@@ -220,17 +220,46 @@
   <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
 </nav>
 
-<!-- HERO -->
+<style>
+  .hero {
+    position: relative;
+    min-height: 80vh; /* Ajuste a altura conforme necessário */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    
+    /* A mágica acontece aqui: Imagem + Gradiente de fade */
+    background-image: 
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.4) 100%), 
+      url('Gemini_Generated_Image_pud5xxpud5xxpud5.png');
+    
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+  }
+
+  .hero-text {
+    position: relative;
+    z-index: 2;
+    text-align: center; /* Centraliza o conteúdo se desejar */
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+</style>
+
 <section class="hero">
   <div class="hero-text">
     <div class="hero-tag fade-up">Espírito Santo · Ciência & Conhecimento</div>
     
-  <h1 class="fade-up-2" style="color: var(--verde); max-width: 90%; line-height: 1.1;">
-    HUB de visibilidade feminina na ciência
-    <span style="display: block; font-size: 0.35em; margin-top: 10px; font-weight: 400; color: var(--cinza);">
-        By <a href="http://www.kickgroup.com.br" target="_blank" style="color: var(--verde); text-decoration: underline;">KICk</a>
-    </span>
-</h1> 
+    <h1 class="fade-up-2" style="color: var(--verde); width: 100%; max-width: 100%; font-size: clamp(2.8rem, 6vw, 5.5rem); line-height: 1.1;">
+      HUB de visibilidade feminina na ciência
+      <span style="display: block; font-size: 0.35em; margin-top: 10px; font-weight: 400; color: var(--cinza);">
+          By <a href="http://www.kickgroup.com.br" target="_blank" style="color: var(--verde); text-decoration: underline;">KICk</a>
+      </span>
+    </h1>
+  </div>
+</section>>
 
        
     <p class="hero-desc fade-up-3">Conheça as pesquisadoras do Espírito Santo que constroem conhecimento, transformam realidades e inspiram novas gerações.</p>
