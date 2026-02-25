@@ -223,48 +223,75 @@
 <style>
   .hero {
     position: relative;
-    min-height: 80vh; /* Ajuste a altura conforme necessário */
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 60px 20px;
-    
-    /* A mágica acontece aqui: Imagem + Gradiente de fade */
+    padding: 80px 20px;
+    text-align: center;
     background-image: 
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.4) 100%), 
+      linear-gradient(to bottom, rgba(248, 244, 238, 0.9) 0%, rgba(248, 244, 238, 0.6) 100%), 
       url('Gemini_Generated_Image_pud5xxpud5xxpud5.png');
-    
     background-size: cover;
     background-position: center;
-    background-attachment: scroll;
   }
 
-  .hero-text {
-    position: relative;
-    z-index: 2;
-    text-align: center; /* Centraliza o conteúdo se desejar */
-    max-width: 1200px;
+  .hero-container {
+    max-width: 900px;
+    width: 100%;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centraliza horizontalmente */
+    z-index: 5;
+  }
+
+  .hero-desc {
+    font-size: 1.2rem;
+    color: var(--cinza);
+    max-width: 650px;
+    margin: 1.5rem auto 2.5rem auto; /* Margens automáticas nas laterais para centralizar */
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 4rem;
+    flex-wrap: wrap;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: clamp(2rem, 8vw, 5rem);
+    justify-content: center;
+    width: 100%;
+    padding-top: 3rem;
+    border-top: 1px solid var(--cinza-claro);
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 </style>
 
 <section class="hero">
-  <div class="hero-text">
+  <div class="hero-container">
     <div class="hero-tag fade-up">Espírito Santo · Ciência & Conhecimento</div>
     
-    <h1 class="fade-up-2" style="color: var(--verde); width: 100%; max-width: 100%; font-size: clamp(2.8rem, 6vw, 5.5rem); line-height: 1.1;">
+    <h1 class="fade-up-2" style="color: var(--verde); font-size: clamp(2.5rem, 6vw, 5rem); line-height: 1.1;">
       HUB de visibilidade feminina na ciência
       <span style="display: block; font-size: 0.35em; margin-top: 10px; font-weight: 400; color: var(--cinza);">
           By <a href="http://www.kickgroup.com.br" target="_blank" style="color: var(--verde); text-decoration: underline;">KICk</a>
       </span>
     </h1>
-  </div>
-</section>>
 
- 
-  <p class="hero-desc fade-up-3">
-      Conheça as pesquisadoras do Espírito Santo que constroem conhecimento, 
-      transformam realidades e inspiram novas gerações.
+    <p class="hero-desc fade-up-3">
+      Conheça as pesquisadoras do Espírito Santo que constroem conhecimento, transformam realidades e inspiram novas gerações.
     </p>
     
     <div class="hero-actions fade-up-4">
