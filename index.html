@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pesquisadoras ES — Ciência feita por mulheres capixabas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  :root {
+    --verde: #2D6A4F; --verde-claro: #52B788; --areia: #F8F4EE;
+    --terra: #C4843A; --preto: #1A1A1A; --cinza: #6B6B6B;
+    --cinza-claro: #E8E4DE; --branco: #FFFFFF;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--areia); color: var(--preto); line-height: 1.6; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(248,244,238,0.96); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--cinza-claro);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 clamp(1.5rem,5vw,4rem); height: 64px;
+  }
+  .nav-logo { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--verde); text-decoration:none; }
+  .nav-logo span { color:var(--terra); }
+  .nav-links { display:flex; gap:2rem; list-style:none; align-items:center; }
+  .nav-links a { font-size:0.85rem; font-weight:500; letter-spacing:0.04em; text-transform:uppercase; color:var(--cinza); text-decoration:none; transition:color 0.2s; }
+  .nav-links a:hover { color:var(--verde); }
+  .nav-btn { background:var(--verde); color:white!important; padding:0.5rem 1.2rem; border-radius:100px; transition:all 0.2s!important; }
+  .nav-btn:hover { background:#235438!important; }
+  .nav-toggle { display:none; background:none; border:none; cursor:pointer; flex-direction:column; gap:5px; }
+  .nav-toggle span { display:block; width:22px; height:2px; background:var(--preto); transition:0.3s; }
+
+  /* HERO */
+  .hero {
+    min-height: 90vh; display:grid; grid-template-columns:1fr 1fr;
+    align-items:center; gap:3rem;
+    padding: clamp(3rem,8vw,7rem) clamp(1.5rem,5vw,4rem);
+    position:relative; overflow:hidden;
+  }
+  .hero::before { content:''; position:absolute; top:-10%; right:-5%; width:55%; height:120%; background:radial-gradient(ellipse at 70% 40%,rgba(82,183,136,.12) 0%,transparent 70%); pointer-events:none; }
+  .hero-tag { display:inline-block; font-family:'DM Mono',monospace; font-size:0.75rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--terra); background:rgba(196,132,58,.1); padding:0.35rem 0.85rem; border-radius:100px; margin-bottom:1.5rem; }
+  .hero h1 { font-family:'Playfair Display',serif; font-size:clamp(2.8rem,6vw,5.5rem); line-height:1.05; font-weight:700; letter-spacing:-0.03em; margin-bottom:1.5rem; }
+  .hero h1 em { color:var(--verde); font-style:italic; }
+  .hero-desc { font-size:1.1rem; color:var(--cinza); max-width:480px; margin-bottom:2.5rem; line-height:1.75; }
+  .btn-primary { display:inline-flex; align-items:center; gap:0.5rem; background:var(--verde); color:white; font-size:0.9rem; font-weight:500; padding:0.9rem 2rem; border-radius:100px; text-decoration:none; transition:all 0.25s; border:none; cursor:pointer; }
+  .btn-primary:hover { background:#235438; transform:translateY(-1px); box-shadow:0 6px 20px rgba(45,106,79,.3); }
+  .btn-secondary { display:inline-flex; align-items:center; gap:0.5rem; background:transparent; color:var(--verde); font-size:0.9rem; font-weight:500; padding:0.9rem 2rem; border-radius:100px; text-decoration:none; transition:all 0.25s; border:1.5px solid var(--verde); cursor:pointer; margin-left:1rem; }
+  .btn-secondary:hover { background:rgba(45,106,79,.06); }
+  .hero-stats { display:flex; gap:3rem; margin-top:3.5rem; padding-top:2.5rem; border-top:1px solid var(--cinza-claro); }
+  .stat-num { display:block; font-family:'Playfair Display',serif; font-size:2.2rem; font-weight:700; color:var(--verde); line-height:1; }
+  .stat-label { font-size:0.78rem; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--cinza); margin-top:0.3rem; }
+  .hero-visual { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; padding:1rem; }
+  .hero-card { background:white; border-radius:16px; padding:1.5rem; box-shadow:0 2px 12px rgba(0,0,0,.06); transition:transform 0.3s,box-shadow 0.3s; cursor:pointer; }
+  .hero-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.1); }
+  .hero-card:nth-child(2) { margin-top:1.5rem; }
+  .hero-card:nth-child(4) { margin-top:-1.5rem; }
+  .hcard-dot { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--verde-claro),var(--verde)); margin-bottom:.75rem; display:flex; align-items:center; justify-content:center; color:white; font-family:'Playfair Display',serif; font-size:.9rem; font-weight:700; }
+  .hcard-area { font-family:'DM Mono',monospace; font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:var(--terra); margin-bottom:.4rem; }
+  .hcard-name { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; margin-bottom:.2rem; line-height:1.3; }
+  .hcard-inst { font-size:.75rem; color:var(--cinza); }
+
+  /* SEÇÕES */
+  section { padding:clamp(3rem,7vw,6rem) clamp(1.5rem,5vw,4rem); }
+  .section-tag { font-family:'DM Mono',monospace; font-size:.7rem; letter-spacing:.15em; text-transform:uppercase; color:var(--terra); margin-bottom:.75rem; display:block; }
+  .section-title { font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3.5vw,3rem); font-weight:700; letter-spacing:-.02em; margin-bottom:.75rem; line-height:1.2; }
+  .section-title em { color:var(--verde); font-style:italic; }
+  .section-desc { font-size:1.05rem; color:var(--cinza); max-width:580px; line-height:1.75; }
+
+  /* PESQUISADORAS */
+  #pesquisadoras { background:white; }
+  .search-bar { position:relative; margin:2rem 0 1.5rem; }
+  .search-bar input { width:100%; padding:1rem 1rem 1rem 3rem; border:1.5px solid var(--cinza-claro); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:.95rem; color:var(--preto); background:var(--areia); transition:border .2s; outline:none; }
+  .search-bar input:focus { border-color:var(--verde); background:white; }
+  .search-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cinza); pointer-events:none; }
+  .filters { display:flex; flex-wrap:wrap; gap:.6rem; margin-bottom:1.5rem; }
+  .filter-btn { font-size:.8rem; font-weight:500; padding:.5rem 1.1rem; border-radius:100px; border:1.5px solid var(--cinza-claro); background:transparent; cursor:pointer; transition:all .2s; color:var(--cinza); font-family:'DM Sans',sans-serif; }
+  .filter-btn:hover { border-color:var(--verde); color:var(--verde); }
+  .filter-btn.active { background:var(--verde); border-color:var(--verde); color:white; }
+  .filter-label { font-family:'DM Mono',monospace; font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; color:var(--cinza); margin:1rem 0 .5rem; display:block; }
+  .researchers-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.5rem; }
+  .researcher-card { background:var(--areia); border-radius:20px; padding:1.75rem; cursor:pointer; transition:all .3s; border:1.5px solid transparent; display:flex; flex-direction:column; gap:1rem; }
+  .researcher-card:hover { border-color:var(--verde-claro); box-shadow:0 8px 32px rgba(45,106,79,.1); transform:translateY(-2px); }
+  .rc-top { display:flex; align-items:flex-start; gap:1rem; }
+  .rc-avatar { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--verde-claro),var(--verde)); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:1.3rem; color:white; font-weight:700; flex-shrink:0; }
+  .rc-name { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; margin-bottom:.2rem; line-height:1.3; }
+  .rc-inst { font-size:.78rem; color:var(--cinza); }
+  .rc-area { display:inline-block; font-family:'DM Mono',monospace; font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:var(--terra); background:rgba(196,132,58,.1); padding:.25rem .65rem; border-radius:100px; }
+  .rc-bio { font-size:.88rem; color:var(--cinza); line-height:1.65; }
+  .rc-links { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:auto; }
+  .rc-link { font-size:.72rem; font-weight:500; padding:.3rem .7rem; border-radius:100px; text-decoration:none; border:1px solid var(--cinza-claro); color:var(--cinza); transition:all .2s; }
+  .rc-link:hover { border-color:var(--verde); color:var(--verde); }
+
+  /* BLOG PREVIEW */
+  #blog-preview { background:var(--areia); }
+  .blog-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.5rem; margin-top:2rem; }
+  .blog-card { background:white; border-radius:20px; overflow:hidden; cursor:pointer; transition:all .3s; border:1.5px solid transparent; }
+  .blog-card:hover { border-color:var(--verde-claro); transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,0,0,.08); }
+  .blog-card-img { height:180px; background:linear-gradient(135deg,var(--verde),var(--verde-claro)); display:flex; align-items:center; justify-content:center; font-size:3rem; }
+  .blog-card-body { padding:1.5rem; }
+  .blog-card-cat { font-family:'DM Mono',monospace; font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:var(--terra); margin-bottom:.5rem; display:block; }
+  .blog-card-title { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; line-height:1.4; margin-bottom:.5rem; }
+  .blog-card-meta { font-size:.78rem; color:var(--cinza); }
+  .blog-card-excerpt { font-size:.85rem; color:var(--cinza); margin-top:.75rem; line-height:1.6; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+
+  /* OBRAS */
+  #obras { background:white; }
+  .works-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.25rem; margin-top:2rem; }
+  .work-card { background:var(--areia); border-radius:16px; padding:1.5rem; transition:all .3s; border:1.5px solid var(--cinza-claro); display:flex; flex-direction:column; gap:.75rem; }
+  .work-card:hover { border-color:var(--verde-claro); transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,0,0,.07); }
+  .wc-top { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+  .wc-type { font-family:'DM Mono',monospace; font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:white; background:var(--verde); padding:.25rem .65rem; border-radius:100px; white-space:nowrap; }
+  .wc-year { font-family:'DM Mono',monospace; font-size:.7rem; color:var(--cinza); }
+  .wc-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; line-height:1.4; }
+  .wc-author { font-size:.82rem; color:var(--terra); font-weight:500; }
+  .wc-resumo { font-size:.85rem; color:var(--cinza); line-height:1.65; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .wc-tags { display:flex; flex-wrap:wrap; gap:.4rem; }
+  .wc-tag { font-size:.7rem; padding:.2rem .6rem; border-radius:100px; background:white; color:var(--cinza); }
+  .wc-actions { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:auto; padding-top:.75rem; border-top:1px solid var(--cinza-claro); }
+  .wc-btn { font-size:.78rem; font-weight:500; padding:.4rem .9rem; border-radius:100px; text-decoration:none; transition:all .2s; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .wc-btn-compra { background:var(--terra); color:white; border:none; }
+  .wc-btn-compra:hover { background:#a86e2a; }
+  .wc-btn-acesso { background:transparent; color:var(--verde); border:1.5px solid var(--verde); }
+  .wc-btn-acesso:hover { background:rgba(45,106,79,.06); }
+
+  /* LIVROS */
+  #livros { background:var(--verde); color:white; }
+  #livros .section-tag { color:var(--verde-claro); }
+  #livros .section-title { color:white; }
+  #livros .section-title em { color:var(--verde-claro); }
+  #livros .section-desc { color:rgba(255,255,255,.7); }
+  .books-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1.25rem; margin-top:2.5rem; }
+  .book-card { background:rgba(255,255,255,.1); border-radius:16px; padding:1.5rem; border:1px solid rgba(255,255,255,.15); transition:all .3s; display:flex; flex-direction:column; gap:.75rem; }
+  .book-card:hover { background:rgba(255,255,255,.18); transform:translateY(-3px); }
+  .book-cover { width:100%; aspect-ratio:3/4; background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.05)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; border:1px solid rgba(255,255,255,.2); }
+  .book-title { font-family:'Playfair Display',serif; font-size:.95rem; font-weight:700; color:white; line-height:1.4; }
+  .book-author { font-size:.78rem; color:rgba(255,255,255,.65); }
+  .book-btn { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; font-size:.78rem; font-weight:500; margin-top:auto; padding:.5rem 1rem; border-radius:100px; background:white; color:var(--verde); text-decoration:none; transition:all .2s; cursor:pointer; font-family:'DM Sans',sans-serif; border:none; }
+  .book-btn:hover { background:var(--areia); }
+
+  /* SOBRE */
+  #sobre { background:white; display:grid; grid-template-columns:1fr 1fr; gap:5rem; align-items:center; }
+  .sobre-stats { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:3rem; }
+  .sobre-stat { background:var(--areia); border-radius:16px; padding:1.5rem; border:1px solid var(--cinza-claro); }
+  .sobre-stat-num { font-family:'Playfair Display',serif; font-size:2.5rem; font-weight:700; color:var(--verde); line-height:1; margin-bottom:.3rem; }
+  .sobre-stat-label { font-size:.8rem; color:var(--cinza); font-weight:500; }
+  .sobre-manifesto { background:var(--areia); border-radius:20px; padding:2.5rem; border-left:4px solid var(--verde); }
+  .manifesto-quote { font-family:'Playfair Display',serif; font-style:italic; font-size:1.35rem; line-height:1.6; margin-bottom:1.5rem; }
+  .manifesto-text { font-size:.92rem; color:var(--cinza); line-height:1.75; }
+
+  /* INSCRIÇÃO CTA */
+  .inscricao-cta { background:linear-gradient(135deg,var(--verde),#1a4332); color:white; text-align:center; padding:clamp(3rem,7vw,6rem) clamp(1.5rem,5vw,4rem); }
+  .inscricao-cta h2 { font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3vw,2.8rem); font-weight:700; margin-bottom:1rem; }
+  .inscricao-cta p { font-size:1.05rem; color:rgba(255,255,255,.8); max-width:500px; margin:0 auto 2rem; line-height:1.75; }
+  .btn-light { background:white; color:var(--verde); border:none; }
+  .btn-light:hover { background:var(--areia); }
+
+  /* MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(26,26,26,.6); backdrop-filter:blur(6px); align-items:center; justify-content:center; padding:1.5rem; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:white; border-radius:24px; max-width:620px; width:100%; max-height:90vh; overflow-y:auto; padding:2.5rem; position:relative; }
+  .modal-close { position:absolute; top:1.25rem; right:1.25rem; background:var(--areia); border:none; border-radius:50%; width:36px; height:36px; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; color:var(--cinza); transition:all .2s; }
+  .modal-close:hover { background:var(--cinza-claro); }
+  .modal-avatar { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--verde-claro),var(--verde)); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:1.8rem; color:white; font-weight:700; margin-bottom:1.25rem; }
+  .modal-name { font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:700; margin-bottom:.35rem; }
+  .modal-inst { font-size:.85rem; color:var(--cinza); margin-bottom:1.5rem; }
+  .modal-bio { font-size:.92rem; color:var(--cinza); line-height:1.75; margin-bottom:1.5rem; }
+  .modal-links { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:2rem; }
+  .modal-works-title { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; margin-bottom:1rem; }
+  .modal-work-item { padding:1rem; border-radius:12px; background:var(--areia); margin-bottom:.75rem; }
+  .modal-work-title { font-weight:600; font-size:.9rem; margin-bottom:.25rem; }
+  .modal-work-meta { font-size:.78rem; color:var(--cinza); display:flex; gap:1rem; flex-wrap:wrap; }
+  .modal-work-actions { margin-top:.6rem; display:flex; gap:.5rem; }
+
+  /* FOOTER */
+  footer { background:var(--preto); color:rgba(255,255,255,.6); padding:3rem clamp(1.5rem,5vw,4rem); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1.5rem; }
+  .footer-brand { font-family:'Playfair Display',serif; font-size:1.1rem; color:white; text-decoration:none; }
+  .footer-brand span { color:var(--verde-claro); }
+  footer p { font-size:.82rem; }
+  footer a { color:var(--verde-claro); text-decoration:none; }
+
+  /* LOADING */
+  .loading { text-align:center; padding:3rem; color:var(--cinza); }
+  .spinner { width:32px; height:32px; border:3px solid var(--cinza-claro); border-top-color:var(--verde); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 1rem; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .empty { text-align:center; padding:3rem; color:var(--cinza); font-size:.95rem; grid-column:1/-1; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .fade-up { animation:fadeUp .6s ease forwards; }
+  .fade-up-2 { animation:fadeUp .6s .15s ease forwards; opacity:0; }
+  .fade-up-3 { animation:fadeUp .6s .3s ease forwards; opacity:0; }
+  .fade-up-4 { animation:fadeUp .6s .45s ease forwards; opacity:0; }
+
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr;}
+    .hero-visual{display:none;}
+    #sobre{grid-template-columns:1fr;}
+    .nav-links{display:none;flex-direction:column;position:fixed;top:64px;left:0;right:0;background:var(--areia);padding:2rem;border-bottom:1px solid var(--cinza-claro);gap:1.5rem;z-index:99;}
+    .nav-links.open{display:flex;}
+    .nav-toggle{display:flex;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Pesquisadoras<span>ES</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#pesquisadoras">Pesquisadoras</a></li>
+    <li><a href="#obras">Publicações</a></li>
+    <li><a href="#livros">Livros</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="#sobre">Sobre</a></li>
+    <li><a href="inscricao.html" class="nav-btn">Inscreva-se</a></li>
+  </ul>
+  <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-text">
+    <div class="hero-tag fade-up">Espírito Santo · Ciência & Conhecimento</div>
+    <h1 class="fade-up-2">A ciência capixaba tem <em>nome de mulher</em></h1>
+    <p class="hero-desc fade-up-3">Conheça as pesquisadoras do Espírito Santo que constroem conhecimento, transformam realidades e inspiram novas gerações.</p>
+    <div class="fade-up-4">
+      <a href="#pesquisadoras" class="btn-primary">Explorar pesquisadoras</a>
+      <a href="inscricao.html" class="btn-secondary">Cadastre-se</a>
+    </div>
+    <div class="hero-stats fade-up-4">
+      <div class="stat"><span class="stat-num" id="statP">—</span><span class="stat-label">Pesquisadoras</span></div>
+      <div class="stat"><span class="stat-num" id="statO">—</span><span class="stat-label">Publicações</span></div>
+      <div class="stat"><span class="stat-num" id="statI">—</span><span class="stat-label">Instituições</span></div>
+    </div>
+  </div>
+  <div class="hero-visual" id="heroCards"></div>
+</section>
+
+<!-- BLOG PREVIEW -->
+<section id="blog-preview">
+  <span class="section-tag">Do blog</span>
+  <h2 class="section-title">Últimas <em>publicações</em></h2>
+  <p class="section-desc">Artigos, reflexões e notícias sobre ciência feita por mulheres no Espírito Santo.</p>
+  <div class="blog-grid" id="blogGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
+  <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary">Ver todos os artigos</a></div>
+</section>
+
+<!-- PESQUISADORAS -->
+<section id="pesquisadoras">
+  <span class="section-tag">Quem são elas</span>
+  <h2 class="section-title">Pesquisadoras em <em>destaque</em></h2>
+  <p class="section-desc">Conheça as mulheres que fazem ciência no Espírito Santo.</p>
+  <div class="search-bar">
+    <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="searchInput" placeholder="Buscar por nome, área ou instituição…">
+  </div>
+  <span class="filter-label">Área</span>
+  <div class="filters" id="areaFilters"></div>
+  <span class="filter-label">Instituição</span>
+  <div class="filters" id="instFilters"></div>
+  <div class="researchers-grid" id="researchersGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
+</section>
+
+<!-- OBRAS -->
+<section id="obras">
+  <span class="section-tag">Produção científica</span>
+  <h2 class="section-title">Obras & <em>Publicações</em></h2>
+  <p class="section-desc">Teses, dissertações, artigos e livros das pesquisadoras capixabas.</p>
+  <div class="filters" id="tipoFilters"></div>
+  <div class="works-grid" id="worksGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
+</section>
+
+<!-- LIVROS -->
+<section id="livros">
+  <span class="section-tag">Livraria</span>
+  <h2 class="section-title">Livros para <em>adquirir</em></h2>
+  <p class="section-desc">Apoie diretamente as autoras capixabas.</p>
+  <div class="books-grid" id="booksGrid"><div class="loading" style="color:rgba(255,255,255,.7)"><div class="spinner" style="border-color:rgba(255,255,255,.3);border-top-color:white"></div>Carregando...</div></div>
+</section>
+
+<!-- INSCRIÇÃO CTA -->
+<div class="inscricao-cta">
+  <h2>Você é pesquisadora capixaba?</h2>
+  <p>Cadastre seu perfil e suas publicações no portal e ganhe visibilidade para o seu trabalho.</p>
+  <a href="inscricao.html" class="btn-primary btn-light">Fazer minha inscrição</a>
+</div>
+
+<!-- SOBRE -->
+<section id="sobre">
+  <div>
+    <span class="section-tag">O projeto</span>
+    <h2 class="section-title">Por que <em>visibilidade</em> importa</h2>
+    <p class="section-desc" style="margin-bottom:1rem">O portal Pesquisadoras ES nasceu da necessidade de dar visibilidade às mulheres que produzem conhecimento científico no Espírito Santo.</p>
+    <p class="section-desc">Aqui você encontra perfis, publicações, pesquisas e formas de acessar e adquirir as obras dessas cientistas.</p>
+    <div class="sobre-stats" id="sobreStats"></div>
+  </div>
+  <div class="sobre-manifesto">
+    <p class="manifesto-quote">"Quando uma mulher cientista é vista, cem outras encontram o caminho."</p>
+    <p class="manifesto-text">Este portal é um espaço vivo, colaborativo e em constante crescimento. Se você conhece pesquisadoras capixabas que deveriam estar aqui, <a href="inscricao.html" style="color:var(--verde)">indique ou convide</a> para se inscrever.</p>
+  </div>
+</section>
+
+<footer>
+  <a href="index.html" class="footer-brand">Pesquisadoras<span>ES</span></a>
+  <p>Dando visibilidade à ciência feita por mulheres no Espírito Santo.</p>
+  <p><a href="admin/login.html">Área administrativa</a></p>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let allResearchers = [], allWorks = [];
+let filtroArea = '', filtroInst = '', filtroTipo = '', busca = '';
+
+function initials(name){ return name.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join(''); }
+const bookEmojis = {"Ciências Biológicas":"🐠","Ciências Humanas":"📖","Engenharias":"🏗️","Ciências da Saúde":"🩺","Ciências Exatas e da Terra":"🔬","Linguística, Letras e Artes":"🎭"};
+
+async function loadAll(){
+  const [{ data: researchers }, { data: works }, { data: posts }] = await Promise.all([
+    db.from('researchers').select('*').eq('status','aprovada').order('destaque',{ascending:false}),
+    db.from('works').select('*').order('ano',{ascending:false}),
+    db.from('blog_posts').select('*').eq('publicado',true).order('created_at',{ascending:false}).limit(3)
+  ]);
+  allResearchers = researchers || [];
+  allWorks = works || [];
+  renderStats();
+  renderHeroCards();
+  renderFilters();
+  renderResearchers();
+  renderWorks();
+  renderBooks();
+  renderSobreStats();
+  renderBlogPreview(posts || []);
+}
+
+function renderStats(){
+  const insts = new Set(allResearchers.map(r=>r.instituicao)).size;
+  document.getElementById('statP').textContent = allResearchers.length;
+  document.getElementById('statO').textContent = allWorks.length;
+  document.getElementById('statI').textContent = insts;
+}
+
+function renderHeroCards(){
+  const el = document.getElementById('heroCards');
+  const featured = allResearchers.filter(r=>r.destaque).slice(0,4);
+  if(!featured.length){ el.style.display='none'; return; }
+  el.innerHTML = featured.map(r=>`
+    <div class="hero-card" onclick="openModal('${r.id}')">
+      <div class="hcard-dot">${initials(r.nome)}</div>
+      <div class="hcard-area">${r.area_principal||''}</div>
+      <div class="hcard-name">${r.nome}</div>
+      <div class="hcard-inst">${r.instituicao||''}</div>
+    </div>`).join('');
+}
+
+function renderFilters(){
+  const areas = [...new Set(allResearchers.map(r=>r.area_principal).filter(Boolean))];
+  const insts = [...new Set(allResearchers.map(r=>r.instituicao).filter(Boolean))];
+  const tipos = [...new Set(allWorks.map(w=>w.tipo).filter(Boolean))];
+  document.getElementById('areaFilters').innerHTML =
+    `<button class="filter-btn active" onclick="setArea('')">Todas</button>` +
+    areas.map(a=>`<button class="filter-btn" onclick="setArea('${a}')">${a}</button>`).join('');
+  document.getElementById('instFilters').innerHTML =
+    `<button class="filter-btn active" onclick="setInst('')">Todas</button>` +
+    insts.map(i=>`<button class="filter-btn" onclick="setInst('${i}')">${i}</button>`).join('');
+  document.getElementById('tipoFilters').innerHTML =
+    `<button class="filter-btn active" onclick="setTipo('')">Todos</button>` +
+    tipos.map(t=>`<button class="filter-btn" onclick="setTipo('${t}')">${t}</button>`).join('');
+}
+
+function setArea(v){ filtroArea=v; document.querySelectorAll('#areaFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todas'))); renderResearchers(); }
+function setInst(v){ filtroInst=v; document.querySelectorAll('#instFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todas'))); renderResearchers(); }
+function setTipo(v){ filtroTipo=v; document.querySelectorAll('#tipoFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todos'))); renderWorks(); }
+
+function renderResearchers(){
+  const grid = document.getElementById('researchersGrid');
+  let list = allResearchers.filter(r=>{
+    const q=busca.toLowerCase();
+    return (!q || r.nome?.toLowerCase().includes(q) || r.area_principal?.toLowerCase().includes(q) || r.instituicao?.toLowerCase().includes(q))
+      && (!filtroArea || r.area_principal===filtroArea)
+      && (!filtroInst || r.instituicao===filtroInst);
+  });
+  if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma pesquisadora encontrada.</div>'; return; }
+  grid.innerHTML = list.map(r=>{
+    const links = [
+      r.lattes ? `<a class="rc-link" href="${r.lattes}" target="_blank">Lattes</a>` : '',
+      r.orcid ? `<a class="rc-link" href="${r.orcid}" target="_blank">ORCID</a>` : '',
+      r.linkedin ? `<a class="rc-link" href="${r.linkedin}" target="_blank">LinkedIn</a>` : '',
+      r.google_scholar ? `<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>` : '',
+    ].filter(Boolean).join('');
+    const wc = allWorks.filter(w=>w.researcher_id===r.id).length;
+    return `<div class="researcher-card" onclick="openModal('${r.id}')">
+      <div class="rc-top">
+        <div class="rc-avatar">${initials(r.nome)}</div>
+        <div><div class="rc-name">${r.nome}</div><div class="rc-inst">${r.instituicao||''}</div></div>
+      </div>
+      <span class="rc-area">${r.area_principal||''}</span>
+      <p class="rc-bio">${r.mini_bio||''}</p>
+      <div class="rc-links">${links}</div>
+      ${wc?`<div style="font-size:.78rem;color:var(--verde);font-weight:500;padding-top:.75rem;border-top:1px solid var(--cinza-claro)">↗ ${wc} publicaç${wc===1?'ão':'ões'}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderWorks(){
+  const grid = document.getElementById('worksGrid');
+  let list = allWorks.filter(w=>!filtroTipo||w.tipo===filtroTipo);
+  if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
+  grid.innerHTML = list.map(w=>{
+    const author = allResearchers.find(r=>r.id===w.researcher_id)?.nome||'—';
+    const tags = (w.tags||[]).map(t=>`<span class="wc-tag">${t}</span>`).join('');
+    return `<div class="work-card">
+      <div class="wc-top"><span class="wc-type">${w.tipo}</span><span class="wc-year">${w.ano||''}</span></div>
+      <div class="wc-title">${w.titulo}</div>
+      <div class="wc-author">${author}</div>
+      <p class="wc-resumo">${w.resumo||''}</p>
+      <div class="wc-tags">${tags}</div>
+      <div class="wc-actions">
+        ${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank">🛒 Comprar</a>`:''}
+        ${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank">Acessar →</a>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderBooks(){
+  const grid = document.getElementById('booksGrid');
+  const books = allWorks.filter(w=>w.tipo==='Livro'&&w.link_compra);
+  if(!books.length){ grid.innerHTML='<div class="empty" style="color:rgba(255,255,255,.6)">Nenhum livro à venda no momento.</div>'; return; }
+  grid.innerHTML = books.map(b=>{
+    const author = allResearchers.find(r=>r.id===b.researcher_id)?.nome||'—';
+    return `<div class="book-card">
+      <div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div>
+      <div class="book-title">${b.titulo}</div>
+      <div class="book-author">${author}</div>
+      <a class="book-btn" href="${b.link_compra}" target="_blank">🛒 Adquirir</a>
+    </div>`;
+  }).join('');
+}
+
+function renderSobreStats(){
+  const el = document.getElementById('sobreStats');
+  const livros = allWorks.filter(w=>w.tipo==='Livro').length;
+  const insts = new Set(allResearchers.map(r=>r.instituicao)).size;
+  el.innerHTML = [
+    {num:allResearchers.length,label:'Pesquisadoras cadastradas'},
+    {num:allWorks.length,label:'Publicações catalogadas'},
+    {num:livros,label:'Livros disponíveis'},
+    {num:insts,label:'Instituições representadas'},
+  ].map(s=>`<div class="sobre-stat"><div class="sobre-stat-num">${s.num}</div><div class="sobre-stat-label">${s.label}</div></div>`).join('');
+}
+
+function renderBlogPreview(posts){
+  const grid = document.getElementById('blogGrid');
+  if(!posts.length){ grid.innerHTML='<div class="empty">Nenhum artigo publicado ainda.</div>'; return; }
+  grid.innerHTML = posts.map(p=>`
+    <div class="blog-card" onclick="location.href='blog.html?post=${p.id}'">
+      <div class="blog-card-img">${p.emoji||'✍️'}</div>
+      <div class="blog-card-body">
+        <span class="blog-card-cat">${p.categoria||'Artigo'}</span>
+        <div class="blog-card-title">${p.titulo}</div>
+        <div class="blog-card-meta">${new Date(p.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</div>
+        <p class="blog-card-excerpt">${p.resumo||''}</p>
+      </div>
+    </div>`).join('');
+}
+
+function openModal(id){
+  const r = allResearchers.find(r=>r.id===id); if(!r) return;
+  const rWorks = allWorks.filter(w=>w.researcher_id===id);
+  const links = [
+    r.lattes?`<a class="rc-link" href="${r.lattes}" target="_blank">Lattes</a>`:'',
+    r.orcid?`<a class="rc-link" href="${r.orcid}" target="_blank">ORCID</a>`:'',
+    r.linkedin?`<a class="rc-link" href="${r.linkedin}" target="_blank">LinkedIn</a>`:'',
+    r.google_scholar?`<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>`:'',
+    r.research_gate?`<a class="rc-link" href="${r.research_gate}" target="_blank">ResearchGate</a>`:'',
+    r.email?`<a class="rc-link" href="mailto:${r.email}" target="_blank">E-mail</a>`:'',
+  ].filter(Boolean).join('');
+  const worksHtml = rWorks.length ? `<div class="modal-works-title">📄 Publicações (${rWorks.length})</div>${rWorks.map(w=>`
+    <div class="modal-work-item">
+      <div class="modal-work-title">${w.titulo}</div>
+      <div class="modal-work-meta"><span>${w.tipo}</span><span>${w.ano||''}</span></div>
+      <div class="modal-work-actions">
+        ${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank" style="font-size:.75rem;padding:.3rem .7rem">🛒 Comprar</a>`:''}
+        ${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank" style="font-size:.75rem;padding:.3rem .7rem">Acessar →</a>`:''}
+      </div>
+    </div>`).join('')}` : '';
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-avatar">${initials(r.nome)}</div>
+    <div class="modal-name">${r.nome}</div>
+    <div style="margin-bottom:.35rem"><span class="rc-area">${r.area_principal||''}</span></div>
+    <div class="modal-inst">${r.instituicao||''}</div>
+    <p class="modal-bio">${r.mini_bio||''}</p>
+    <div class="modal-links">${links}</div>
+    ${worksHtml}`;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+document.getElementById('modalClose').onclick = ()=>{ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; };
+document.getElementById('modalOverlay').onclick = e=>{ if(e.target===e.currentTarget){ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; } };
+document.getElementById('searchInput').addEventListener('input',function(){ busca=this.value; renderResearchers(); });
+document.getElementById('navToggle').onclick = ()=>document.getElementById('navLinks').classList.toggle('open');
+
+loadAll();
+</script>
+</body>
+</html>

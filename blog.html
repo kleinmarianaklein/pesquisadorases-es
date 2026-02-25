@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog — Pesquisadoras ES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  :root{--verde:#2D6A4F;--verde-claro:#52B788;--areia:#F8F4EE;--terra:#C4843A;--preto:#1A1A1A;--cinza:#6B6B6B;--cinza-claro:#E8E4DE;--branco:#FFFFFF;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'DM Sans',sans-serif;background:var(--areia);color:var(--preto);}
+  nav{position:sticky;top:0;z-index:100;background:rgba(248,244,238,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--cinza-claro);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1.5rem,5vw,4rem);height:64px;}
+  .nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--verde);text-decoration:none;}
+  .nav-logo span{color:var(--terra);}
+  .nav-links{display:flex;gap:2rem;list-style:none;align-items:center;}
+  .nav-links a{font-size:.85rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--cinza);text-decoration:none;transition:color .2s;}
+  .nav-links a:hover,.nav-links a.active{color:var(--verde);}
+  .nav-btn{background:var(--verde);color:white!important;padding:.5rem 1.2rem;border-radius:100px;}
+  .nav-toggle{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:5px;}
+  .nav-toggle span{display:block;width:22px;height:2px;background:var(--preto);}
+
+  .blog-hero{background:var(--verde);color:white;padding:clamp(3rem,7vw,6rem) clamp(1.5rem,5vw,4rem);text-align:center;}
+  .blog-hero-tag{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:var(--verde-claro);margin-bottom:1rem;display:block;}
+  .blog-hero h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,4rem);font-weight:700;margin-bottom:1rem;}
+  .blog-hero h1 em{font-style:italic;color:var(--verde-claro);}
+  .blog-hero p{font-size:1.05rem;color:rgba(255,255,255,.75);max-width:500px;margin:0 auto;}
+
+  .blog-content{max-width:1100px;margin:0 auto;padding:clamp(2rem,5vw,4rem) clamp(1.5rem,5vw,2rem);}
+
+  /* LISTA DE POSTS */
+  #postList .blog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;}
+  .blog-card{background:white;border-radius:20px;overflow:hidden;cursor:pointer;transition:all .3s;border:1.5px solid transparent;}
+  .blog-card:hover{border-color:var(--verde-claro);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.08);}
+  .blog-card-img{height:180px;background:linear-gradient(135deg,var(--verde),var(--verde-claro));display:flex;align-items:center;justify-content:center;font-size:3rem;}
+  .blog-card-body{padding:1.5rem;}
+  .blog-card-cat{font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--terra);margin-bottom:.5rem;display:block;}
+  .blog-card-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;line-height:1.4;margin-bottom:.5rem;}
+  .blog-card-meta{font-size:.78rem;color:var(--cinza);}
+  .blog-card-excerpt{font-size:.85rem;color:var(--cinza);margin-top:.75rem;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+
+  /* POST INDIVIDUAL */
+  #postView{display:none;}
+  .post-back{display:inline-flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--verde);text-decoration:none;margin-bottom:2rem;cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;transition:gap .2s;}
+  .post-back:hover{gap:.8rem;}
+  .post-cat{font-family:'DM Mono',monospace;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--terra);margin-bottom:.75rem;display:block;}
+  .post-title{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:700;line-height:1.15;margin-bottom:1rem;}
+  .post-meta{font-size:.85rem;color:var(--cinza);margin-bottom:2rem;padding-bottom:2rem;border-bottom:1px solid var(--cinza-claro);}
+  .post-body{font-size:1.05rem;line-height:1.85;color:#333;max-width:720px;}
+  .post-body h2{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;margin:2rem 0 1rem;}
+  .post-body h3{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;margin:1.5rem 0 .75rem;}
+  .post-body p{margin-bottom:1.25rem;}
+  .post-body strong{font-weight:600;}
+  .post-body em{font-style:italic;}
+  .post-body blockquote{border-left:4px solid var(--verde);padding:.75rem 1.5rem;background:rgba(45,106,79,.05);border-radius:0 12px 12px 0;margin:1.5rem 0;font-family:'Playfair Display',serif;font-style:italic;font-size:1.1rem;}
+
+  .loading{text-align:center;padding:3rem;color:var(--cinza);}
+  .spinner{width:32px;height:32px;border:3px solid var(--cinza-claro);border-top-color:var(--verde);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .empty{text-align:center;padding:3rem;color:var(--cinza);}
+
+  footer{background:var(--preto);color:rgba(255,255,255,.6);padding:3rem clamp(1.5rem,5vw,4rem);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;}
+  .footer-brand{font-family:'Playfair Display',serif;font-size:1.1rem;color:white;text-decoration:none;}
+  .footer-brand span{color:var(--verde-claro);}
+  footer p{font-size:.82rem;}
+  footer a{color:var(--verde-claro);text-decoration:none;}
+  @media(max-width:768px){.nav-links{display:none;}.nav-toggle{display:flex;}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">Pesquisadoras<span>ES</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html#pesquisadoras">Pesquisadoras</a></li>
+    <li><a href="index.html#obras">Publicações</a></li>
+    <li><a href="blog.html" class="active">Blog</a></li>
+    <li><a href="index.html#sobre">Sobre</a></li>
+    <li><a href="inscricao.html" class="nav-btn">Inscreva-se</a></li>
+  </ul>
+  <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="blog-hero">
+  <span class="blog-hero-tag">Reflexões & Notícias</span>
+  <h1>Blog <em>Pesquisadoras ES</em></h1>
+  <p>Artigos, entrevistas e reflexões sobre ciência, gênero e conhecimento no Espírito Santo.</p>
+</div>
+
+<div class="blog-content">
+  <!-- LISTA -->
+  <div id="postList">
+    <div class="blog-grid" id="blogGrid">
+      <div class="loading"><div class="spinner"></div>Carregando artigos…</div>
+    </div>
+  </div>
+
+  <!-- POST INDIVIDUAL -->
+  <div id="postView">
+    <button class="post-back" onclick="showList()">← Voltar ao blog</button>
+    <div id="postContent"></div>
+  </div>
+</div>
+
+<footer>
+  <a href="index.html" class="footer-brand">Pesquisadoras<span>ES</span></a>
+  <p>Dando visibilidade à ciência feita por mulheres no Espírito Santo.</p>
+  <p><a href="admin/login.html">Área administrativa</a></p>
+</footer>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function loadPosts(){
+  const { data } = await db.from('blog_posts').select('*').eq('publicado',true).order('created_at',{ascending:false});
+  const grid = document.getElementById('blogGrid');
+  if(!data?.length){ grid.innerHTML='<div class="empty">Nenhum artigo publicado ainda.</div>'; return; }
+  grid.innerHTML = data.map(p=>`
+    <div class="blog-card" onclick="showPost('${p.id}')">
+      <div class="blog-card-img">${p.emoji||'✍️'}</div>
+      <div class="blog-card-body">
+        <span class="blog-card-cat">${p.categoria||'Artigo'}</span>
+        <div class="blog-card-title">${p.titulo}</div>
+        <div class="blog-card-meta">${new Date(p.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</div>
+        <p class="blog-card-excerpt">${p.resumo||''}</p>
+      </div>
+    </div>`).join('');
+}
+
+async function showPost(id){
+  const { data } = await db.from('blog_posts').select('*').eq('id',id).single();
+  if(!data) return;
+  document.getElementById('postContent').innerHTML = `
+    <span class="post-cat">${data.categoria||'Artigo'}</span>
+    <h1 class="post-title">${data.titulo}</h1>
+    <div class="post-meta">Publicado em ${new Date(data.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})} ${data.autor?'· por '+data.autor:''}</div>
+    <div class="post-body">${data.conteudo||''}</div>`;
+  document.getElementById('postList').style.display='none';
+  document.getElementById('postView').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+  history.pushState({},'','?post='+id);
+}
+
+function showList(){
+  document.getElementById('postList').style.display='block';
+  document.getElementById('postView').style.display='none';
+  history.pushState({},'','blog.html');
+}
+
+// Checar URL para post direto
+const urlParams = new URLSearchParams(window.location.search);
+const postId = urlParams.get('post');
+if(postId) showPost(postId); else loadPosts();
+</script>
+</body>
+</html>
