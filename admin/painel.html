@@ -458,12 +458,15 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 
 // ── LOAD ALL DATA ──────────────────────────────────────────
 async function loadAll(){
-  const [{ data: r }, { data: w }, { data: p }] = await Promise.all([
+  const [resRes, worksRes, postsRes] = await Promise.all([
     db.from('researchers').select('*').order('created_at',{ascending:false}),
     db.from('works').select('*').order('created_at',{ascending:false}),
     db.from('blog_posts').select('*').order('created_at',{ascending:false}),
   ]);
-  allResearchers = r||[]; allWorks = w||[]; allPosts = p||[];
+  if(resRes.error) console.error('Erro ao carregar researchers:', resRes.error.message);
+  if(worksRes.error) console.error('Erro ao carregar works:', worksRes.error.message);
+  if(postsRes.error) console.error('Erro ao carregar blog_posts:', postsRes.error.message);
+  allResearchers = resRes.data||[]; allWorks = worksRes.data||[]; allPosts = postsRes.data||[];
   await loadComments();
   renderDashboard(); renderInscricoes(); renderPesquisadoras(); renderObras(); renderBlogPosts();
   populateObraResearcherSelect();
@@ -1263,7 +1266,10 @@ async function mSalvar(){
       .map(id => mGetObra(id))
       .filter(o => o.titulo && o.tipo)
       .map(o => ({...o, researcher_id: researcher.id, area_conhecimento: area}));
-    if(obrasData.length) await db.from('works').insert(obrasData);
+    if(obrasData.length){
+      const { error: obrasErr } = await db.from('works').insert(obrasData);
+      if(obrasErr) throw new Error('Erro ao salvar publicações: ' + obrasErr.message);
+    }
 
     toast('Pesquisadora cadastrada com sucesso!');
     mLimpar();
