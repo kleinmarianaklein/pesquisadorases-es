@@ -1,8 +1,24 @@
+plugins = []
+headers = []
+redirects = []
+
+[functions]
+
+  [functions."*"]
+
 [build]
   publish = "."
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
+  [build.environment]
+
+  [build.processing]
+
+    [build.processing.css]
+
+    [build.processing.html]
+
+    [build.processing.images]
+
+    [build.processing.js]
+
+  [build.services]
