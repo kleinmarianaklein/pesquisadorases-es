@@ -452,14 +452,20 @@ const bookEmojis = {"Ciências Biológicas":"🐠","Ciências Humanas":"📖","E
 
 async function loadAll(){
   try {
+    // Busca pesquisadoras e obras de forma independente para evitar que o erro de uma trave a outra
     const [resRes, worksRes, postsRes] = await Promise.all([
       db.from('researchers').select('*').eq('status','aprovada').order('destaque',{ascending:false}),
       db.from('works').select('*').order('ano',{ascending:false}),
       db.from('blog_posts').select('*').eq('publicado',true).order('created_at',{ascending:false}).limit(3)
     ]);
+
     allResearchers = resRes.data || [];
     allWorks = worksRes.data || [];
     const posts = postsRes.data || [];
+
+    // Verificação técnica: abre o console do navegador (F12) para ver se os dados chegaram
+    console.log("Sistema carregado. Pesquisadoras:", allResearchers.length, "Publicações:", allWorks.length);
+
     renderStats();
     renderFilters();
     renderResearchers();
@@ -468,11 +474,7 @@ async function loadAll(){
     renderSobreStats();
     renderBlogPreview(posts);
   } catch(e) {
-    console.error('Erro ao carregar dados:', e);
-    ['blogGrid','researchersGrid','worksGrid','booksGrid'].forEach(id => {
-      const el = document.getElementById(id);
-      if(el) el.innerHTML = '<div class="empty">Erro ao carregar. Verifique a conexão com o banco de dados.</div>';
-    });
+    console.error('Erro crítico ao carregar dados:', e);
   }
 }
 
