@@ -339,6 +339,19 @@
         </div>
         <div class="form-group"><label>Área principal *</label><select id="m_area"><option value="">Selecione…</option><option>Ciências Exatas e da Terra</option><option>Ciências Biológicas</option><option>Engenharias</option><option>Ciências da Saúde</option><option>Ciências Agrárias</option><option>Ciências Sociais Aplicadas</option><option>Ciências Humanas</option><option>Linguística, Letras e Artes</option><option>Multidisciplinar</option></select></div>
         <div class="form-group"><label>Instituição *</label><select id="m_inst"><option value="">Selecione…</option><option>UFES - Universidade Federal do Espírito Santo</option><option>IFES - Instituto Federal do Espírito Santo</option><option>UVV - Universidade Vila Velha</option><option>FUCAPE</option><option>EMESCAM</option><option>FDV - Faculdade de Direito de Vitória</option><option>MULTIVIX</option><option>FAESA</option><option>Outra</option></select></div>
+        <!-- FOTO DE PERFIL -->
+        <div class="form-group full">
+          <label>📷 Foto de perfil <span style="font-weight:400;color:var(--cinza)">(opcional — formato quadrado recomendado)</span></label>
+          <div style="display:flex;gap:1rem;align-items:center;margin-top:.5rem;flex-wrap:wrap">
+            <div id="m_fotoPreview" style="width:72px;height:72px;border-radius:50%;overflow:hidden;background:var(--cinza-claro);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;border:2px solid var(--cinza-claro)">👤</div>
+            <div>
+              <button type="button" class="btn btn-outline" style="font-size:.82rem;padding:.4rem 1rem" onclick="document.getElementById('m_fotoInput').click()">Escolher foto</button>
+              <button type="button" class="btn btn-outline" id="m_fotoRemoveBtn" style="font-size:.82rem;padding:.4rem 1rem;display:none" onclick="mRemoverFoto()">✕ Remover</button>
+              <input type="file" id="m_fotoInput" accept="image/*" style="display:none" onchange="mPreviewFoto(this)">
+              <div style="font-size:.72rem;color:var(--cinza);margin-top:.3rem" id="m_fotoStatus">Nenhuma foto selecionada</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="form-card">
@@ -416,178 +429,49 @@
 <div class="success-toast" id="toast"></div>
 
 <script>
-// 1. Variáveis Globais e Inicialização
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let allResearchers = [], allWorks = [], allPosts = [], allInscricoes = [];
-let editandoId = null; // Variável para controlar o Modo Edição
+let currentUser = null;
+let allResearchers = [], allWorks = [], allPosts = [];
+let iaData = {};
 
-// 2. Carregamento Principal
-async function loadAll() {
-    try {
-        const [res, wor, pos] = await Promise.all([
-            db.from('researchers').select('*').order('created_at', { ascending: false }),
-            db.from('works').select('*').order('created_at', { ascending: false }),
-            db.from('blog_posts').select('*').order('created_at', { ascending: false })
-        ]);
-
-        allResearchers = res.data || [];
-        allWorks = wor.data || [];
-        allPosts = pos.data || [];
-
-        // Filtra inscrições (pendentes) para a aba específica
-        allInscricoes = allResearchers.filter(r => r.status === 'pendente');
-
-        renderDashboard();
-        renderPesquisadoras();
-        renderInscricoes();
-        renderPublicacoes();
-        renderBlog();
-    } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-        toast("Erro ao carregar dados do servidor.");
-    }
+// AUTH CHECK
+async function initAuth(){
+  const { data: { session } } = await db.auth.getSession();
+  if(!session){ location.href='login.html'; return; }
+  currentUser = session.user;
+  document.getElementById('userEmail').textContent = currentUser.email;
+  loadAll();
 }
 
-// 3. Renderização do Dashboard (Correção do Item 3)
-function renderDashboard() {
-    const dashStats = document.getElementById('dashStats');
-    const recentInscricoes = document.getElementById('recentInscricoes');
-    
-    if (!dashStats || !recentInscricoes) return;
+async function logout(){ await db.auth.signOut(); location.href='login.html'; }
 
-    const aprovadas = allResearchers.filter(r => r.status === 'aprovada').length;
-    const pendentes = allInscricoes.length;
-
-    dashStats.innerHTML = [
-        { num: aprovadas, label: 'Pesquisadoras aprovadas' },
-        { num: pendentes, label: 'Aguardando aprovação' },
-        { num: allWorks.length, label: 'Publicações cadastradas' }
-    ].map(s => `
-        <div class="stat-card">
-            <div class="stat-card-num">${s.num}</div>
-            <div class="stat-card-label">${s.label}</div>
-        </div>
-    `).join('');
-
-    // Mostra as 5 mais recentes. O clique agora chama 'verPesquisadora'
-    const recent = allResearchers.slice(0, 5);
-    recentInscricoes.innerHTML = recent.length ? recent.map(r => `
-        <tr onclick="verPesquisadora('${r.id}')" style="cursor:pointer">
-            <td><strong>${r.nome}</strong></td>
-            <td>${r.area_principal || '—'}</td>
-            <td><span class="badge badge-${r.status}">${r.status}</span></td>
-            <td>${new Date(r.created_at).toLocaleDateString('pt-BR')}</td>
-            <td><button class="btn btn-outline">Editar</button></td>
-        </tr>
-    `).join('') : '<tr><td colspan="5" class="empty">Nenhuma atividade recente.</td></tr>';
-}
-
-// 4. Função de Edição (Correção do Item 1)
-function verPesquisadora(id) {
-    const r = allResearchers.find(x => x.id === id);
-    if (!r) return;
-
-    editandoId = id; // Ativa modo edição
-    showPage('cadastro-manual'); 
-
-    // Ajusta textos da interface
-    const tituloPage = document.querySelector('#page-cadastro-manual .page-title');
-    const btnSalvar = document.querySelector('#page-cadastro-manual .btn-primary-lg');
-    if(tituloPage) tituloPage.textContent = "Editar Pesquisadora";
-    if(btnSalvar) btnSalvar.textContent = "💾 Salvar Alterações";
-
-    // Preenche campos do formulário
-    const campos = ['nome', 'bio', 'area', 'inst', 'lattes', 'orcid', 'linkedin', 'scholar', 'researchgate', 'email', 'site'];
-    campos.forEach(campo => {
-        const el = document.getElementById('m_' + campo);
-        if (el) el.value = r[campo] || r['mini_bio'] || ''; // mapeia bio para mini_bio
-    });
-    
-    const checkDestaque = document.getElementById('m_destaque');
-    if (checkDestaque) checkDestaque.checked = r.destaque || false;
-}
-
-// 5. Função de Salvar/Atualizar (Garante que apareça na Home - Item 2)
-async function mSalvar() {
-    const btn = document.querySelector('#page-cadastro-manual .btn-primary-lg');
-    const originalText = btn.textContent;
-    
-    const payload = {
-        nome: document.getElementById('m_nome').value.trim(),
-        mini_bio: document.getElementById('m_bio').value.trim(),
-        area_principal: document.getElementById('m_area').value,
-        instituicao: document.getElementById('m_inst').value,
-        status: 'aprovada', // Força aprovação para aparecer no site
-        destaque: document.getElementById('m_destaque').checked
-    };
-
-    btn.disabled = true;
-    btn.textContent = "Processando...";
-
-    try {
-        if (editandoId) {
-            await db.from('researchers').update(payload).eq('id', editandoId);
-            toast("Cadastro atualizado com sucesso!");
-        } else {
-            await db.from('researchers').insert([payload]);
-            toast("Nova pesquisadora cadastrada!");
-        }
-        
-        editandoId = null; // Reseta modo edição
-        mLimpar();
-        await loadAll();
-        showPage('dashboard');
-    } catch (error) {
-        toast("Erro ao salvar alterações.");
-    } finally {
-        btn.disabled = false;
-        btn.textContent = originalText;
-    }
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
 }
 
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
 
 // ── LOAD ALL DATA ──────────────────────────────────────────
 async function loadAll(){
-  const [{ data: r }, { data: w }, { data: p }] = await Promise.all([
+  const [resRes, worksRes, postsRes] = await Promise.all([
     db.from('researchers').select('*').order('created_at',{ascending:false}),
     db.from('works').select('*').order('created_at',{ascending:false}),
     db.from('blog_posts').select('*').order('created_at',{ascending:false}),
   ]);
-  allResearchers = r||[]; allWorks = w||[]; allPosts = p||[];
+  if(resRes.error) console.error('Erro ao carregar researchers:', resRes.error.message);
+  if(worksRes.error) console.error('Erro ao carregar works:', worksRes.error.message);
+  if(postsRes.error) console.error('Erro ao carregar blog_posts:', postsRes.error.message);
+  allResearchers = resRes.data||[]; allWorks = worksRes.data||[]; allPosts = postsRes.data||[];
   await loadComments();
   renderDashboard(); renderInscricoes(); renderPesquisadoras(); renderObras(); renderBlogPosts();
   populateObraResearcherSelect();
 }
-let editandoId = null; // Controla se estamos editando ou criando
 
-function verPesquisadora(id) {
-  const r = allResearchers.find(x => x.id === id);
-  if (!r) return;
-
-  editandoId = id; 
-  showPage('cadastro-manual'); // Leva para o formulário
-
-  // Muda os textos da página para modo de edição
-  document.getElementById('m_titulo_pagina').textContent = "Editar Pesquisadora";
-  document.querySelector('#page-cadastro-manual .btn-primary-lg').textContent = "💾 Salvar Alterações";
-
-  // Preenche os campos
-  document.getElementById('m_nome').value = r.nome || '';
-  document.getElementById('m_bio').value = r.mini_bio || '';
-  document.getElementById('m_area').value = r.area_principal || '';
-  document.getElementById('m_inst').value = r.instituicao || '';
-  document.getElementById('m_lattes').value = r.lattes || '';
-  document.getElementById('m_orcid').value = r.orcid || '';
-  document.getElementById('m_linkedin').value = r.linkedin || '';
-  document.getElementById('m_scholar').value = r.google_scholar || '';
-  document.getElementById('m_researchgate').value = r.research_gate || '';
-  document.getElementById('m_email').value = r.email || '';
-  document.getElementById('m_site').value = r.site || '';
-  document.getElementById('m_destaque').checked = r.destaque || false;
-}
 // ── DASHBOARD ──────────────────────────────────────────────
 function renderDashboard(){
   const pendentes = allResearchers.filter(r=>r.status==='pendente').length;
@@ -600,18 +484,14 @@ function renderDashboard(){
   ].map(s=>`<div class="stat-card"><div class="stat-card-num">${s.num}</div><div class="stat-card-label">${s.label}</div></div>`).join('');
 
   const recent = allResearchers.slice(0,5);
-  // O clique agora chama 'verPesquisadora' em vez de trocar de página
   document.getElementById('recentInscricoes').innerHTML = recent.length ?
-    recent.map(r => `
-      <tr onclick="verPesquisadora('${r.id}')" style="cursor:pointer">
-        <td><strong>${r.nome}</strong></td>
-        <td>${r.area_principal || '—'}</td>
-        <td><span class="badge badge-${r.status}">${r.status}</span></td>
-        <td>${new Date(r.created_at).toLocaleDateString('pt-BR')}</td>
-        <td><button class="btn btn-outline" onclick="event.stopPropagation(); verPesquisadora('${r.id}')">Editar</button></td>
-      </tr>
-    `).join('') : '<tr><td colspan="5" class="empty">Nenhuma pesquisadora recente.</td></tr>';
-}
+    recent.map(r=>`<tr>
+      <td><strong>${r.nome}</strong></td>
+      <td>${r.area_principal||'—'}</td>
+      <td><span class="badge badge-${r.status}">${r.status}</span></td>
+      <td>${new Date(r.created_at).toLocaleDateString('pt-BR')}</td>
+      <td><button class="btn btn-outline" onclick="openResearcherModal('${r.id}')">Ver / Editar</button></td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">Nenhuma inscrição ainda.</td></tr>';
 }
 
 // ── INSCRIÇÕES ──────────────────────────────────────────────
@@ -642,11 +522,157 @@ async function reprovar(id){
   await db.from('researchers').update({status:'reprovada'}).eq('id',id);
   toast('Inscrição reprovada.'); await loadAll();
 }
-function verPerfil(id){
-  const r = allResearchers.find(r=>r.id===id);
+function verPerfil(id){ openResearcherModal(id); }
+
+function openResearcherModal(id){
+  const r = allResearchers.find(x=>x.id===id);
   if(!r) return;
   const works = allWorks.filter(w=>w.researcher_id===id);
-  alert(`${r.nome}\n${r.area_principal} · ${r.instituicao}\n\n${r.mini_bio}\n\nPublicações: ${works.length}`);
+
+  // Criar modal dinamicamente
+  document.getElementById('researcherModal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'researcherModal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(26,26,26,.65);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1rem';
+  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
+
+  const avatarHtml = r.foto_url
+    ? `<img src="${r.foto_url}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+    : `<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#52B788,#2D6A4F);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.6rem;color:white;flex-shrink:0">${r.nome.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join('')}</div>`;
+
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:24px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;padding:2rem;position:relative">
+      <button onclick="document.getElementById('researcherModal').remove()" style="position:absolute;top:1rem;right:1rem;background:#f0ede8;border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">✕</button>
+
+      <div style="display:flex;gap:1.25rem;align-items:flex-start;margin-bottom:1.5rem">
+        ${avatarHtml}
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;line-height:1.2">${r.nome}</div>
+          <div style="font-size:.82rem;color:#6B6B6B;margin-top:.25rem">${r.area_principal||''} · ${r.instituicao||''}</div>
+          <div style="margin-top:.4rem"><span style="font-size:.72rem;padding:.2rem .6rem;border-radius:100px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em;background:${r.status==='aprovada'?'rgba(45,106,79,.1)':r.status==='pendente'?'rgba(196,132,58,.1)':'#fef2f2'};color:${r.status==='aprovada'?'#2D6A4F':r.status==='pendente'?'#C4843A':'#b91c1c'}">${r.status}</span></div>
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO DE EDIÇÃO -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+        <div style="grid-column:1/-1">
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">Nome completo</label>
+          <input id="rm_nome" value="${r.nome||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div style="grid-column:1/-1">
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">Mini bio</label>
+          <textarea id="rm_bio" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;resize:vertical;min-height:80px">${r.mini_bio||''}</textarea>
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">Área principal</label>
+          <input id="rm_area" value="${r.area_principal||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">Instituição</label>
+          <input id="rm_inst" value="${r.instituicao||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">Lattes</label>
+          <input id="rm_lattes" value="${r.lattes||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">ORCID</label>
+          <input id="rm_orcid" value="${r.orcid||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">LinkedIn</label>
+          <input id="rm_linkedin" value="${r.linkedin||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">E-mail</label>
+          <input id="rm_email" value="${r.email||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+      </div>
+
+      <!-- FOTO DE PERFIL -->
+      <div style="margin-bottom:1rem;padding:1rem;background:#F8F4EE;border-radius:12px">
+        <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.6rem">📷 Foto de perfil</label>
+        <div style="display:flex;gap:.75rem;align-items:center">
+          <div id="rm_fotoPreview" style="width:56px;height:56px;border-radius:50%;overflow:hidden;background:#E8E4DE;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            ${r.foto_url ? `<img src="${r.foto_url}" style="width:100%;height:100%;object-fit:cover">` : '👤'}
+          </div>
+          <div>
+            <button type="button" onclick="document.getElementById('rm_fotoInput').click()" style="font-size:.78rem;padding:.35rem .8rem;border:1.5px solid #E8E4DE;border-radius:100px;background:white;cursor:pointer;font-family:'DM Sans',sans-serif">Trocar foto</button>
+            <input type="file" id="rm_fotoInput" accept="image/*" style="display:none" onchange="previewRmFoto(this,'${r.id}')">
+            <div id="rm_fotoStatus" style="font-size:.72rem;color:#6B6B6B;margin-top:.3rem"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PUBLICAÇÕES -->
+      ${works.length ? `<div style="margin-bottom:1.25rem">
+        <div style="font-size:.8rem;font-weight:600;margin-bottom:.5rem">📄 Publicações (${works.length})</div>
+        ${works.map(w=>`<div style="font-size:.82rem;padding:.5rem .75rem;background:#F8F4EE;border-radius:8px;margin-bottom:.3rem">${w.tipo} · ${w.titulo}</div>`).join('')}
+      </div>` : ''}
+
+      <!-- STATUS -->
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;padding-top:1rem;border-top:1px solid #E8E4DE">
+        <button onclick="saveResearcherModal('${r.id}')" style="flex:1;padding:.75rem;background:#2D6A4F;color:white;border:none;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer">💾 Salvar alterações</button>
+        ${r.status==='pendente' ? `
+          <button onclick="aprovar('${r.id}');document.getElementById('researcherModal').remove()" style="padding:.75rem 1.25rem;background:#52B788;color:white;border:none;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:.88rem;cursor:pointer">✓ Aprovar</button>
+          <button onclick="reprovar('${r.id}');document.getElementById('researcherModal').remove()" style="padding:.75rem 1.25rem;background:#fef2f2;color:#b91c1c;border:1.5px solid #fca5a5;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:.88rem;cursor:pointer">✕ Reprovar</button>
+        ` : ''}
+      </div>
+      <div id="rm_saveMsg" style="display:none;margin-top:.75rem;font-size:.85rem;color:#2D6A4F;font-weight:500;text-align:center">✓ Alterações salvas!</div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+}
+
+function previewRmFoto(input, researcherId){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('rm_fotoPreview').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+    document.getElementById('rm_fotoStatus').textContent = 'Foto selecionada (salve para confirmar)';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveResearcherModal(id){
+  const btn = document.querySelector('#researcherModal button[onclick*="saveResearcherModal"]');
+  if(btn){ btn.textContent='Salvando…'; btn.disabled=true; }
+
+  const payload = {
+    nome: document.getElementById('rm_nome').value.trim(),
+    mini_bio: document.getElementById('rm_bio').value.trim(),
+    area_principal: document.getElementById('rm_area').value.trim(),
+    instituicao: document.getElementById('rm_inst').value.trim(),
+    lattes: document.getElementById('rm_lattes').value.trim()||null,
+    orcid: document.getElementById('rm_orcid').value.trim()||null,
+    linkedin: document.getElementById('rm_linkedin').value.trim()||null,
+    email: document.getElementById('rm_email').value.trim()||null,
+  };
+
+  // Upload foto se tiver nova
+  const fotoInput = document.getElementById('rm_fotoInput');
+  if(fotoInput?.files[0]){
+    const file = fotoInput.files[0];
+    const ext = file.name.split('.').pop();
+    const path = `${id}.${ext}`;
+    const { error: upErr } = await db.storage.from('avatars').upload(path, file, {upsert:true, contentType:file.type});
+    if(!upErr){
+      const { data } = db.storage.from('avatars').getPublicUrl(path);
+      payload.foto_url = data.publicUrl;
+    }
+  }
+
+  const { error } = await db.from('researchers').update(payload).eq('id', id);
+  if(btn){ btn.textContent='💾 Salvar alterações'; btn.disabled=false; }
+  if(!error){
+    document.getElementById('rm_saveMsg').style.display='block';
+    document.getElementById('rm_fotoStatus').textContent = payload.foto_url ? '✓ Foto atualizada!' : '';
+    await loadAll();
+    setTimeout(()=>{ document.getElementById('rm_saveMsg').style.display='none'; }, 3000);
+  } else {
+    alert('Erro ao salvar: '+error.message);
+  }
 }
 
 // ── PESQUISADORAS ──────────────────────────────────────────
@@ -1150,6 +1176,29 @@ function mGetObra(id){
   };
 }
 
+let mFotoFile = null;
+
+function mPreviewFoto(input){
+  const file = input.files[0];
+  if(!file) return;
+  mFotoFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('m_fotoPreview').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+    document.getElementById('m_fotoRemoveBtn').style.display = 'inline-flex';
+    document.getElementById('m_fotoStatus').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+function mRemoverFoto(){
+  mFotoFile = null;
+  document.getElementById('m_fotoInput').value = '';
+  document.getElementById('m_fotoPreview').innerHTML = '👤';
+  document.getElementById('m_fotoRemoveBtn').style.display = 'none';
+  document.getElementById('m_fotoStatus').textContent = 'Nenhuma foto selecionada';
+}
+
 function mLimpar(){
   ['m_nome','m_bio','m_lattes','m_orcid','m_linkedin','m_scholar','m_researchgate','m_email','m_site'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.value='';
@@ -1160,6 +1209,7 @@ function mLimpar(){
   document.getElementById('m_bioCount').textContent='0/300 caracteres';
   document.getElementById('m_obrasContainer').innerHTML='';
   document.getElementById('m_erro').style.display='none';
+  mRemoverFoto();
   mObras=[]; mObraCount=0;
 }
 
@@ -1169,69 +1219,19 @@ async function mSalvar(){
   const area = document.getElementById('m_area').value;
   const inst = document.getElementById('m_inst').value;
   const errEl = document.getElementById('m_erro');
-  
+  errEl.style.display='none';
+
   if(!nome || !bio || !area || !inst){
-    errEl.textContent = 'Preencha os campos obrigatórios.';
-    errEl.style.display='block'; return;
-  }
-
-  const btn = document.querySelector('#page-cadastro-manual .btn-primary-lg');
-  btn.disabled = true; btn.textContent = 'Processando...';
-
-  const payload = {
-    nome, mini_bio: bio, area_principal: area, instituicao: inst,
-    lattes: document.getElementById('m_lattes').value.trim()||null,
-    orcid: document.getElementById('m_orcid').value.trim()||null,
-    linkedin: document.getElementById('m_linkedin').value.trim()||null,
-    google_scholar: document.getElementById('m_scholar').value.trim()||null,
-    research_gate: document.getElementById('m_researchgate').value.trim()||null,
-    email: document.getElementById('m_email').value.trim()||null,
-    site: document.getElementById('m_site').value.trim()||null,
-    status: 'aprovada',
-    destaque: document.getElementById('m_destaque').checked,
-  };
-
-  try {
-    let resId;
-    if (editandoId) {
-      // MODO EDIÇÃO (Item 1)
-      const { error } = await db.from('researchers').update(payload).eq('id', editandoId);
-      if (error) throw error;
-      resId = editandoId;
-    } else {
-      // MODO NOVO
-      const { data, error } = await db.from('researchers').insert([payload]).select().single();
-      if (error) throw error;
-      resId = data.id;
-    }
-
-    // Salva as obras se houver novas inseridas no painel
-    if(resId && mObras.length > 0) {
-      const obrasData = mObras.map(id => mGetObra(id)).map(o => ({
-        ...o, researcher_id: resId, area_conhecimento: area
-      }));
-      await db.from('works').insert(obrasData);
-    }
-
-    toast(editandoId ? 'Dados atualizados!' : 'Cadastrada com sucesso!');
-    editandoId = null; // Reseta o modo
-    mLimpar();
-    await loadAll();
-    showPage('pesquisadoras');
-  } catch(e) {
-    errEl.textContent = 'Erro: ' + e.message;
+    errEl.textContent = 'Preencha os campos obrigatórios: Nome, Mini bio, Área e Instituição.';
     errEl.style.display='block';
-  }
-  btn.disabled = false; btn.textContent = '✓ Salvar';
-}
+    errEl.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
   }
 
   const btn = document.querySelector('#page-cadastro-manual .btn-primary-lg');
-  const textOriginal = btn.textContent;
-  btn.textContent='Salvando...'; btn.disabled=true;
+  btn.textContent='Salvando…'; btn.disabled=true;
 
   try {
-    // 1. Cadastra a pesquisadora e recebe os dados de volta (incluindo o ID)
     const { data: researcher, error } = await db.from('researchers').insert([{
       nome,
       mini_bio: bio,
@@ -1250,24 +1250,28 @@ async function mSalvar(){
 
     if(error) throw error;
 
-    // 2. Verifica se há obras para salvar e se o ID da pesquisadora foi gerado
-    if(researcher && researcher.id && mObras.length > 0) {
-      const obrasData = mObras
-        .map(id => mGetObra(id))
-        .filter(o => o.titulo && o.tipo) // Garante que não salve campos vazios
-        .map(o => ({
-          ...o, 
-          researcher_id: researcher.id, 
-          area_conhecimento: area // Vincula a área para os filtros do site funcionarem
-        }));
-
-      if(obrasData.length > 0) {
-        const { error: errorObras } = await db.from('works').insert(obrasData);
-        if(errorObras) throw errorObras;
+    // Upload de foto se houver
+    if(mFotoFile && researcher?.id){
+      const ext = mFotoFile.name.split('.').pop();
+      const path = `${researcher.id}.${ext}`;
+      const { error: upErr } = await db.storage.from('avatars').upload(path, mFotoFile, {upsert:true, contentType:mFotoFile.type});
+      if(!upErr){
+        const { data: urlData } = db.storage.from('avatars').getPublicUrl(path);
+        await db.from('researchers').update({foto_url: urlData.publicUrl}).eq('id', researcher.id);
       }
     }
 
-    toast('Pesquisadora e publicações cadastradas com sucesso!');
+    // Salvar obras
+    const obrasData = mObras
+      .map(id => mGetObra(id))
+      .filter(o => o.titulo && o.tipo)
+      .map(o => ({...o, researcher_id: researcher.id, area_conhecimento: area}));
+    if(obrasData.length){
+      const { error: obrasErr } = await db.from('works').insert(obrasData);
+      if(obrasErr) throw new Error('Erro ao salvar publicações: ' + obrasErr.message);
+    }
+
+    toast('Pesquisadora cadastrada com sucesso!');
     mLimpar();
     await loadAll();
     showPage('pesquisadoras');
@@ -1275,7 +1279,7 @@ async function mSalvar(){
     errEl.textContent = 'Erro ao salvar: ' + e.message;
     errEl.style.display='block';
   }
-  btn.textContent = textOriginal; btn.disabled=false;
+  btn.textContent='✓ Cadastrar pesquisadora'; btn.disabled=false;
 }
 
 // INIT
