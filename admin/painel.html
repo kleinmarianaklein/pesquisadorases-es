@@ -455,7 +455,33 @@ async function loadAll(){
   renderDashboard(); renderInscricoes(); renderPesquisadoras(); renderObras(); renderBlogPosts();
   populateObraResearcherSelect();
 }
+let editandoId = null; // Controla se estamos editando ou criando
 
+function verPesquisadora(id) {
+  const r = allResearchers.find(x => x.id === id);
+  if (!r) return;
+
+  editandoId = id; 
+  showPage('cadastro-manual'); // Leva para o formulário
+
+  // Muda os textos da página para modo de edição
+  document.getElementById('m_titulo_pagina').textContent = "Editar Pesquisadora";
+  document.querySelector('#page-cadastro-manual .btn-primary-lg').textContent = "💾 Salvar Alterações";
+
+  // Preenche os campos
+  document.getElementById('m_nome').value = r.nome || '';
+  document.getElementById('m_bio').value = r.mini_bio || '';
+  document.getElementById('m_area').value = r.area_principal || '';
+  document.getElementById('m_inst').value = r.instituicao || '';
+  document.getElementById('m_lattes').value = r.lattes || '';
+  document.getElementById('m_orcid').value = r.orcid || '';
+  document.getElementById('m_linkedin').value = r.linkedin || '';
+  document.getElementById('m_scholar').value = r.google_scholar || '';
+  document.getElementById('m_researchgate').value = r.research_gate || '';
+  document.getElementById('m_email').value = r.email || '';
+  document.getElementById('m_site').value = r.site || '';
+  document.getElementById('m_destaque').checked = r.destaque || false;
+}
 // ── DASHBOARD ──────────────────────────────────────────────
 function renderDashboard(){
   const pendentes = allResearchers.filter(r=>r.status==='pendente').length;
@@ -468,15 +494,18 @@ function renderDashboard(){
   ].map(s=>`<div class="stat-card"><div class="stat-card-num">${s.num}</div><div class="stat-card-label">${s.label}</div></div>`).join('');
 
   const recent = allResearchers.slice(0,5);
-  // CORREÇÃO: O clique agora chama 'verPesquisadora' para abrir a edição/detalhes
+  // O clique agora chama 'verPesquisadora' em vez de trocar de página
   document.getElementById('recentInscricoes').innerHTML = recent.length ?
-    recent.map(r=>`<tr onclick="verPesquisadora('${r.id}')" style="cursor:pointer">
-      <td><strong>${r.nome}</strong></td>
-      <td>${r.area_principal||'—'}</td>
-      <td><span class="badge badge-${r.status}">${r.status}</span></td>
-      <td>${new Date(r.created_at).toLocaleDateString('pt-BR')}</td>
-      <td><button class="btn btn-outline">Editar</button></td>
-    </tr>`).join('') : '<tr><td colspan="5" class="empty">Nenhuma inscrição ainda.</td></tr>';
+    recent.map(r => `
+      <tr onclick="verPesquisadora('${r.id}')" style="cursor:pointer">
+        <td><strong>${r.nome}</strong></td>
+        <td>${r.area_principal || '—'}</td>
+        <td><span class="badge badge-${r.status}">${r.status}</span></td>
+        <td>${new Date(r.created_at).toLocaleDateString('pt-BR')}</td>
+        <td><button class="btn btn-outline" onclick="event.stopPropagation(); verPesquisadora('${r.id}')">Editar</button></td>
+      </tr>
+    `).join('') : '<tr><td colspan="5" class="empty">Nenhuma pesquisadora recente.</td></tr>';
+}
 }
 
 // ── INSCRIÇÕES ──────────────────────────────────────────────
@@ -1034,13 +1063,61 @@ async function mSalvar(){
   const area = document.getElementById('m_area').value;
   const inst = document.getElementById('m_inst').value;
   const errEl = document.getElementById('m_erro');
-  errEl.style.display='none';
-
+  
   if(!nome || !bio || !area || !inst){
-    errEl.textContent = 'Preencha os campos obrigatórios: Nome, Mini bio, Área e Instituição.';
+    errEl.textContent = 'Preencha os campos obrigatórios.';
+    errEl.style.display='block'; return;
+  }
+
+  const btn = document.querySelector('#page-cadastro-manual .btn-primary-lg');
+  btn.disabled = true; btn.textContent = 'Processando...';
+
+  const payload = {
+    nome, mini_bio: bio, area_principal: area, instituicao: inst,
+    lattes: document.getElementById('m_lattes').value.trim()||null,
+    orcid: document.getElementById('m_orcid').value.trim()||null,
+    linkedin: document.getElementById('m_linkedin').value.trim()||null,
+    google_scholar: document.getElementById('m_scholar').value.trim()||null,
+    research_gate: document.getElementById('m_researchgate').value.trim()||null,
+    email: document.getElementById('m_email').value.trim()||null,
+    site: document.getElementById('m_site').value.trim()||null,
+    status: 'aprovada',
+    destaque: document.getElementById('m_destaque').checked,
+  };
+
+  try {
+    let resId;
+    if (editandoId) {
+      // MODO EDIÇÃO (Item 1)
+      const { error } = await db.from('researchers').update(payload).eq('id', editandoId);
+      if (error) throw error;
+      resId = editandoId;
+    } else {
+      // MODO NOVO
+      const { data, error } = await db.from('researchers').insert([payload]).select().single();
+      if (error) throw error;
+      resId = data.id;
+    }
+
+    // Salva as obras se houver novas inseridas no painel
+    if(resId && mObras.length > 0) {
+      const obrasData = mObras.map(id => mGetObra(id)).map(o => ({
+        ...o, researcher_id: resId, area_conhecimento: area
+      }));
+      await db.from('works').insert(obrasData);
+    }
+
+    toast(editandoId ? 'Dados atualizados!' : 'Cadastrada com sucesso!');
+    editandoId = null; // Reseta o modo
+    mLimpar();
+    await loadAll();
+    showPage('pesquisadoras');
+  } catch(e) {
+    errEl.textContent = 'Erro: ' + e.message;
     errEl.style.display='block';
-    errEl.scrollIntoView({behavior:'smooth', block:'center'});
-    return;
+  }
+  btn.disabled = false; btn.textContent = '✓ Salvar';
+}
   }
 
   const btn = document.querySelector('#page-cadastro-manual .btn-primary-lg');
