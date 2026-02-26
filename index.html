@@ -538,25 +538,27 @@ function renderResearchers(){
   }).join('');
 }
 
-function renderWorks(){
-  const grid = document.getElementById('worksGrid');
-  let list = allWorks.filter(w=>!filtroTipo||w.tipo===filtroTipo);
-  if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
-  grid.innerHTML = list.map(w=>{
-    const author = allResearchers.find(r=>r.id===w.researcher_id)?.nome||'—';
-    const tags = (w.tags||[]).map(t=>`<span class="wc-tag">${t}</span>`).join('');
-    return `<div class="work-card">
-      <div class="wc-top"><span class="wc-type">${w.tipo}</span><span class="wc-year">${w.ano||''}</span></div>
-      <div class="wc-title">${w.titulo}</div>
-      <div class="wc-author">${author}</div>
-      <p class="wc-resumo">${w.resumo||''}</p>
-      <div class="wc-tags">${tags}</div>
-      <div class="wc-actions">
-        ${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank">🛒 Comprar</a>`:''}
-        ${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank">Acessar →</a>`:''}
-      </div>
-    </div>`;
-  }).join('');
+function renderWorks() {
+  const container = document.getElementById('worksGrid');
+  if (!container) return;
+
+  // Filtra obras: só mostra se a pesquisadora dona da obra estiver aprovada
+  const aprovadasIds = allResearchers.filter(r => r.status === 'aprovada').map(r => r.id);
+  const filtradas = allWorks.filter(w => aprovadasIds.includes(w.researcher_id));
+
+  if (filtradas.length === 0) {
+    container.innerHTML = '<p class="empty-msg">Nenhuma publicação encontrada no momento.</p>';
+    return;
+  }
+
+  container.innerHTML = filtradas.map(w => `
+    <div class="work-card">
+      <div class="work-type">${w.tipo}</div>
+      <h3 class="work-title">${w.titulo}</h3>
+      <div class="work-author">${w.autores || ''}</div>
+      ${w.link ? `<a href="${w.link}" target="_blank" class="btn-text">Ver publicação →</a>` : ''}
+    </div>
+  `).join('');
 }
 
 function renderBooks(){
