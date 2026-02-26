@@ -161,21 +161,28 @@
   .btn-light:hover { background:var(--areia); }
 
   /* MODAL */
-  .modal-overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(26,26,26,.6); backdrop-filter:blur(6px); align-items:center; justify-content:center; padding:1.5rem; }
-  .modal-overlay.open { display:flex; }
-  .modal { background:white; border-radius:24px; max-width:620px; width:100%; max-height:90vh; overflow-y:auto; padding:2.5rem; position:relative; }
-  .modal-close { position:absolute; top:1.25rem; right:1.25rem; background:var(--areia); border:none; border-radius:50%; width:36px; height:36px; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; color:var(--cinza); transition:all .2s; }
-  .modal-close:hover { background:var(--cinza-claro); }
-  .modal-avatar { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--verde-claro),var(--verde)); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:1.8rem; color:white; font-weight:700; margin-bottom:1.25rem; }
-  .modal-name { font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:700; margin-bottom:.35rem; }
-  .modal-inst { font-size:.85rem; color:var(--cinza); margin-bottom:1.5rem; }
-  .modal-bio { font-size:.92rem; color:var(--cinza); line-height:1.75; margin-bottom:1.5rem; }
-  .modal-links { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:2rem; }
-  .modal-works-title { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; margin-bottom:1rem; }
-  .modal-work-item { padding:1rem; border-radius:12px; background:var(--areia); margin-bottom:.75rem; }
-  .modal-work-title { font-weight:600; font-size:.9rem; margin-bottom:.25rem; }
-  .modal-work-meta { font-size:.78rem; color:var(--cinza); display:flex; gap:1rem; flex-wrap:wrap; }
-  .modal-work-actions { margin-top:.6rem; display:flex; gap:.5rem; }
+  .modal-overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(26,26,26,.65); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:1.5rem; }
+  .modal-overlay.open { display:flex; animation:fadeIn .2s ease; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .modal { background:white; border-radius:28px; max-width:660px; width:100%; max-height:92vh; overflow-y:auto; position:relative; box-shadow:0 24px 80px rgba(0,0,0,.18); }
+  .modal-close { position:absolute; top:1.25rem; right:1.25rem; background:rgba(255,255,255,.9); border:none; border-radius:50%; width:36px; height:36px; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; color:var(--cinza); transition:all .2s; z-index:10; box-shadow:0 2px 8px rgba(0,0,0,.12); }
+  .modal-close:hover { background:var(--areia); }
+  .modal-header { background:linear-gradient(135deg,var(--verde),#1a4332); padding:2rem 2rem 3.5rem; }
+  .modal-header-avatar { width:80px; height:80px; border-radius:50%; border:3px solid rgba(255,255,255,.3); overflow:hidden; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:2rem; color:white; font-weight:700; margin-bottom:1rem; }
+  .modal-header-avatar img { width:100%; height:100%; object-fit:cover; }
+  .modal-name { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:700; color:white; line-height:1.2; margin-bottom:.4rem; }
+  .modal-inst { font-size:.82rem; color:rgba(255,255,255,.75); margin-bottom:.65rem; }
+  .modal-area-badge { display:inline-block; font-family:'DM Mono',monospace; font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:var(--verde); background:rgba(255,255,255,.92); padding:.3rem .8rem; border-radius:100px; }
+  .modal-body { padding:2rem; margin-top:-1.5rem; background:white; border-radius:20px 20px 0 0; position:relative; }
+  .modal-bio { font-size:.95rem; color:var(--cinza); line-height:1.8; margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--cinza-claro); }
+  .modal-links { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:1.75rem; }
+  .modal-works-title { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; margin-bottom:1rem; color:var(--preto); }
+  .modal-works-empty { font-size:.88rem; color:var(--cinza); font-style:italic; padding:.5rem 0 1rem; }
+  .modal-work-item { padding:1rem 1.1rem; border-radius:12px; background:var(--areia); margin-bottom:.65rem; border-left:3px solid var(--verde-claro); }
+  .modal-work-title { font-weight:600; font-size:.9rem; margin-bottom:.3rem; line-height:1.4; color:var(--preto); }
+  .modal-work-meta { font-size:.75rem; color:var(--cinza); display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; margin-bottom:.5rem; }
+  .modal-work-meta .wc-type { font-family:'DM Mono',monospace; font-size:.62rem; text-transform:uppercase; letter-spacing:.08em; background:var(--verde); color:white; padding:.15rem .55rem; border-radius:100px; }
+  .modal-work-actions { display:flex; gap:.5rem; flex-wrap:wrap; }
 
   /* FOOTER */
   footer { background:var(--preto); color:rgba(255,255,255,.6); padding:3rem clamp(1.5rem,5vw,4rem); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1.5rem; }
@@ -426,7 +433,10 @@
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <button class="modal-close" id="modalClose">✕</button>
-    <div id="modalContent"></div>
+    <div id="modalHeader" class="modal-header"></div>
+    <div class="modal-body">
+      <div id="modalContent"></div>
+    </div>
   </div>
 </div>
 
@@ -577,46 +587,69 @@ function renderSobreStats(){
 function renderBlogPreview(posts){
   const grid = document.getElementById('blogGrid');
   if(!posts.length){ grid.innerHTML='<div class="empty">Nenhum artigo publicado ainda.</div>'; return; }
-  grid.innerHTML = posts.map(p=>`
-    <div class="blog-card" onclick="location.href='blog.html?post=${p.id}'">
-      <div class="blog-card-img">${p.emoji||'✍️'}</div>
+  grid.innerHTML = posts.map(p=>{
+    const capaHtml = p.foto_capa
+      ? `<div class="blog-card-img" style="position:relative;overflow:hidden"><img src="${p.foto_capa}" alt="${p.titulo}" loading="lazy" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></div>`
+      : `<div class="blog-card-img">${p.emoji||'✍️'}</div>`;
+    return `<div class="blog-card" onclick="location.href='blog.html?post=${p.id}'">
+      ${capaHtml}
       <div class="blog-card-body">
         <span class="blog-card-cat">${p.categoria||'Artigo'}</span>
         <div class="blog-card-title">${p.titulo}</div>
         <div class="blog-card-meta">${new Date(p.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</div>
         <p class="blog-card-excerpt">${p.resumo||''}</p>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function openModal(id){
   const r = allResearchers.find(r=>r.id===id); if(!r) return;
   const rWorks = allWorks.filter(w=>w.researcher_id===id);
+
   const links = [
-    r.lattes?`<a class="rc-link" href="${r.lattes}" target="_blank">Lattes</a>`:'',
+    r.lattes?`<a class="rc-link" href="${r.lattes}" target="_blank">🔬 Lattes</a>`:'',
     r.orcid?`<a class="rc-link" href="${r.orcid}" target="_blank">ORCID</a>`:'',
     r.linkedin?`<a class="rc-link" href="${r.linkedin}" target="_blank">LinkedIn</a>`:'',
     r.google_scholar?`<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>`:'',
     r.research_gate?`<a class="rc-link" href="${r.research_gate}" target="_blank">ResearchGate</a>`:'',
-    r.email?`<a class="rc-link" href="mailto:${r.email}" target="_blank">E-mail</a>`:'',
+    r.email?`<a class="rc-link" href="mailto:${r.email}" target="_blank">✉ E-mail</a>`:'',
+    r.site?`<a class="rc-link" href="${r.site}" target="_blank">🌐 Site</a>`:'',
   ].filter(Boolean).join('');
-  const worksHtml = rWorks.length ? `<div class="modal-works-title">📄 Publicações (${rWorks.length})</div>${rWorks.map(w=>`
-    <div class="modal-work-item">
-      <div class="modal-work-title">${w.titulo}</div>
-      <div class="modal-work-meta"><span>${w.tipo}</span><span>${w.ano||''}</span></div>
-      <div class="modal-work-actions">
-        ${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank" style="font-size:.75rem;padding:.3rem .7rem">🛒 Comprar</a>`:''}
-        ${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank" style="font-size:.75rem;padding:.3rem .7rem">Acessar →</a>`:''}
-      </div>
-    </div>`).join('')}` : '';
-  document.getElementById('modalContent').innerHTML = `
-    <div class="modal-avatar">${initials(r.nome)}</div>
+
+  const worksHtml = rWorks.length
+    ? `<div class="modal-works-title">📄 Publicações (${rWorks.length})</div>
+       ${rWorks.map(w=>`
+        <div class="modal-work-item">
+          <div class="modal-work-title">${w.titulo}</div>
+          <div class="modal-work-meta">
+            <span class="wc-type">${w.tipo}</span>
+            ${w.ano?`<span>${w.ano}</span>`:''}
+          </div>
+          ${w.resumo?`<div style="font-size:.82rem;color:var(--cinza);line-height:1.6;margin-top:.4rem">${w.resumo}</div>`:''}
+          <div class="modal-work-actions">
+            ${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank" style="font-size:.75rem;padding:.35rem .8rem">🛒 Comprar</a>`:''}
+            ${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank" style="font-size:.75rem;padding:.35rem .8rem">Acessar →</a>`:''}
+          </div>
+        </div>`).join('')}`
+    : `<div class="modal-works-title">📄 Publicações</div><p class="modal-works-empty">Nenhuma publicação cadastrada ainda.</p>`;
+
+  // Header com foto ou iniciais
+  const avatarHtml = r.foto_url
+    ? `<div class="modal-header-avatar"><img src="${r.foto_url}" alt="${r.nome}"></div>`
+    : `<div class="modal-header-avatar">${initials(r.nome)}</div>`;
+
+  document.getElementById('modalHeader').innerHTML = `
+    ${avatarHtml}
     <div class="modal-name">${r.nome}</div>
-    <div style="margin-bottom:.35rem"><span class="rc-area">${r.area_principal||''}</span></div>
     <div class="modal-inst">${r.instituicao||''}</div>
+    <span class="modal-area-badge">${r.area_principal||''}</span>`;
+
+  document.getElementById('modalContent').innerHTML = `
     <p class="modal-bio">${r.mini_bio||''}</p>
     <div class="modal-links">${links}</div>
     ${worksHtml}`;
+
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow='hidden';
 }
