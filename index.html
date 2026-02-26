@@ -444,158 +444,225 @@
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentUser = null;
-let allResearchers = [], allWorks = [], allPosts = [], allComments = [];
-let mObraCount = 0, mObras = [], editandoId = null;
+let allResearchers = [], allWorks = [];
+let filtroArea = '', filtroInst = '', filtroTipo = '', busca = '';
 
-// --- INICIALIZAÇÃO E CARREGAMENTO ---
-async function initAuth(){
-  const { data: { session } } = await db.auth.getSession();
-  if(!session){ location.href='login.html'; return; }
-  currentUser = session.user;
-  document.getElementById('userEmail').textContent = currentUser.email;
-  await loadAll();
-}
+function initials(name){ return name.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join(''); }
+const bookEmojis = {"Ciências Biológicas":"🐠","Ciências Humanas":"📖","Engenharias":"🏗️","Ciências da Saúde":"🩺","Ciências Exatas e da Terra":"🔬","Linguística, Letras e Artes":"🎭"};
 
 async function loadAll(){
   try {
-    const [{ data: r }, { data: w }, { data: p }] = await Promise.all([
-      db.from('researchers').select('*').order('created_at',{ascending:false}),
-      db.from('works').select('*').order('created_at',{ascending:false}),
-      db.from('blog_posts').select('*').order('created_at',{ascending:false}),
+    const [resRes, worksRes, postsRes] = await Promise.all([
+      db.from('researchers').select('*').eq('status','aprovada').order('destaque',{ascending:false}),
+      db.from('works').select('*').order('ano',{ascending:false}),
+      db.from('blog_posts').select('*').eq('publicado',true).order('created_at',{ascending:false}).limit(3)
     ]);
-    allResearchers = r||[]; allWorks = w||[]; allPosts = p||[];
-    await loadComments();
-    
-    // Chama as funções de desenho da tela
-    renderDashboard(); 
-    renderInscricoes(); 
-    renderPesquisadoras(); 
-    renderObras(); 
-    renderBlogPosts();
-    populateObraResearcherSelect();
-  } catch(e) { console.error("Erro ao carregar:", e); }
-}
-
-// --- DASHBOARD (Correção Item 3) ---
-function renderDashboard(){
-  const pendentes = allResearchers.filter(r=>r.status==='pendente').length;
-  const aprovadas = allResearchers.filter(r=>r.status==='aprovada').length;
-  
-  const dashStats = document.getElementById('dashStats');
-  if(dashStats) {
-    dashStats.innerHTML = [
-      {num:aprovadas, label:'Pesquisadoras aprovadas'},
-      {num:pendentes, label:'Aguardando aprovação'},
-      {num:allWorks.length, label:'Publicações cadastradas'}
-    ].map(s=>`<div class="stat-card"><div class="stat-card-num">${s.num}</div><div class="stat-card-label">${s.label}</div></div>`).join('');
-  }
-
-  const recent = allResearchers.slice(0,5);
-  const recentTable = document.getElementById('recentInscricoes');
-  if(recentTable) {
-    recentTable.innerHTML = recent.length ?
-      recent.map(r=>`<tr onclick="verPesquisadora('${r.id}')" style="cursor:pointer">
-        <td><strong>${r.nome}</strong></td>
-        <td>${r.area_principal||'—'}</td>
-        <td><span class="badge badge-${r.status}">${r.status}</span></td>
-        <td>${new Date(r.created_at).toLocaleDateString('pt-BR')}</td>
-        <td><button class="btn btn-outline">Editar</button></td>
-      </tr>`).join('') : '<tr><td colspan="5" class="empty">Nenhuma inscrição recente.</td></tr>';
+    if(resRes.error) console.error('researchers:', resRes.error.message);
+    if(worksRes.error) console.error('works:', worksRes.error.message);
+    if(postsRes.error) console.error('blog_posts:', postsRes.error.message);
+    allResearchers = resRes.data || [];
+    allWorks = worksRes.data || [];
+    const posts = postsRes.data || [];
+    renderStats();
+    renderFilters();
+    renderResearchers();
+    renderWorks();
+    renderBooks();
+    renderSobreStats();
+    renderBlogPreview(posts);
+  } catch(e) {
+    console.error('Erro ao carregar dados:', e);
+    ['blogGrid','researchersGrid','worksGrid','booksGrid'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.innerHTML = '<div class="empty">Erro ao carregar. Verifique a conexão com o banco de dados.</div>';
+    });
   }
 }
 
-// --- EDIÇÃO (Item 1) ---
-function verPesquisadora(id) {
-  const r = allResearchers.find(x => x.id === id);
-  if (!r) return;
-  editandoId = id; 
-  showPage('cadastro-manual');
-  
-  // Atualiza textos da página de cadastro para modo edição
-  document.querySelector('#page-cadastro-manual .page-title').textContent = "Editar Pesquisadora";
-  document.querySelector('#page-cadastro-manual .btn-primary-lg').textContent = "💾 Salvar Alterações";
-
-  document.getElementById('m_nome').value = r.nome || '';
-  document.getElementById('m_bio').value = r.mini_bio || '';
-  document.getElementById('m_area').value = r.area_principal || '';
-  document.getElementById('m_inst').value = r.instituicao || '';
-  document.getElementById('m_lattes').value = r.lattes || '';
-  document.getElementById('m_orcid').value = r.orcid || '';
-  document.getElementById('m_linkedin').value = r.linkedin || '';
-  document.getElementById('m_scholar').value = r.google_scholar || '';
-  document.getElementById('m_researchgate').value = r.research_gate || '';
-  document.getElementById('m_email').value = r.email || '';
-  document.getElementById('m_site').value = r.site || '';
-  document.getElementById('m_destaque').checked = r.destaque || false;
+function renderStats(){
+  const insts = new Set(allResearchers.map(r=>r.instituicao)).size;
+  document.getElementById('statP').textContent = allResearchers.length;
+  document.getElementById('statO').textContent = allWorks.length;
+  document.getElementById('statI').textContent = insts;
 }
 
-// --- SALVAMENTO (Item 2) ---
-async function mSalvar(){
-  const nome = document.getElementById('m_nome').value.trim();
-  const bio = document.getElementById('m_bio').value.trim();
-  const area = document.getElementById('m_area').value;
-  const inst = document.getElementById('m_inst').value;
-  const errEl = document.getElementById('m_erro');
-  
-  if(!nome || !bio || !area || !inst){
-    errEl.textContent = 'Preencha os campos obrigatórios.';
-    errEl.style.display='block'; return;
-  }
-
-  const btn = document.querySelector('#page-cadastro-manual .btn-primary-lg');
-  const originalTxt = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Processando...';
-
-  const payload = {
-    nome, mini_bio: bio, area_principal: area, instituicao: inst,
-    lattes: document.getElementById('m_lattes').value.trim()||null,
-    orcid: document.getElementById('m_orcid').value.trim()||null,
-    linkedin: document.getElementById('m_linkedin').value.trim()||null,
-    google_scholar: document.getElementById('m_scholar').value.trim()||null,
-    research_gate: document.getElementById('m_researchgate').value.trim()||null,
-    email: document.getElementById('m_email').value.trim()||null,
-    site: document.getElementById('m_site').value.trim()||null,
-    status: 'aprovada', // Força aprovação para aparecer na home
-    destaque: document.getElementById('m_destaque').checked,
-  };
-
-  try {
-    let resId;
-    if(editandoId) {
-      await db.from('researchers').update(payload).eq('id', editandoId);
-      resId = editandoId;
-    } else {
-      const { data, error } = await db.from('researchers').insert([payload]).select().single();
-      if(error) throw error;
-      resId = data.id;
-    }
-
-    if(resId && mObras.length > 0) {
-      const obrasData = mObras.map(id => mGetObra(id)).map(o => ({
-        ...o, researcher_id: resId, area_conhecimento: area
-      }));
-      await db.from('works').insert(obrasData);
-    }
-
-    toast(editandoId ? 'Atualizado!' : 'Cadastrada!');
-    editandoId = null; mLimpar(); await loadAll(); showPage('dashboard');
-  } catch(e) { errEl.textContent = 'Erro: ' + e.message; errEl.style.display='block'; }
-  btn.disabled = false; btn.textContent = originalTxt;
+function renderHeroCards(){
+  // elemento removido do HTML — função mantida para compatibilidade
 }
 
-// --- FUNÇÕES AUXILIARES (Deixe como estão no seu arquivo) ---
-function showPage(name){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
+function renderFilters(){
+  const areas = [...new Set(allResearchers.map(r=>r.area_principal).filter(Boolean))];
+  const insts = [...new Set(allResearchers.map(r=>r.instituicao).filter(Boolean))];
+  const tipos = [...new Set(allWorks.map(w=>w.tipo).filter(Boolean))];
+  document.getElementById('areaFilters').innerHTML =
+    `<button class="filter-btn active" onclick="setArea('')">Todas</button>` +
+    areas.map(a=>`<button class="filter-btn" onclick="setArea('${a}')">${a}</button>`).join('');
+  document.getElementById('instFilters').innerHTML =
+    `<button class="filter-btn active" onclick="setInst('')">Todas</button>` +
+    insts.map(i=>`<button class="filter-btn" onclick="setInst('${i}')">${i}</button>`).join('');
+  document.getElementById('tipoFilters').innerHTML =
+    `<button class="filter-btn active" onclick="setTipo('')">Todos</button>` +
+    tipos.map(t=>`<button class="filter-btn" onclick="setTipo('${t}')">${t}</button>`).join('');
 }
-function logout(){ db.auth.signOut(); location.href='login.html'; }
-function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
-// ... (mantenha as funções renderInscricoes, renderPesquisadoras, renderObras, mAddObra, mLimpar, etc. conforme seu arquivo original)
 
-initAuth();
+function setArea(v){ filtroArea=v; document.querySelectorAll('#areaFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todas'))); renderResearchers(); }
+function setInst(v){ filtroInst=v; document.querySelectorAll('#instFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todas'))); renderResearchers(); }
+function setTipo(v){ filtroTipo=v; document.querySelectorAll('#tipoFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todos'))); renderWorks(); }
+
+function renderResearchers(){
+  const grid = document.getElementById('researchersGrid');
+  let list = allResearchers.filter(r=>{
+    const q=busca.toLowerCase();
+    return (!q || r.nome?.toLowerCase().includes(q) || r.area_principal?.toLowerCase().includes(q) || r.instituicao?.toLowerCase().includes(q))
+      && (!filtroArea || r.area_principal===filtroArea)
+      && (!filtroInst || r.instituicao===filtroInst);
+  });
+  if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma pesquisadora encontrada.</div>'; return; }
+  grid.innerHTML = list.map(r=>{
+    const links = [
+      r.lattes ? `<a class="rc-link" href="${r.lattes}" target="_blank">Lattes</a>` : '',
+      r.orcid ? `<a class="rc-link" href="${r.orcid}" target="_blank">ORCID</a>` : '',
+      r.linkedin ? `<a class="rc-link" href="${r.linkedin}" target="_blank">LinkedIn</a>` : '',
+      r.google_scholar ? `<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>` : '',
+    ].filter(Boolean).join('');
+    const wc = allWorks.filter(w=>w.researcher_id===r.id).length;
+    return `<div class="researcher-card" onclick="openModal('${r.id}')">
+      <div class="rc-top">
+        <div class="rc-avatar">${initials(r.nome)}</div>
+        <div><div class="rc-name">${r.nome}</div><div class="rc-inst">${r.instituicao||''}</div></div>
+      </div>
+      <span class="rc-area">${r.area_principal||''}</span>
+      <p class="rc-bio">${r.mini_bio||''}</p>
+      <div class="rc-links">${links}</div>
+      ${wc?`<div style="font-size:.78rem;color:var(--verde);font-weight:500;padding-top:.75rem;border-top:1px solid var(--cinza-claro)">↗ ${wc} publicaç${wc===1?'ão':'ões'}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderWorks(){
+  const grid = document.getElementById('worksGrid');
+  let list = allWorks.filter(w=>!filtroTipo||w.tipo===filtroTipo);
+  if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
+  grid.innerHTML = list.map(w=>{
+    const author = allResearchers.find(r=>r.id===w.researcher_id)?.nome||'—';
+    const tags = (w.tags||[]).map(t=>`<span class="wc-tag">${t}</span>`).join('');
+    return `<div class="work-card">
+      <div class="wc-top"><span class="wc-type">${w.tipo}</span><span class="wc-year">${w.ano||''}</span></div>
+      <div class="wc-title">${w.titulo}</div>
+      <div class="wc-author">${author}</div>
+      <p class="wc-resumo">${w.resumo||''}</p>
+      <div class="wc-tags">${tags}</div>
+      <div class="wc-actions">
+        ${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank">🛒 Comprar</a>`:''}
+        ${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank">Acessar →</a>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderBooks(){
+  const grid = document.getElementById('booksGrid');
+  const books = allWorks.filter(w=>w.tipo==='Livro'&&w.link_compra);
+  if(!books.length){ grid.innerHTML='<div class="empty" style="color:rgba(255,255,255,.6)">Nenhum livro à venda no momento.</div>'; return; }
+  grid.innerHTML = books.map(b=>{
+    const author = allResearchers.find(r=>r.id===b.researcher_id)?.nome||'—';
+    return `<div class="book-card">
+      <div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div>
+      <div class="book-title">${b.titulo}</div>
+      <div class="book-author">${author}</div>
+      <a class="book-btn" href="${b.link_compra}" target="_blank">🛒 Adquirir</a>
+    </div>`;
+  }).join('');
+}
+
+function renderSobreStats(){
+  const el = document.getElementById('sobreStats');
+  const livros = allWorks.filter(w=>w.tipo==='Livro').length;
+  const insts = new Set(allResearchers.map(r=>r.instituicao)).size;
+  el.innerHTML = [
+    {num:allResearchers.length,label:'Pesquisadoras cadastradas'},
+    {num:allWorks.length,label:'Publicações catalogadas'},
+    {num:livros,label:'Livros disponíveis'},
+    {num:insts,label:'Instituições representadas'},
+  ].map(s=>`<div class="sobre-stat"><div class="sobre-stat-num">${s.num}</div><div class="sobre-stat-label">${s.label}</div></div>`).join('');
+}
+
+function renderBlogPreview(posts){
+  const grid = document.getElementById('blogGrid');
+  if(!posts.length){ grid.innerHTML='<div class="empty">Nenhum artigo publicado ainda.</div>'; return; }
+  grid.innerHTML = posts.map(p=>{
+    const capaHtml = p.foto_capa
+      ? `<div class="blog-card-img" style="position:relative;overflow:hidden"><img src="${p.foto_capa}" alt="${p.titulo}" loading="lazy" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></div>`
+      : `<div class="blog-card-img">${p.emoji||'✍️'}</div>`;
+    return `<div class="blog-card" onclick="location.href='blog.html?post=${p.id}'">
+      ${capaHtml}
+      <div class="blog-card-body">
+        <span class="blog-card-cat">${p.categoria||'Artigo'}</span>
+        <div class="blog-card-title">${p.titulo}</div>
+        <div class="blog-card-meta">${new Date(p.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</div>
+        <p class="blog-card-excerpt">${p.resumo||''}</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openModal(id){
+  const r = allResearchers.find(r=>r.id===id); if(!r) return;
+  const rWorks = allWorks.filter(w=>w.researcher_id===id);
+
+  const links = [
+    r.lattes?`<a class="rc-link" href="${r.lattes}" target="_blank">🔬 Lattes</a>`:'',
+    r.orcid?`<a class="rc-link" href="${r.orcid}" target="_blank">ORCID</a>`:'',
+    r.linkedin?`<a class="rc-link" href="${r.linkedin}" target="_blank">LinkedIn</a>`:'',
+    r.google_scholar?`<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>`:'',
+    r.research_gate?`<a class="rc-link" href="${r.research_gate}" target="_blank">ResearchGate</a>`:'',
+    r.email?`<a class="rc-link" href="mailto:${r.email}" target="_blank">✉ E-mail</a>`:'',
+    r.site?`<a class="rc-link" href="${r.site}" target="_blank">🌐 Site</a>`:'',
+  ].filter(Boolean).join('');
+
+  const worksHtml = rWorks.length
+    ? `<div class="modal-works-title">📄 Publicações (${rWorks.length})</div>
+       ${rWorks.map(w=>`
+        <div class="modal-work-item">
+          <div class="modal-work-title">${w.titulo}</div>
+          <div class="modal-work-meta">
+            <span class="wc-type">${w.tipo}</span>
+            ${w.ano?`<span>${w.ano}</span>`:''}
+          </div>
+          ${w.resumo?`<div style="font-size:.82rem;color:var(--cinza);line-height:1.6;margin-top:.4rem">${w.resumo}</div>`:''}
+          <div class="modal-work-actions">
+            ${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank" style="font-size:.75rem;padding:.35rem .8rem">🛒 Comprar</a>`:''}
+            ${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank" style="font-size:.75rem;padding:.35rem .8rem">Acessar →</a>`:''}
+          </div>
+        </div>`).join('')}`
+    : `<div class="modal-works-title">📄 Publicações</div><p class="modal-works-empty">Nenhuma publicação cadastrada ainda.</p>`;
+
+  // Header com foto ou iniciais
+  const avatarHtml = r.foto_url
+    ? `<div class="modal-header-avatar"><img src="${r.foto_url}" alt="${r.nome}"></div>`
+    : `<div class="modal-header-avatar">${initials(r.nome)}</div>`;
+
+  document.getElementById('modalHeader').innerHTML = `
+    ${avatarHtml}
+    <div class="modal-name">${r.nome}</div>
+    <div class="modal-inst">${r.instituicao||''}</div>
+    <span class="modal-area-badge">${r.area_principal||''}</span>`;
+
+  document.getElementById('modalContent').innerHTML = `
+    <p class="modal-bio">${r.mini_bio||''}</p>
+    <div class="modal-links">${links}</div>
+    ${worksHtml}`;
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+document.getElementById('modalClose').onclick = ()=>{ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; };
+document.getElementById('modalOverlay').onclick = e=>{ if(e.target===e.currentTarget){ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; } };
+document.getElementById('searchInput').addEventListener('input',function(){ busca=this.value; renderResearchers(); });
+document.getElementById('navToggle').onclick = ()=>document.getElementById('navLinks').classList.toggle('open');
+
+loadAll();
 </script>
 </body>
 </html>
