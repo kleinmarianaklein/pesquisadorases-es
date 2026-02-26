@@ -1043,9 +1043,11 @@ async function mSalvar(){
   }
 
   const btn = document.querySelector('#page-cadastro-manual .btn-primary-lg');
-  btn.textContent='Salvando…'; btn.disabled=true;
+  const textOriginal = btn.textContent;
+  btn.textContent='Salvando...'; btn.disabled=true;
 
   try {
+    // 1. Cadastra a pesquisadora e recebe os dados de volta (incluindo o ID)
     const { data: researcher, error } = await db.from('researchers').insert([{
       nome,
       mini_bio: bio,
@@ -1064,14 +1066,24 @@ async function mSalvar(){
 
     if(error) throw error;
 
-    // Salvar obras
-    const obrasData = mObras
-      .map(id => mGetObra(id))
-      .filter(o => o.titulo && o.tipo)
-      .map(o => ({...o, researcher_id: researcher.id, area_conhecimento: area}));
-    if(obrasData.length) await db.from('works').insert(obrasData);
+    // 2. Verifica se há obras para salvar e se o ID da pesquisadora foi gerado
+    if(researcher && researcher.id && mObras.length > 0) {
+      const obrasData = mObras
+        .map(id => mGetObra(id))
+        .filter(o => o.titulo && o.tipo) // Garante que não salve campos vazios
+        .map(o => ({
+          ...o, 
+          researcher_id: researcher.id, 
+          area_conhecimento: area // Vincula a área para os filtros do site funcionarem
+        }));
 
-    toast('Pesquisadora cadastrada com sucesso!');
+      if(obrasData.length > 0) {
+        const { error: errorObras } = await db.from('works').insert(obrasData);
+        if(errorObras) throw errorObras;
+      }
+    }
+
+    toast('Pesquisadora e publicações cadastradas com sucesso!');
     mLimpar();
     await loadAll();
     showPage('pesquisadoras');
@@ -1079,7 +1091,7 @@ async function mSalvar(){
     errEl.textContent = 'Erro ao salvar: ' + e.message;
     errEl.style.display='block';
   }
-  btn.textContent='✓ Cadastrar pesquisadora'; btn.disabled=false;
+  btn.textContent = textOriginal; btn.disabled=false;
 }
 
 // INIT
