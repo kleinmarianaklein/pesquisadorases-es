@@ -1,665 +1,1289 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> Pesquisadoras do ES — Hub de visibilidade feminina na ciência </title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Admin — Pesquisadoras ES</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
+<script src="../config.js"></script>
 <style>
-  :root {
-    --verde: #2D6A4F; --verde-claro: #52B788; --areia: #F8F4EE;
-    --terra: #C4843A; --preto: #1A1A1A; --cinza: #6B6B6B;
-    --cinza-claro: #E8E4DE; --branco: #FFFFFF;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--areia); color: var(--preto); line-height: 1.6; }
+  :root{--verde:#2D6A4F;--verde-claro:#52B788;--areia:#F8F4EE;--terra:#C4843A;--preto:#1A1A1A;--cinza:#6B6B6B;--cinza-claro:#E8E4DE;--sidebar:240px;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:#F0ECE6;color:var(--preto);display:flex;min-height:100vh;}
 
-  /* NAV */
-  nav {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(248,244,238,0.96); backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--cinza-claro);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 clamp(1.5rem,5vw,4rem); height: 64px;
-  }
-  .nav-logo { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--verde); text-decoration:none; }
-  .nav-logo span { color:var(--terra); }
-  .nav-links { display:flex; gap:2rem; list-style:none; align-items:center; }
-  .nav-links a { font-size:0.85rem; font-weight:500; letter-spacing:0.04em; text-transform:uppercase; color:var(--cinza); text-decoration:none; transition:color 0.2s; }
-  .nav-links a:hover { color:var(--verde); }
-  .nav-btn { background:var(--verde); color:white!important; padding:0.5rem 1.2rem; border-radius:100px; transition:all 0.2s!important; }
-  .nav-btn:hover { background:#235438!important; }
-  .nav-toggle { display:none; background:none; border:none; cursor:pointer; flex-direction:column; gap:5px; }
-  .nav-toggle span { display:block; width:22px; height:2px; background:var(--preto); transition:0.3s; }
+  /* SIDEBAR */
+  .sidebar{width:var(--sidebar);background:var(--preto);color:white;position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;padding:1.5rem;z-index:50;}
+  .sidebar-logo{font-family:'Playfair Display',serif;font-size:1rem;color:white;margin-bottom:.25rem;}
+  .sidebar-logo span{color:var(--verde-claro);}
+  .sidebar-sub{font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.4);margin-bottom:2rem;}
+  .nav-item{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:10px;cursor:pointer;transition:all .2s;margin-bottom:.25rem;font-size:.88rem;color:rgba(255,255,255,.65);border:none;background:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif;}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:white;}
+  .nav-item.active{background:var(--verde);color:white;}
+  .nav-item .icon{font-size:1rem;width:20px;text-align:center;}
+  .sidebar-footer{margin-top:auto;padding-top:1rem;border-top:1px solid rgba(255,255,255,.1);}
+  .sidebar-user{font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:.75rem;}
+  .btn-logout{font-size:.8rem;color:rgba(255,255,255,.5);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:.4rem .8rem;border-radius:8px;transition:all .2s;width:100%;text-align:left;}
+  .btn-logout:hover{background:rgba(255,255,255,.08);color:white;}
 
-  /* HERO */
-  .hero {
-    min-height: 90vh; display:grid; grid-template-columns:1fr 1fr;
-    align-items:center; gap:3rem;
-    padding: clamp(3rem,8vw,7rem) clamp(1.5rem,5vw,4rem);
-    position:relative; overflow:hidden;
-  }
-  .hero::before { content:''; position:absolute; top:-10%; right:-5%; width:55%; height:120%; background:radial-gradient(ellipse at 70% 40%,rgba(82,183,136,.12) 0%,transparent 70%); pointer-events:none; }
-  .hero-tag { display:inline-block; font-family:'DM Mono',monospace; font-size:0.75rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--terra); background:rgba(196,132,58,.1); padding:0.35rem 0.85rem; border-radius:100px; margin-bottom:1.5rem; }
-  .hero h1 { font-family:'Playfair Display',serif; font-size:clamp(2.8rem,6vw,5.5rem); line-height:1.05; font-weight:700; letter-spacing:-0.03em; margin-bottom:1.5rem; }
-  .hero h1 em { color:var(--verde); font-style:italic; }
-  .hero-desc { font-size:1.1rem; color:var(--cinza); max-width:480px; margin-bottom:2.5rem; line-height:1.75; }
-  .btn-primary { display:inline-flex; align-items:center; gap:0.5rem; background:var(--verde); color:white; font-size:0.9rem; font-weight:500; padding:0.9rem 2rem; border-radius:100px; text-decoration:none; transition:all 0.25s; border:none; cursor:pointer; }
-  .btn-primary:hover { background:#235438; transform:translateY(-1px); box-shadow:0 6px 20px rgba(45,106,79,.3); }
-  .btn-secondary { display:inline-flex; align-items:center; gap:0.5rem; background:transparent; color:var(--verde); font-size:0.9rem; font-weight:500; padding:0.9rem 2rem; border-radius:100px; text-decoration:none; transition:all 0.25s; border:1.5px solid var(--verde); cursor:pointer; margin-left:1rem; }
-  .btn-secondary:hover { background:rgba(45,106,79,.06); }
-  .hero-stats { display:flex; gap:3rem; margin-top:3.5rem; padding-top:2.5rem; border-top:1px solid var(--cinza-claro); }
-  .stat-num { display:block; font-family:'Playfair Display',serif; font-size:2.2rem; font-weight:700; color:var(--verde); line-height:1; }
-  .stat-label { font-size:0.78rem; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--cinza); margin-top:0.3rem; }
-  .hero-visual { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; padding:1rem; }
-  .hero-card { background:white; border-radius:16px; padding:1.5rem; box-shadow:0 2px 12px rgba(0,0,0,.06); transition:transform 0.3s,box-shadow 0.3s; cursor:pointer; }
-  .hero-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.1); }
-  .hero-card:nth-child(2) { margin-top:1.5rem; }
-  .hero-card:nth-child(4) { margin-top:-1.5rem; }
-  .hcard-dot { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--verde-claro),var(--verde)); margin-bottom:.75rem; display:flex; align-items:center; justify-content:center; color:white; font-family:'Playfair Display',serif; font-size:.9rem; font-weight:700; }
-  .hcard-area { font-family:'DM Mono',monospace; font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:var(--terra); margin-bottom:.4rem; }
-  .hcard-name { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; margin-bottom:.2rem; line-height:1.3; }
-  .hcard-inst { font-size:.75rem; color:var(--cinza); }
+  /* MAIN */
+  .main{margin-left:var(--sidebar);flex:1;padding:2rem;min-height:100vh;}
+  .page{display:none;}
+  .page.active{display:block;}
+  .page-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;margin-bottom:.4rem;}
+  .page-sub{font-size:.88rem;color:var(--cinza);margin-bottom:2rem;}
 
-  /* SEÇÕES */
-  section { padding:clamp(3rem,7vw,6rem) clamp(1.5rem,5vw,4rem); }
-  .section-tag { font-family:'DM Mono',monospace; font-size:.7rem; letter-spacing:.15em; text-transform:uppercase; color:var(--terra); margin-bottom:.75rem; display:block; }
-  .section-title { font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3.5vw,3rem); font-weight:700; letter-spacing:-.02em; margin-bottom:.75rem; line-height:1.2; }
-  .section-title em { color:var(--verde); font-style:italic; }
-  .section-desc { font-size:1.05rem; color:var(--cinza); max-width:580px; line-height:1.75; }
+  /* CARDS STAT */
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;}
+  .stat-card{background:white;border-radius:16px;padding:1.25rem;border:1.5px solid var(--cinza-claro);}
+  .stat-card-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--verde);}
+  .stat-card-label{font-size:.78rem;color:var(--cinza);margin-top:.25rem;}
 
-  /* PESQUISADORAS */
-  #pesquisadoras { background:white; }
-  .search-bar { position:relative; margin:2rem 0 1.5rem; }
-  .search-bar input { width:100%; padding:1rem 1rem 1rem 3rem; border:1.5px solid var(--cinza-claro); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:.95rem; color:var(--preto); background:var(--areia); transition:border .2s; outline:none; }
-  .search-bar input:focus { border-color:var(--verde); background:white; }
-  .search-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cinza); pointer-events:none; }
-  .filters { display:flex; flex-wrap:wrap; gap:.6rem; margin-bottom:1.5rem; }
-  .filter-btn { font-size:.8rem; font-weight:500; padding:.5rem 1.1rem; border-radius:100px; border:1.5px solid var(--cinza-claro); background:transparent; cursor:pointer; transition:all .2s; color:var(--cinza); font-family:'DM Sans',sans-serif; }
-  .filter-btn:hover { border-color:var(--verde); color:var(--verde); }
-  .filter-btn.active { background:var(--verde); border-color:var(--verde); color:white; }
-  .filter-label { font-family:'DM Mono',monospace; font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; color:var(--cinza); margin:1rem 0 .5rem; display:block; }
-  .researchers-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.5rem; }
-  .researcher-card { background:var(--areia); border-radius:20px; padding:1.75rem; cursor:pointer; transition:all .3s; border:1.5px solid transparent; display:flex; flex-direction:column; gap:1rem; }
-  .researcher-card:hover { border-color:var(--verde-claro); box-shadow:0 8px 32px rgba(45,106,79,.1); transform:translateY(-2px); }
-  .rc-top { display:flex; align-items:flex-start; gap:1rem; }
-  .rc-avatar { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--verde-claro),var(--verde)); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:1.3rem; color:white; font-weight:700; flex-shrink:0; }
-  .rc-name { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; margin-bottom:.2rem; line-height:1.3; }
-  .rc-inst { font-size:.78rem; color:var(--cinza); }
-  .rc-area { display:inline-block; font-family:'DM Mono',monospace; font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:var(--terra); background:rgba(196,132,58,.1); padding:.25rem .65rem; border-radius:100px; }
-  .rc-bio { font-size:.88rem; color:var(--cinza); line-height:1.65; }
-  .rc-links { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:auto; }
-  .rc-link { font-size:.72rem; font-weight:500; padding:.3rem .7rem; border-radius:100px; text-decoration:none; border:1px solid var(--cinza-claro); color:var(--cinza); transition:all .2s; }
-  .rc-link:hover { border-color:var(--verde); color:var(--verde); }
+  /* TABELAS */
+  .table-wrap{background:white;border-radius:16px;border:1.5px solid var(--cinza-claro);overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:var(--areia);font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);padding:.75rem 1rem;text-align:left;border-bottom:1px solid var(--cinza-claro);}
+  td{padding:.9rem 1rem;font-size:.88rem;border-bottom:1px solid rgba(0,0,0,.04);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:var(--areia);}
 
-  /* BLOG PREVIEW */
-  #blog-preview { background:var(--areia); }
-  .blog-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.5rem; margin-top:2rem; }
-  .blog-card { background:white; border-radius:20px; overflow:hidden; cursor:pointer; transition:all .3s; border:1.5px solid transparent; }
-  .blog-card:hover { border-color:var(--verde-claro); transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,0,0,.08); }
-  .blog-card-img { height:180px; background:linear-gradient(135deg,var(--verde),var(--verde-claro)); display:flex; align-items:center; justify-content:center; font-size:3rem; }
-  .blog-card-body { padding:1.5rem; }
-  .blog-card-cat { font-family:'DM Mono',monospace; font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:var(--terra); margin-bottom:.5rem; display:block; }
-  .blog-card-title { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; line-height:1.4; margin-bottom:.5rem; }
-  .blog-card-meta { font-size:.78rem; color:var(--cinza); }
-  .blog-card-excerpt { font-size:.85rem; color:var(--cinza); margin-top:.75rem; line-height:1.6; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  /* BADGES */
+  .badge{display:inline-block;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .65rem;border-radius:100px;}
+  .badge-pendente{background:#fef3c7;color:#92400e;}
+  .badge-aprovada{background:#d1fae5;color:#065f46;}
+  .badge-reprovada{background:#fee2e2;color:#991b1b;}
+  .badge-destaque{background:rgba(45,106,79,.1);color:var(--verde);}
 
-  /* OBRAS */
-  #obras { background:white; }
-  .works-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.25rem; margin-top:2rem; }
-  .work-card { background:var(--areia); border-radius:16px; padding:1.5rem; transition:all .3s; border:1.5px solid var(--cinza-claro); display:flex; flex-direction:column; gap:.75rem; }
-  .work-card:hover { border-color:var(--verde-claro); transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,0,0,.07); }
-  .wc-top { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
-  .wc-type { font-family:'DM Mono',monospace; font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:white; background:var(--verde); padding:.25rem .65rem; border-radius:100px; white-space:nowrap; }
-  .wc-year { font-family:'DM Mono',monospace; font-size:.7rem; color:var(--cinza); }
-  .wc-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; line-height:1.4; }
-  .wc-author { font-size:.82rem; color:var(--terra); font-weight:500; }
-  .wc-resumo { font-size:.85rem; color:var(--cinza); line-height:1.65; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
-  .wc-tags { display:flex; flex-wrap:wrap; gap:.4rem; }
-  .wc-tag { font-size:.7rem; padding:.2rem .6rem; border-radius:100px; background:white; color:var(--cinza); }
-  .wc-actions { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:auto; padding-top:.75rem; border-top:1px solid var(--cinza-claro); }
-  .wc-btn { font-size:.78rem; font-weight:500; padding:.4rem .9rem; border-radius:100px; text-decoration:none; transition:all .2s; cursor:pointer; font-family:'DM Sans',sans-serif; }
-  .wc-btn-compra { background:var(--terra); color:white; border:none; }
-  .wc-btn-compra:hover { background:#a86e2a; }
-  .wc-btn-acesso { background:transparent; color:var(--verde); border:1.5px solid var(--verde); }
-  .wc-btn-acesso:hover { background:rgba(45,106,79,.06); }
+  /* BOTÕES */
+  .btn{display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:500;padding:.45rem 1rem;border-radius:100px;border:none;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
+  .btn-green{background:var(--verde);color:white;}
+  .btn-green:hover{background:#235438;}
+  .btn-red{background:#fee2e2;color:#991b1b;}
+  .btn-red:hover{background:#fca5a5;}
+  .btn-terra{background:var(--terra);color:white;}
+  .btn-terra:hover{background:#a86e2a;}
+  .btn-outline{background:white;color:var(--cinza);border:1.5px solid var(--cinza-claro);}
+  .btn-outline:hover{border-color:var(--verde);color:var(--verde);}
+  .btn-primary-lg{background:var(--verde);color:white;padding:.85rem 2rem;border-radius:100px;font-size:.95rem;font-weight:500;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;transition:all .2s;}
+  .btn-primary-lg:hover{background:#235438;}
+  .btn-primary-lg:disabled{opacity:.6;cursor:not-allowed;}
 
-  /* LIVROS */
-  #livros { background:var(--verde); color:white; }
-  #livros .section-tag { color:var(--verde-claro); }
-  #livros .section-title { color:white; }
-  #livros .section-title em { color:var(--verde-claro); }
-  #livros .section-desc { color:rgba(255,255,255,.7); }
-  .books-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1.25rem; margin-top:2.5rem; }
-  .book-card { background:rgba(255,255,255,.1); border-radius:16px; padding:1.5rem; border:1px solid rgba(255,255,255,.15); transition:all .3s; display:flex; flex-direction:column; gap:.75rem; }
-  .book-card:hover { background:rgba(255,255,255,.18); transform:translateY(-3px); }
-  .book-cover { width:100%; aspect-ratio:3/4; background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.05)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; border:1px solid rgba(255,255,255,.2); }
-  .book-title { font-family:'Playfair Display',serif; font-size:.95rem; font-weight:700; color:white; line-height:1.4; }
-  .book-author { font-size:.78rem; color:rgba(255,255,255,.65); }
-  .book-btn { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; font-size:.78rem; font-weight:500; margin-top:auto; padding:.5rem 1rem; border-radius:100px; background:white; color:var(--verde); text-decoration:none; transition:all .2s; cursor:pointer; font-family:'DM Sans',sans-serif; border:none; }
-  .book-btn:hover { background:var(--areia); }
+  /* FORMS */
+  .form-card{background:white;border-radius:16px;padding:2rem;border:1.5px solid var(--cinza-claro);margin-bottom:1.5rem;}
+  .form-card h3{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+  .form-grid.single{grid-template-columns:1fr;}
+  .form-group{display:flex;flex-direction:column;gap:.35rem;}
+  .form-group.full{grid-column:1/-1;}
+  label{font-size:.8rem;font-weight:500;color:var(--preto);}
+  input,select,textarea{font-family:'DM Sans',sans-serif;font-size:.92rem;color:var(--preto);padding:.7rem .9rem;border:1.5px solid var(--cinza-claro);border-radius:9px;background:white;outline:none;transition:border .2s;width:100%;}
+  input:focus,select:focus,textarea:focus{border-color:var(--verde);}
+  textarea{resize:vertical;min-height:100px;}
 
-  /* SOBRE */
-  #sobre { background:white; display:grid; grid-template-columns:1fr 1fr; gap:5rem; align-items:center; }
-  .sobre-stats { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:3rem; }
-  .sobre-stat { background:var(--areia); border-radius:16px; padding:1.5rem; border:1px solid var(--cinza-claro); }
-  .sobre-stat-num { font-family:'Playfair Display',serif; font-size:2.5rem; font-weight:700; color:var(--verde); line-height:1; margin-bottom:.3rem; }
-  .sobre-stat-label { font-size:.8rem; color:var(--cinza); font-weight:500; }
-  .sobre-manifesto { background:var(--areia); border-radius:20px; padding:2.5rem; border-left:4px solid var(--verde); }
-  .manifesto-quote { font-family:'Playfair Display',serif; font-style:italic; font-size:1.35rem; line-height:1.6; margin-bottom:1.5rem; }
-  .manifesto-text { font-size:.92rem; color:var(--cinza); line-height:1.75; }
+  /* IA CHAT */
+  .ai-chat{background:white;border-radius:16px;border:1.5px solid var(--cinza-claro);overflow:hidden;}
+  .ai-chat-header{background:linear-gradient(135deg,var(--verde),#1a4332);color:white;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:.75rem;}
+  .ai-chat-header h3{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;}
+  .ai-chat-header p{font-size:.78rem;opacity:.75;margin-top:.1rem;}
+  .ai-icon{width:40px;height:40px;background:rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+  .chat-messages{height:320px;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;}
+  .msg{max-width:85%;padding:.85rem 1rem;border-radius:14px;font-size:.88rem;line-height:1.6;}
+  .msg-ai{background:var(--areia);color:var(--preto);align-self:flex-start;border-bottom-left-radius:4px;}
+  .msg-user{background:var(--verde);color:white;align-self:flex-end;border-bottom-right-radius:4px;}
+  .msg-ai strong{color:var(--verde);}
+  .chat-input-area{border-top:1px solid var(--cinza-claro);padding:1rem;display:flex;gap:.75rem;align-items:flex-end;}
+  .chat-input-area textarea{min-height:44px;max-height:120px;border-radius:12px;resize:none;font-size:.9rem;}
+  .btn-send{background:var(--verde);color:white;border:none;border-radius:100px;padding:.65rem 1.25rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+  .btn-send:hover{background:#235438;}
+  .btn-send:disabled{opacity:.6;cursor:not-allowed;}
 
-  /* INSCRIÇÃO CTA */
-  .inscricao-cta { background:linear-gradient(135deg,var(--verde),#1a4332); color:white; text-align:center; padding:clamp(3rem,7vw,6rem) clamp(1.5rem,5vw,4rem); }
-  .inscricao-cta h2 { font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3vw,2.8rem); font-weight:700; margin-bottom:1rem; }
-  .inscricao-cta p { font-size:1.05rem; color:rgba(255,255,255,.8); max-width:500px; margin:0 auto 2rem; line-height:1.75; }
-  .btn-light { background:white; color:var(--verde); border:none; }
-  .btn-light:hover { background:var(--areia); }
+  .ai-result{background:var(--areia);border-radius:12px;padding:1.25rem;margin:1rem 0;border:1.5px solid var(--cinza-claro);}
+  .ai-result h4{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:.75rem;color:var(--verde);}
+  .ai-field{display:flex;flex-direction:column;gap:.2rem;margin-bottom:.75rem;}
+  .ai-field label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza);}
+  .ai-field span{font-size:.88rem;color:var(--preto);}
+  .ai-field input,.ai-field select,.ai-field textarea{font-size:.85rem;}
 
-  /* MODAL */
-  .modal-overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(26,26,26,.65); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:1.5rem; }
-  .modal-overlay.open { display:flex; animation:fadeIn .2s ease; }
-  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  .modal { background:white; border-radius:28px; max-width:660px; width:100%; max-height:92vh; overflow-y:auto; position:relative; box-shadow:0 24px 80px rgba(0,0,0,.18); }
-  .modal-close { position:absolute; top:1.25rem; right:1.25rem; background:rgba(255,255,255,.9); border:none; border-radius:50%; width:36px; height:36px; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; color:var(--cinza); transition:all .2s; z-index:10; box-shadow:0 2px 8px rgba(0,0,0,.12); }
-  .modal-close:hover { background:var(--areia); }
-  .modal-header { background:linear-gradient(135deg,var(--verde),#1a4332); padding:2rem 2rem 3.5rem; }
-  .modal-header-avatar { width:80px; height:80px; border-radius:50%; border:3px solid rgba(255,255,255,.3); overflow:hidden; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:2rem; color:white; font-weight:700; margin-bottom:1rem; }
-  .modal-header-avatar img { width:100%; height:100%; object-fit:cover; }
-  .modal-name { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:700; color:white; line-height:1.2; margin-bottom:.4rem; }
-  .modal-inst { font-size:.82rem; color:rgba(255,255,255,.75); margin-bottom:.65rem; }
-  .modal-area-badge { display:inline-block; font-family:'DM Mono',monospace; font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:var(--verde); background:rgba(255,255,255,.92); padding:.3rem .8rem; border-radius:100px; }
-  .modal-body { padding:2rem; margin-top:-1.5rem; background:white; border-radius:20px 20px 0 0; position:relative; }
-  .modal-bio { font-size:.95rem; color:var(--cinza); line-height:1.8; margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--cinza-claro); }
-  .modal-links { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:1.75rem; }
-  .modal-works-title { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; margin-bottom:1rem; color:var(--preto); }
-  .modal-works-empty { font-size:.88rem; color:var(--cinza); font-style:italic; padding:.5rem 0 1rem; }
-  .modal-work-item { padding:1rem 1.1rem; border-radius:12px; background:var(--areia); margin-bottom:.65rem; border-left:3px solid var(--verde-claro); }
-  .modal-work-title { font-weight:600; font-size:.9rem; margin-bottom:.3rem; line-height:1.4; color:var(--preto); }
-  .modal-work-meta { font-size:.75rem; color:var(--cinza); display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; margin-bottom:.5rem; }
-  .modal-work-meta .wc-type { font-family:'DM Mono',monospace; font-size:.62rem; text-transform:uppercase; letter-spacing:.08em; background:var(--verde); color:white; padding:.15rem .55rem; border-radius:100px; }
-  .modal-work-actions { display:flex; gap:.5rem; flex-wrap:wrap; }
+  /* BLOG EDITOR */
+  .editor-toolbar{display:flex;gap:.5rem;flex-wrap:wrap;padding:.75rem;background:var(--areia);border-bottom:1px solid var(--cinza-claro);}
+  .toolbar-btn{background:white;border:1px solid var(--cinza-claro);border-radius:6px;padding:.35rem .6rem;cursor:pointer;font-size:.82rem;transition:all .2s;}
+  .toolbar-btn:hover{border-color:var(--verde);color:var(--verde);}
+  #blogEditor{width:100%;min-height:340px;padding:1.25rem;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:.95rem;line-height:1.8;resize:vertical;}
 
-  /* FOOTER */
-  footer { background:var(--preto); color:rgba(255,255,255,.6); padding:3rem clamp(1.5rem,5vw,4rem); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1.5rem; }
-  .footer-brand { font-family:'Playfair Display',serif; font-size:1.1rem; color:white; text-decoration:none; }
-  .footer-brand span { color:var(--verde-claro); }
-  footer p { font-size:.82rem; }
-  footer a { color:var(--verde-claro); text-decoration:none; }
-
-  /* LOADING */
-  .loading { text-align:center; padding:3rem; color:var(--cinza); }
-  .spinner { width:32px; height:32px; border:3px solid var(--cinza-claro); border-top-color:var(--verde); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 1rem; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  .empty { text-align:center; padding:3rem; color:var(--cinza); font-size:.95rem; grid-column:1/-1; }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-  .fade-up { animation:fadeUp .6s ease forwards; }
-  .fade-up-2 { animation:fadeUp .6s .15s ease forwards; opacity:0; }
-  .fade-up-3 { animation:fadeUp .6s .3s ease forwards; opacity:0; }
-  .fade-up-4 { animation:fadeUp .6s .45s ease forwards; opacity:0; }
-
-  @media(max-width:900px){
-    .hero{grid-template-columns:1fr;}
-    .hero-visual{display:none;}
-    #sobre{grid-template-columns:1fr;}
-    .nav-links{display:none;flex-direction:column;position:fixed;top:64px;left:0;right:0;background:var(--areia);padding:2rem;border-bottom:1px solid var(--cinza-claro);gap:1.5rem;z-index:99;}
-    .nav-links.open{display:flex;}
-    .nav-toggle{display:flex;}
-  }
+  /* UTILS */
+  .loading{text-align:center;padding:2rem;color:var(--cinza);}
+  .spinner{width:28px;height:28px;border:3px solid var(--cinza-claro);border-top-color:var(--verde);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .empty{text-align:center;padding:2.5rem;color:var(--cinza);font-size:.9rem;}
+  .success-toast{position:fixed;bottom:2rem;right:2rem;background:var(--verde);color:white;padding:1rem 1.5rem;border-radius:12px;font-size:.88rem;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.15);transform:translateY(100px);transition:transform .3s;z-index:999;}
+  .success-toast.show{transform:translateY(0);}
+  .actions-cell{display:flex;gap:.5rem;flex-wrap:wrap;}
+  .section-sep{height:1.5rem;}
+  .tag-input-hint{font-size:.72rem;color:var(--cinza);}
+  @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;}}
 </style>
 </head>
 <body>
 
-<nav>
-  <a href="index.html" class="nav-logo">Pesquisadoras<span>ES</span></a>
-  <ul class="nav-links" id="navLinks">
-    <li><a href="#pesquisadoras">Pesquisadoras</a></li>
-    <li><a href="#obras">Publicações</a></li>
-    <li><a href="#livros">Livros</a></li>
-    <li><a href="blog.html">Blog</a></li>
-    <li><a href="#sobre">Sobre</a></li>
-    <li><a href="inscricao.html" class="nav-btn">Inscreva-se</a></li>
-  </ul>
-  <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
-</nav>
-
-<style>
-  /* BLOCO 1: Banner com imagem de fundo */
-  .hero-banner {
-    position: relative;
-    min-height: 55vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: clamp(3rem, 8vw, 6rem) clamp(1.5rem, 5vw, 4rem);
-    background-image:
-      linear-gradient(to bottom, rgba(248,244,238,0.82) 0%, rgba(248,244,238,0.97) 100%),
-      url('Gemini_Generated_Image_pud5xxpud5xxpud5.png');
-    background-size: cover;
-    background-position: center;
-  }
-  .hero-banner-inner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-  .hero-banner h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(2.2rem, 5vw, 4.5rem);
-    font-weight: 700;
-    color: var(--verde);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-  }
-  .hero-banner-credit {
-    font-size: 0.85rem;
-    color: var(--cinza);
-  }
-  .hero-banner-credit a {
-    color: var(--verde);
-    text-decoration: underline;
-  }
-
-  /* BLOCO 2: Descrição, botões e stats */
-  .hero-intro {
-    background: var(--areia);
-    padding: clamp(3rem, 6vw, 5rem) clamp(1.5rem, 5vw, 4rem);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-    border-bottom: 1px solid var(--cinza-claro);
-  }
-  .hero-intro-desc {
-    font-size: clamp(1rem, 2vw, 1.2rem);
-    color: var(--cinza);
-    max-width: 640px;
-    line-height: 1.75;
-  }
-  .hero-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .hero-stats {
-    display: flex;
-    gap: clamp(2.5rem, 6vw, 5rem);
-    justify-content: center;
-    flex-wrap: wrap;
-    padding-top: 2rem;
-    border-top: 1px solid var(--cinza-claro);
-    width: 100%;
-    max-width: 700px;
-  }
-  .stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .stat-num {
-    display: block;
-    font-family: 'Playfair Display', serif;
-    font-size: 2.4rem;
-    font-weight: 700;
-    color: var(--verde);
-    line-height: 1;
-  }
-  .stat-label {
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--cinza);
-    margin-top: 0.3rem;
-  }
-</style>
-
-<!-- BLOCO 1: Banner HUB -->
-<div class="hero-banner">
-  <div class="hero-banner-inner">
-    <div class="hero-tag fade-up">Espírito Santo · Ciência & Conhecimento</div>
-    <h1 class="fade-up-2">HUB de visibilidade feminina na ciência</h1>
-    <p class="hero-banner-credit fade-up-3">
-      By <a href="http://www.kickgroup.com.br" target="_blank">KICk</a>
-    </p>
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">Pesquisadoras<span>ES</span></div>
+  <div class="sidebar-sub">Painel Admin</div>
+  <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><span class="icon">📊</span>Dashboard</button>
+  <button class="nav-item" onclick="showPage('inscricoes')" id="nav-inscricoes"><span class="icon">📬</span>Inscrições</button>
+  <button class="nav-item" onclick="showPage('pesquisadoras')" id="nav-pesquisadoras"><span class="icon">👩‍🔬</span>Pesquisadoras</button>
+  <button class="nav-item" onclick="showPage('obras')" id="nav-obras"><span class="icon">📄</span>Publicações</button>
+  <button class="nav-item" onclick="showPage('blog')" id="nav-blog"><span class="icon">✍️</span>Blog</button>
+  <button class="nav-item" onclick="showPage('cadastro-manual')" id="nav-cadastro-manual"><span class="icon">✏️</span>Cadastro manual</button>
+  <button class="nav-item" onclick="showPage('cadastro-ia')" id="nav-cadastro-ia"><span class="icon">🤖</span>Cadastro com IA</button>
+  <div class="sidebar-footer">
+    <div class="sidebar-user" id="userEmail">—</div>
+    <button class="btn-logout" onclick="logout()">↩ Sair</button>
+    <div style="margin-top:.75rem"><a href="../index.html" style="font-size:.75rem;color:rgba(255,255,255,.35);text-decoration:none;">← Ver portal público</a></div>
   </div>
 </div>
 
-<!-- BLOCO 2: Descrição, botões e estatísticas -->
-<div class="hero-intro">
-  <p class="hero-intro-desc fade-up">
-    Conheça as pesquisadoras do Espírito Santo que constroem conhecimento,
-    transformam realidades e inspiram novas gerações.
-  </p>
-  <div class="hero-actions fade-up-2">
-    <a href="#pesquisadoras" class="btn-primary">Explorar pesquisadoras</a>
-    <a href="inscricao.html" class="btn-secondary">Cadastre-se</a>
-  </div>
-  <div class="hero-stats fade-up-3">
-    <div class="stat">
-      <span class="stat-num" id="statP">—</span>
-      <span class="stat-label">Pesquisadoras</span>
-    </div>
-    <div class="stat">
-      <span class="stat-num" id="statO">—</span>
-      <span class="stat-label">Publicações</span>
-    </div>
-    <div class="stat">
-      <span class="stat-num" id="statI">—</span>
-      <span class="stat-label">Instituições</span>
+<!-- MAIN -->
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-sub">Visão geral do portal.</p>
+    <div class="stats-row" id="dashStats"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Inscrições recentes</th><th>Área</th><th>Status</th><th>Data</th><th></th></tr></thead>
+        <tbody id="recentInscricoes"><tr><td colspan="5" class="loading"><div class="spinner"></div></td></tr></tbody>
+      </table>
     </div>
   </div>
-</div>
-  
-<!-- BLOG PREVIEW -->
-<section id="blog-preview">
-  <span class="section-tag">Do blog</span>
-  <h2 class="section-title">Últimas <em>publicações</em></h2>
-  <p class="section-desc">Artigos, reflexões e notícias sobre ciência feita por mulheres no Espírito Santo.</p>
-  <div class="blog-grid" id="blogGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
-  <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary">Ver todos os artigos</a></div>
-</section>
 
-<!-- PESQUISADORAS -->
-<section id="pesquisadoras">
-  <span class="section-tag">Quem são elas</span>
-  <h2 class="section-title">Pesquisadoras em <em>destaque</em></h2>
-  <p class="section-desc">Conheça as mulheres que fazem ciência no Espírito Santo.</p>
-  <div class="search-bar">
-    <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-    <input type="text" id="searchInput" placeholder="Buscar por nome, área ou instituição…">
-  </div>
-  <span class="filter-label">Área</span>
-  <div class="filters" id="areaFilters"></div>
-  <span class="filter-label">Instituição</span>
-  <div class="filters" id="instFilters"></div>
-  <div class="researchers-grid" id="researchersGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
-</section>
-
-<!-- OBRAS -->
-<section id="obras">
-  <span class="section-tag">Produção científica</span>
-  <h2 class="section-title">Obras & <em>Publicações</em></h2>
-  <p class="section-desc">Teses, dissertações, artigos e livros das pesquisadoras capixabas.</p>
-  <div class="filters" id="tipoFilters"></div>
-  <div class="works-grid" id="worksGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
-</section>
-
-<!-- LIVROS -->
-<section id="livros">
-  <span class="section-tag">Livraria</span>
-  <h2 class="section-title">Livros para <em>adquirir</em></h2>
-  <p class="section-desc">Apoie diretamente as autoras capixabas.</p>
-  <div class="books-grid" id="booksGrid"><div class="loading" style="color:rgba(255,255,255,.7)"><div class="spinner" style="border-color:rgba(255,255,255,.3);border-top-color:white"></div>Carregando...</div></div>
-</section>
-
-<!-- INSCRIÇÃO CTA -->
-<div class="inscricao-cta">
-  <h2>Você é pesquisadora capixaba?</h2>
-  <p>Cadastre seu perfil e suas publicações no portal e ganhe visibilidade para o seu trabalho.</p>
-  <a href="inscricao.html" class="btn-primary btn-light">Fazer minha inscrição</a>
-</div>
-
-<!-- SOBRE -->
-<section id="sobre">
-  <div>
-    <span class="section-tag">O projeto</span>
-    <h2 class="section-title">Por que <em>visibilidade</em> importa</h2>
-    <p class="section-desc" style="margin-bottom:1rem">O portal Pesquisadoras ES nasceu da necessidade de dar visibilidade às mulheres que produzem conhecimento científico no Espírito Santo.</p>
-    <p class="section-desc">Aqui você encontra perfis, publicações, pesquisas e formas de acessar e adquirir as obras dessas cientistas.</p>
-    <div class="sobre-stats" id="sobreStats"></div>
-  </div>
-  <div class="sobre-manifesto">
-    <p class="manifesto-quote">"Quando uma mulher cientista é vista, cem outras encontram o caminho."</p>
-    <p class="manifesto-text">Este portal é um espaço vivo, colaborativo e em constante crescimento. Se você conhece pesquisadoras capixabas que deveriam estar aqui, <a href="inscricao.html" style="color:var(--verde)">indique ou convide</a> para se inscrever.</p>
-  </div>
-</section>
-
-<footer>
-  <a href="index.html" class="footer-brand">Pesquisadoras<span>ES</span></a>
-  <p>Dando visibilidade à ciência feita por mulheres no Espírito Santo.</p>
-  <p><a href="admin/login.html">Área administrativa</a></p>
-</footer>
-
-<!-- MODAL -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <button class="modal-close" id="modalClose">✕</button>
-    <div id="modalHeader" class="modal-header"></div>
-    <div class="modal-body">
-      <div id="modalContent"></div>
+  <!-- INSCRIÇÕES -->
+  <div class="page" id="page-inscricoes">
+    <h1 class="page-title">Inscrições</h1>
+    <p class="page-sub">Aprove ou reprove as pesquisadoras que se inscreveram.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nome</th><th>Área</th><th>Instituição</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="inscricoesTable"><tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr></tbody>
+      </table>
     </div>
   </div>
-</div>
+
+  <!-- PESQUISADORAS -->
+  <div class="page" id="page-pesquisadoras">
+    <h1 class="page-title">Pesquisadoras</h1>
+    <p class="page-sub">Gerencie as pesquisadoras aprovadas no portal.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nome</th><th>Área</th><th>Instituição</th><th>Destaque</th><th>Ações</th></tr></thead>
+        <tbody id="pesquisadorasTable"><tr><td colspan="5" class="loading"><div class="spinner"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PUBLICAÇÕES -->
+  <div class="page" id="page-obras">
+    <h1 class="page-title">Publicações</h1>
+    <p class="page-sub">Gerencie as obras cadastradas.</p>
+    <div style="margin-bottom:1rem"><button class="btn btn-green" onclick="showAddObra()">+ Nova publicação</button></div>
+    <div id="addObraForm" style="display:none" class="form-card">
+      <h3>Nova publicação</h3>
+      <div class="form-grid">
+        <div class="form-group full"><label>Pesquisadora</label><select id="obraResearcher"><option value="">Selecione…</option></select></div>
+        <div class="form-group full"><label>Título *</label><input type="text" id="obraTitulo" placeholder="Título completo"></div>
+        <div class="form-group"><label>Tipo *</label>
+          <select id="obraTipo"><option value="">Selecione…</option><option>Livro</option><option>Tese de Doutorado</option><option>Dissertação de Mestrado</option><option>TCC</option><option>Artigo Científico</option><option>Capítulo de Livro</option><option>Monografia</option><option>Relatório Técnico</option></select>
+        </div>
+        <div class="form-group"><label>Ano</label><input type="number" id="obraAno" placeholder="2023"></div>
+        <div class="form-group full"><label>Resumo</label><textarea id="obraResumo" placeholder="Breve descrição…"></textarea></div>
+        <div class="form-group"><label>Área do Conhecimento</label>
+          <select id="obraArea"><option value="">Selecione…</option><option>Ciências Exatas e da Terra</option><option>Ciências Biológicas</option><option>Engenharias</option><option>Ciências da Saúde</option><option>Ciências Agrárias</option><option>Ciências Sociais Aplicadas</option><option>Ciências Humanas</option><option>Linguística, Letras e Artes</option><option>Multidisciplinar</option></select>
+        </div>
+        <div class="form-group"><label>Tags (separadas por vírgula)</label><input type="text" id="obraTags" placeholder="saúde pública, epidemiologia"></div>
+        <div class="form-group"><label>Link de acesso</label><input type="url" id="obraAcesso"></div>
+        <div class="form-group"><label>Link de compra</label><input type="url" id="obraCompra"></div>
+      </div>
+      <div style="display:flex;gap:.75rem;margin-top:1.25rem">
+        <button class="btn btn-green" onclick="saveObra()">Salvar publicação</button>
+        <button class="btn btn-outline" onclick="document.getElementById('addObraForm').style.display='none'">Cancelar</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Título</th><th>Autora</th><th>Tipo</th><th>Ano</th><th>Ações</th></tr></thead>
+        <tbody id="obrasTable"><tr><td colspan="5" class="loading"><div class="spinner"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- BLOG -->
+  <div class="page" id="page-blog">
+    <h1 class="page-title">Blog</h1>
+    <p class="page-sub">Escreva, edite e gerencie os artigos do portal.</p>
+    <div style="display:grid;grid-template-columns:1fr 400px;gap:1.5rem;align-items:start">
+
+      <!-- EDITOR -->
+      <div>
+        <div class="form-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+            <h3 style="margin:0" id="blogFormTitle">Novo artigo</h3>
+            <button class="btn btn-outline" id="blogCancelEdit" style="display:none;font-size:.78rem;padding:.35rem .8rem" onclick="cancelEditPost()">✕ Cancelar edição</button>
+          </div>
+          <input type="hidden" id="blogEditId">
+          <div class="form-grid single">
+            <div class="form-group"><label>Título *</label><input type="text" id="blogTitulo" placeholder="Título do artigo"></div>
+            <div class="form-group"><label>Resumo (aparece na lista)</label><textarea id="blogResumo" placeholder="Breve descrição do artigo…" style="min-height:80px"></textarea></div>
+            <div class="form-group"><label>Categoria</label><input type="text" id="blogCategoria" placeholder="Ex: Entrevista, Opinião, Notícia…"></div>
+            <div style="display:flex;gap:1rem">
+              <div class="form-group" style="flex:0 0 90px"><label>Emoji</label><input type="text" id="blogEmoji" placeholder="✍️" maxlength="2"></div>
+              <div class="form-group" style="flex:1"><label>Autora</label><input type="text" id="blogAutor" placeholder="Nome da autora do artigo"></div>
+            </div>
+            <!-- FOTOS -->
+            <div class="form-group">
+              <label>📷 Foto de capa <span style="font-weight:400;color:var(--cinza)">(aparece no card da lista)</span></label>
+              <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-top:.35rem">
+                <div id="capaPreview" style="width:80px;height:56px;border-radius:8px;background:var(--cinza-claro);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem">🖼️</div>
+                <div>
+                  <button type="button" class="btn btn-outline" style="font-size:.78rem;padding:.35rem .8rem" onclick="document.getElementById('capaInput').click()">Escolher imagem</button>
+                  <button type="button" class="btn btn-outline" id="capaRemoveBtn" style="font-size:.78rem;padding:.35rem .8rem;display:none" onclick="removeFotoBlog('capa')">✕ Remover</button>
+                  <input type="file" id="capaInput" accept="image/*" style="display:none" onchange="previewFotoBlog('capa',this)">
+                  <input type="hidden" id="capaUrl">
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>🖼️ Foto de cabeçalho <span style="font-weight:400;color:var(--cinza)">(aparece no topo do post)</span></label>
+              <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-top:.35rem">
+                <div id="headerPreview" style="width:120px;height:56px;border-radius:8px;background:var(--cinza-claro);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem">🖼️</div>
+                <div>
+                  <button type="button" class="btn btn-outline" style="font-size:.78rem;padding:.35rem .8rem" onclick="document.getElementById('headerInput').click()">Escolher imagem</button>
+                  <button type="button" class="btn btn-outline" id="headerRemoveBtn" style="font-size:.78rem;padding:.35rem .8rem;display:none" onclick="removeFotoBlog('header')">✕ Remover</button>
+                  <input type="file" id="headerInput" accept="image/*" style="display:none" onchange="previewFotoBlog('header',this)">
+                  <input type="hidden" id="headerUrl">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITOR RICO -->
+        <div class="form-card" style="padding:0;overflow:hidden">
+          <div class="editor-toolbar" style="display:flex;flex-wrap:wrap;gap:.25rem;padding:.6rem .75rem;border-bottom:1px solid var(--cinza-claro);background:#fafafa">
+            <button class="toolbar-btn" onclick="richCmd('bold')" title="Negrito"><b>B</b></button>
+            <button class="toolbar-btn" onclick="richCmd('italic')" title="Itálico"><i>I</i></button>
+            <button class="toolbar-btn" onclick="richCmd('underline')" title="Sublinhado"><u>U</u></button>
+            <span style="width:1px;background:var(--cinza-claro);margin:0 .25rem;align-self:stretch"></span>
+            <button class="toolbar-btn" onclick="richHeading('h2')" title="Título H2" style="font-size:.75rem;font-weight:700">H2</button>
+            <button class="toolbar-btn" onclick="richHeading('h3')" title="Subtítulo H3" style="font-size:.75rem;font-weight:700">H3</button>
+            <span style="width:1px;background:var(--cinza-claro);margin:0 .25rem;align-self:stretch"></span>
+            <button class="toolbar-btn" onclick="richCmd('insertUnorderedList')" title="Lista com marcadores">≡</button>
+            <button class="toolbar-btn" onclick="richCmd('insertOrderedList')" title="Lista numerada">1.</button>
+            <button class="toolbar-btn" onclick="richBlockquote()" title="Citação">❝</button>
+            <span style="width:1px;background:var(--cinza-claro);margin:0 .25rem;align-self:stretch"></span>
+            <button class="toolbar-btn" onclick="richCmd('justifyLeft')" title="Alinhar esquerda">⬅</button>
+            <button class="toolbar-btn" onclick="richCmd('justifyCenter')" title="Centralizar">⬛</button>
+            <button class="toolbar-btn" onclick="richCmd('justifyRight')" title="Alinhar direita">➡</button>
+            <span style="width:1px;background:var(--cinza-claro);margin:0 .25rem;align-self:stretch"></span>
+            <button class="toolbar-btn" onclick="richLink()" title="Inserir link">🔗</button>
+            <button class="toolbar-btn" onclick="richCmd('removeFormat')" title="Limpar formatação" style="font-size:.7rem">✕fmt</button>
+          </div>
+          <div id="blogEditor"
+            contenteditable="true"
+            style="min-height:320px;padding:1.25rem;font-family:'DM Sans',sans-serif;font-size:.95rem;line-height:1.75;outline:none;color:var(--preto)"
+            data-placeholder="Escreva o conteúdo do artigo aqui…"></div>
+        </div>
+
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem">
+          <button class="btn-primary-lg" id="btnPublicar" onclick="saveBlog(true)">🌐 Publicar agora</button>
+          <button class="btn btn-outline" id="btnRascunho" onclick="saveBlog(false)" style="padding:.85rem 1.5rem;font-size:.9rem">💾 Salvar rascunho</button>
+        </div>
+      </div>
+
+      <!-- LISTA DE POSTS + COMENTÁRIOS -->
+      <div>
+        <!-- Abas -->
+        <div style="display:flex;border-bottom:2px solid var(--cinza-claro);margin-bottom:1.25rem">
+          <button id="tabPublicados" onclick="switchBlogTab('publicados')"
+            style="flex:1;padding:.6rem .4rem;font-size:.75rem;font-weight:600;background:none;border:none;cursor:pointer;border-bottom:2px solid var(--verde);margin-bottom:-2px;color:var(--verde);font-family:'DM Sans',sans-serif">
+            🌐 Publicados
+          </button>
+          <button id="tabRascunhos" onclick="switchBlogTab('rascunhos')"
+            style="flex:1;padding:.6rem .4rem;font-size:.75rem;font-weight:600;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--cinza);font-family:'DM Sans',sans-serif">
+            💾 Rascunhos
+          </button>
+          <button id="tabComentarios" onclick="switchBlogTab('comentarios')"
+            style="flex:1;padding:.6rem .4rem;font-size:.75rem;font-weight:600;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--cinza);font-family:'DM Sans',sans-serif">
+            💬 Comentários
+          </button>
+        </div>
+        <div id="blogPostsList"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CADASTRO MANUAL -->
+  <div class="page" id="page-cadastro-manual">
+    <h1 class="page-title">Cadastro manual</h1>
+    <p class="page-sub">Cadastre uma pesquisadora diretamente, sem passar pela fila de inscrições.</p>
+    <div class="form-card">
+      <h3>Dados pessoais</h3>
+      <div class="form-grid">
+        <div class="form-group full"><label>Nome completo *</label><input type="text" id="m_nome" placeholder="Ex: Dra. Maria da Silva Santos"></div>
+        <div class="form-group full">
+          <label>Mini bio *</label>
+          <textarea id="m_bio" placeholder="Apresentação breve da trajetória acadêmica (até 300 caracteres)…" maxlength="300" style="min-height:90px"></textarea>
+          <span style="font-size:.72rem;color:var(--cinza)" id="m_bioCount">0/300 caracteres</span>
+        </div>
+        <div class="form-group"><label>Área principal *</label><select id="m_area"><option value="">Selecione…</option><option>Ciências Exatas e da Terra</option><option>Ciências Biológicas</option><option>Engenharias</option><option>Ciências da Saúde</option><option>Ciências Agrárias</option><option>Ciências Sociais Aplicadas</option><option>Ciências Humanas</option><option>Linguística, Letras e Artes</option><option>Multidisciplinar</option></select></div>
+        <div class="form-group"><label>Instituição *</label><select id="m_inst"><option value="">Selecione…</option><option>UFES - Universidade Federal do Espírito Santo</option><option>IFES - Instituto Federal do Espírito Santo</option><option>UVV - Universidade Vila Velha</option><option>FUCAPE</option><option>EMESCAM</option><option>FDV - Faculdade de Direito de Vitória</option><option>MULTIVIX</option><option>FAESA</option><option>Outra</option></select></div>
+        <!-- FOTO DE PERFIL -->
+        <div class="form-group full">
+          <label>📷 Foto de perfil <span style="font-weight:400;color:var(--cinza)">(opcional — formato quadrado recomendado)</span></label>
+          <div style="display:flex;gap:1rem;align-items:center;margin-top:.5rem;flex-wrap:wrap">
+            <div id="m_fotoPreview" style="width:72px;height:72px;border-radius:50%;overflow:hidden;background:var(--cinza-claro);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;border:2px solid var(--cinza-claro)">👤</div>
+            <div>
+              <button type="button" class="btn btn-outline" style="font-size:.82rem;padding:.4rem 1rem" onclick="document.getElementById('m_fotoInput').click()">Escolher foto</button>
+              <button type="button" class="btn btn-outline" id="m_fotoRemoveBtn" style="font-size:.82rem;padding:.4rem 1rem;display:none" onclick="mRemoverFoto()">✕ Remover</button>
+              <input type="file" id="m_fotoInput" accept="image/*" style="display:none" onchange="mPreviewFoto(this)">
+              <div style="font-size:.72rem;color:var(--cinza);margin-top:.3rem" id="m_fotoStatus">Nenhuma foto selecionada</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-card">
+      <h3>Links &amp; contato</h3>
+      <div class="form-grid">
+        <div class="form-group"><label>Currículo Lattes</label><input type="url" id="m_lattes" placeholder="http://lattes.cnpq.br/…"></div>
+        <div class="form-group"><label>ORCID</label><input type="url" id="m_orcid" placeholder="https://orcid.org/0000-…"></div>
+        <div class="form-group"><label>LinkedIn</label><input type="url" id="m_linkedin" placeholder="https://linkedin.com/in/…"></div>
+        <div class="form-group"><label>Google Scholar</label><input type="url" id="m_scholar" placeholder="https://scholar.google.com/…"></div>
+        <div class="form-group"><label>ResearchGate</label><input type="url" id="m_researchgate" placeholder="https://researchgate.net/…"></div>
+        <div class="form-group"><label>E-mail público</label><input type="email" id="m_email" placeholder="contato@universidade.br"></div>
+        <div class="form-group full"><label>Site ou blog</label><input type="url" id="m_site" placeholder="https://meusite.com.br"></div>
+      </div>
+    </div>
+    <div class="form-card">
+      <h3>Publicações <span style="font-size:.8rem;font-weight:400;color:var(--cinza)">(opcional — pode adicionar depois na aba Publicações)</span></h3>
+      <div id="m_obrasContainer"></div>
+      <button class="btn btn-outline" style="width:100%;justify-content:center;padding:.75rem" onclick="mAddObra()">+ Adicionar publicação</button>
+    </div>
+    <div class="form-card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+      <label style="display:flex;align-items:center;gap:.6rem;cursor:pointer;font-size:.9rem;font-weight:500">
+        <input type="checkbox" id="m_destaque" style="width:18px;height:18px;accent-color:var(--verde)">
+        Marcar como pesquisadora em destaque (aparece na capa)
+      </label>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+        <button class="btn btn-outline" onclick="mLimpar()">Limpar</button>
+        <button class="btn-primary-lg" onclick="mSalvar()">✓ Cadastrar pesquisadora</button>
+      </div>
+    </div>
+    <div id="m_erro" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:.85rem 1rem;font-size:.85rem;color:#b91c1c;margin-top:.5rem"></div>
+  </div>
+
+  <!-- CADASTRO COM IA -->
+  <div class="page" id="page-cadastro-ia">
+    <h1 class="page-title">Cadastro com IA</h1>
+    <p class="page-sub">Cole textos, links ou informações sobre uma pesquisadora. A IA vai extrair e preencher o cadastro automaticamente.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+      <!-- Chat IA -->
+      <div class="ai-chat">
+        <div class="ai-chat-header">
+          <div class="ai-icon">🤖</div>
+          <div><h3>Assistente de Cadastro</h3><p>Envie informações e extraio os dados automaticamente</p></div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="msg msg-ai">Olá! Envie qualquer informação sobre a pesquisadora — pode ser a biografia do site da UFES, o link do Lattes, um texto de apresentação, ou simplesmente descreva quem ela é. Vou identificar os dados e montar o cadastro para você revisar.</div>
+        </div>
+        <div class="chat-input-area">
+          <textarea id="chatInput" placeholder="Cole texto, links ou descreva a pesquisadora…" rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+          <button class="btn-send" id="btnSend" onclick="sendChat()">Enviar</button>
+        </div>
+      </div>
+
+      <!-- Resultado da IA -->
+      <div>
+        <div class="form-card" id="iaResultCard" style="display:none">
+          <h3 style="color:var(--verde)">✓ Dados identificados pela IA</h3>
+          <p style="font-size:.82rem;color:var(--cinza);margin-bottom:1.25rem">Revise e ajuste se necessário, depois salve.</p>
+          <div id="iaFields"></div>
+          <div style="display:flex;gap:.75rem;margin-top:1.25rem;flex-wrap:wrap">
+            <button class="btn btn-green" onclick="saveIaResearcher()">✓ Salvar pesquisadora</button>
+            <button class="btn btn-outline" onclick="clearIaResult()">✕ Limpar</button>
+          </div>
+          <div id="iaSaveMsg" style="display:none;margin-top:.75rem;font-size:.85rem;color:var(--verde);font-weight:500"></div>
+        </div>
+        <div id="iaEmptyState" class="form-card" style="text-align:center;padding:3rem 2rem">
+          <div style="font-size:3rem;margin-bottom:1rem">🤖</div>
+          <p style="font-size:.9rem;color:var(--cinza)">O cadastro preenchido pela IA aparecerá aqui.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="success-toast" id="toast"></div>
 
 <script>
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let allResearchers = [], allWorks = [];
-let filtroArea = '', filtroInst = '', filtroTipo = '', busca = '';
+let currentUser = null;
+let allResearchers = [], allWorks = [], allPosts = [];
+let iaData = {};
 
-function initials(name){ return name.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join(''); }
-const bookEmojis = {"Ciências Biológicas":"🐠","Ciências Humanas":"📖","Engenharias":"🏗️","Ciências da Saúde":"🩺","Ciências Exatas e da Terra":"🔬","Linguística, Letras e Artes":"🎭"};
+// AUTH CHECK
+async function initAuth(){
+  const { data: { session } } = await db.auth.getSession();
+  if(!session){ location.href='login.html'; return; }
+  currentUser = session.user;
+  document.getElementById('userEmail').textContent = currentUser.email;
+  loadAll();
+}
 
+async function logout(){ await db.auth.signOut(); location.href='login.html'; }
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+}
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+
+// ── LOAD ALL DATA ──────────────────────────────────────────
 async function loadAll(){
-  try {
-    const [resRes, worksRes, postsRes] = await Promise.all([
-      db.from('researchers').select('*').eq('status','aprovada').order('destaque',{ascending:false}),
-      db.from('works').select('*').order('ano',{ascending:false}),
-      db.from('blog_posts').select('*').eq('publicado',true).order('created_at',{ascending:false}).limit(3)
-    ]);
-    allResearchers = resRes.data || [];
-    allWorks = worksRes.data || [];
-    const posts = postsRes.data || [];
-    renderStats();
-    renderFilters();
-    renderResearchers();
-    renderWorks();
-    renderBooks();
-    renderSobreStats();
-    renderBlogPreview(posts);
-  } catch(e) {
-    console.error('Erro ao carregar dados:', e);
-    ['blogGrid','researchersGrid','worksGrid','booksGrid'].forEach(id => {
-      const el = document.getElementById(id);
-      if(el) el.innerHTML = '<div class="empty">Erro ao carregar. Verifique a conexão com o banco de dados.</div>';
-    });
+  const [resRes, worksRes, postsRes] = await Promise.all([
+    db.from('researchers').select('*').order('created_at',{ascending:false}),
+    db.from('works').select('*').order('created_at',{ascending:false}),
+    db.from('blog_posts').select('*').order('created_at',{ascending:false}),
+  ]);
+  if(resRes.error) console.error('Erro ao carregar researchers:', resRes.error.message);
+  if(worksRes.error) console.error('Erro ao carregar works:', worksRes.error.message);
+  if(postsRes.error) console.error('Erro ao carregar blog_posts:', postsRes.error.message);
+  allResearchers = resRes.data||[]; allWorks = worksRes.data||[]; allPosts = postsRes.data||[];
+  await loadComments();
+  renderDashboard(); renderInscricoes(); renderPesquisadoras(); renderObras(); renderBlogPosts();
+  populateObraResearcherSelect();
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────
+function renderDashboard(){
+  const pendentes = allResearchers.filter(r=>r.status==='pendente').length;
+  const aprovadas = allResearchers.filter(r=>r.status==='aprovada').length;
+  document.getElementById('dashStats').innerHTML = [
+    {num:aprovadas, label:'Pesquisadoras aprovadas'},
+    {num:pendentes, label:'Aguardando aprovação'},
+    {num:allWorks.length, label:'Publicações cadastradas'},
+    {num:allPosts.filter(p=>p.publicado).length, label:'Artigos publicados'},
+  ].map(s=>`<div class="stat-card"><div class="stat-card-num">${s.num}</div><div class="stat-card-label">${s.label}</div></div>`).join('');
+
+  const recent = allResearchers.slice(0,5);
+  document.getElementById('recentInscricoes').innerHTML = recent.length ?
+    recent.map(r=>`<tr>
+      <td><strong>${r.nome}</strong></td>
+      <td>${r.area_principal||'—'}</td>
+      <td><span class="badge badge-${r.status}">${r.status}</span></td>
+      <td>${new Date(r.created_at).toLocaleDateString('pt-BR')}</td>
+      <td><button class="btn btn-outline" onclick="openResearcherModal('${r.id}')">Ver / Editar</button></td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">Nenhuma inscrição ainda.</td></tr>';
+}
+
+// ── INSCRIÇÕES ──────────────────────────────────────────────
+function renderInscricoes(){
+  const list = allResearchers.filter(r=>r.status==='pendente');
+  const tbody = document.getElementById('inscricoesTable');
+  if(!list.length){ tbody.innerHTML='<tr><td colspan="6" class="empty">Nenhuma inscrição pendente. 🎉</td></tr>'; return; }
+  tbody.innerHTML = list.map(r=>`<tr>
+    <td><strong>${r.nome}</strong><br><small style="color:var(--cinza)">${r.email||''}</small></td>
+    <td>${r.area_principal||'—'}</td>
+    <td>${r.instituicao||'—'}</td>
+    <td>${new Date(r.created_at).toLocaleDateString('pt-BR')}</td>
+    <td><span class="badge badge-pendente">Pendente</span></td>
+    <td><div class="actions-cell">
+      <button class="btn btn-green" onclick="aprovar('${r.id}')">✓ Aprovar</button>
+      <button class="btn btn-red" onclick="reprovar('${r.id}')">✕ Reprovar</button>
+      <button class="btn btn-outline" onclick="verPerfil('${r.id}')">Ver perfil</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+async function aprovar(id){
+  await db.from('researchers').update({status:'aprovada'}).eq('id',id);
+  toast('Pesquisadora aprovada!'); await loadAll();
+}
+async function reprovar(id){
+  if(!confirm('Reprovar esta inscrição?')) return;
+  await db.from('researchers').update({status:'reprovada'}).eq('id',id);
+  toast('Inscrição reprovada.'); await loadAll();
+}
+function verPerfil(id){ openResearcherModal(id); }
+
+function openResearcherModal(id){
+  const r = allResearchers.find(x=>x.id===id);
+  if(!r) return;
+  const works = allWorks.filter(w=>w.researcher_id===id);
+
+  // Criar modal dinamicamente
+  document.getElementById('researcherModal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'researcherModal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(26,26,26,.65);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1rem';
+  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
+
+  const avatarHtml = r.foto_url
+    ? `<img src="${r.foto_url}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+    : `<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#52B788,#2D6A4F);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.6rem;color:white;flex-shrink:0">${r.nome.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join('')}</div>`;
+
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:24px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;padding:2rem;position:relative">
+      <button onclick="document.getElementById('researcherModal').remove()" style="position:absolute;top:1rem;right:1rem;background:#f0ede8;border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">✕</button>
+
+      <div style="display:flex;gap:1.25rem;align-items:flex-start;margin-bottom:1.5rem">
+        ${avatarHtml}
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;line-height:1.2">${r.nome}</div>
+          <div style="font-size:.82rem;color:#6B6B6B;margin-top:.25rem">${r.area_principal||''} · ${r.instituicao||''}</div>
+          <div style="margin-top:.4rem"><span style="font-size:.72rem;padding:.2rem .6rem;border-radius:100px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em;background:${r.status==='aprovada'?'rgba(45,106,79,.1)':r.status==='pendente'?'rgba(196,132,58,.1)':'#fef2f2'};color:${r.status==='aprovada'?'#2D6A4F':r.status==='pendente'?'#C4843A':'#b91c1c'}">${r.status}</span></div>
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO DE EDIÇÃO -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+        <div style="grid-column:1/-1">
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">Nome completo</label>
+          <input id="rm_nome" value="${r.nome||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div style="grid-column:1/-1">
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">Mini bio</label>
+          <textarea id="rm_bio" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;resize:vertical;min-height:80px">${r.mini_bio||''}</textarea>
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">Área principal</label>
+          <input id="rm_area" value="${r.area_principal||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">Instituição</label>
+          <input id="rm_inst" value="${r.instituicao||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">Lattes</label>
+          <input id="rm_lattes" value="${r.lattes||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">ORCID</label>
+          <input id="rm_orcid" value="${r.orcid||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">LinkedIn</label>
+          <input id="rm_linkedin" value="${r.linkedin||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem">E-mail</label>
+          <input id="rm_email" value="${r.email||''}" style="width:100%;padding:.65rem .9rem;border:1.5px solid #E8E4DE;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none">
+        </div>
+      </div>
+
+      <!-- FOTO DE PERFIL -->
+      <div style="margin-bottom:1rem;padding:1rem;background:#F8F4EE;border-radius:12px">
+        <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.6rem">📷 Foto de perfil</label>
+        <div style="display:flex;gap:.75rem;align-items:center">
+          <div id="rm_fotoPreview" style="width:56px;height:56px;border-radius:50%;overflow:hidden;background:#E8E4DE;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            ${r.foto_url ? `<img src="${r.foto_url}" style="width:100%;height:100%;object-fit:cover">` : '👤'}
+          </div>
+          <div>
+            <button type="button" onclick="document.getElementById('rm_fotoInput').click()" style="font-size:.78rem;padding:.35rem .8rem;border:1.5px solid #E8E4DE;border-radius:100px;background:white;cursor:pointer;font-family:'DM Sans',sans-serif">Trocar foto</button>
+            <input type="file" id="rm_fotoInput" accept="image/*" style="display:none" onchange="previewRmFoto(this,'${r.id}')">
+            <div id="rm_fotoStatus" style="font-size:.72rem;color:#6B6B6B;margin-top:.3rem"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PUBLICAÇÕES -->
+      ${works.length ? `<div style="margin-bottom:1.25rem">
+        <div style="font-size:.8rem;font-weight:600;margin-bottom:.5rem">📄 Publicações (${works.length})</div>
+        ${works.map(w=>`<div style="font-size:.82rem;padding:.5rem .75rem;background:#F8F4EE;border-radius:8px;margin-bottom:.3rem">${w.tipo} · ${w.titulo}</div>`).join('')}
+      </div>` : ''}
+
+      <!-- STATUS -->
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;padding-top:1rem;border-top:1px solid #E8E4DE">
+        <button onclick="saveResearcherModal('${r.id}')" style="flex:1;padding:.75rem;background:#2D6A4F;color:white;border:none;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer">💾 Salvar alterações</button>
+        ${r.status==='pendente' ? `
+          <button onclick="aprovar('${r.id}');document.getElementById('researcherModal').remove()" style="padding:.75rem 1.25rem;background:#52B788;color:white;border:none;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:.88rem;cursor:pointer">✓ Aprovar</button>
+          <button onclick="reprovar('${r.id}');document.getElementById('researcherModal').remove()" style="padding:.75rem 1.25rem;background:#fef2f2;color:#b91c1c;border:1.5px solid #fca5a5;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:.88rem;cursor:pointer">✕ Reprovar</button>
+        ` : ''}
+      </div>
+      <div id="rm_saveMsg" style="display:none;margin-top:.75rem;font-size:.85rem;color:#2D6A4F;font-weight:500;text-align:center">✓ Alterações salvas!</div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+}
+
+function previewRmFoto(input, researcherId){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('rm_fotoPreview').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+    document.getElementById('rm_fotoStatus').textContent = 'Foto selecionada (salve para confirmar)';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveResearcherModal(id){
+  const btn = document.querySelector('#researcherModal button[onclick*="saveResearcherModal"]');
+  if(btn){ btn.textContent='Salvando…'; btn.disabled=true; }
+
+  const payload = {
+    nome: document.getElementById('rm_nome').value.trim(),
+    mini_bio: document.getElementById('rm_bio').value.trim(),
+    area_principal: document.getElementById('rm_area').value.trim(),
+    instituicao: document.getElementById('rm_inst').value.trim(),
+    lattes: document.getElementById('rm_lattes').value.trim()||null,
+    orcid: document.getElementById('rm_orcid').value.trim()||null,
+    linkedin: document.getElementById('rm_linkedin').value.trim()||null,
+    email: document.getElementById('rm_email').value.trim()||null,
+  };
+
+  // Upload foto se tiver nova
+  const fotoInput = document.getElementById('rm_fotoInput');
+  if(fotoInput?.files[0]){
+    const file = fotoInput.files[0];
+    const ext = file.name.split('.').pop();
+    const path = `${id}.${ext}`;
+    const { error: upErr } = await db.storage.from('avatars').upload(path, file, {upsert:true, contentType:file.type});
+    if(!upErr){
+      const { data } = db.storage.from('avatars').getPublicUrl(path);
+      payload.foto_url = data.publicUrl;
+    }
+  }
+
+  const { error } = await db.from('researchers').update(payload).eq('id', id);
+  if(btn){ btn.textContent='💾 Salvar alterações'; btn.disabled=false; }
+  if(!error){
+    document.getElementById('rm_saveMsg').style.display='block';
+    document.getElementById('rm_fotoStatus').textContent = payload.foto_url ? '✓ Foto atualizada!' : '';
+    await loadAll();
+    setTimeout(()=>{ document.getElementById('rm_saveMsg').style.display='none'; }, 3000);
+  } else {
+    alert('Erro ao salvar: '+error.message);
   }
 }
 
-function renderStats(){
-  const insts = new Set(allResearchers.map(r=>r.instituicao)).size;
-  document.getElementById('statP').textContent = allResearchers.length;
-  document.getElementById('statO').textContent = allWorks.length;
-  document.getElementById('statI').textContent = insts;
+// ── PESQUISADORAS ──────────────────────────────────────────
+function renderPesquisadoras(){
+  const list = allResearchers.filter(r=>r.status==='aprovada');
+  const tbody = document.getElementById('pesquisadorasTable');
+  if(!list.length){ tbody.innerHTML='<tr><td colspan="5" class="empty">Nenhuma pesquisadora aprovada ainda.</td></tr>'; return; }
+  tbody.innerHTML = list.map(r=>`<tr>
+    <td><strong>${r.nome}</strong></td>
+    <td>${r.area_principal||'—'}</td>
+    <td>${r.instituicao||'—'}</td>
+    <td>${r.destaque?'<span class="badge badge-destaque">Sim</span>':'—'}</td>
+    <td><div class="actions-cell">
+      <button class="btn ${r.destaque?'btn-outline':'btn-terra'}" onclick="toggleDestaque('${r.id}',${!r.destaque})">${r.destaque?'Remover destaque':'⭐ Destacar'}</button>
+      <button class="btn btn-red" onclick="deleteResearcher('${r.id}')">🗑 Remover</button>
+    </div></td>
+  </tr>`).join('');
 }
 
-function renderHeroCards(){
-  // elemento removido do HTML — função mantida para compatibilidade
+async function toggleDestaque(id, val){
+  await db.from('researchers').update({destaque:val}).eq('id',id);
+  toast(val?'Pesquisadora destacada!':'Destaque removido.'); await loadAll();
+}
+async function deleteResearcher(id){
+  if(!confirm('Remover esta pesquisadora do portal?')) return;
+  await db.from('works').delete().eq('researcher_id',id);
+  await db.from('researchers').delete().eq('id',id);
+  toast('Pesquisadora removida.'); await loadAll();
 }
 
-function renderFilters(){
-  const areas = [...new Set(allResearchers.map(r=>r.area_principal).filter(Boolean))];
-  const insts = [...new Set(allResearchers.map(r=>r.instituicao).filter(Boolean))];
-  const tipos = [...new Set(allWorks.map(w=>w.tipo).filter(Boolean))];
-  document.getElementById('areaFilters').innerHTML =
-    `<button class="filter-btn active" onclick="setArea('')">Todas</button>` +
-    areas.map(a=>`<button class="filter-btn" onclick="setArea('${a}')">${a}</button>`).join('');
-  document.getElementById('instFilters').innerHTML =
-    `<button class="filter-btn active" onclick="setInst('')">Todas</button>` +
-    insts.map(i=>`<button class="filter-btn" onclick="setInst('${i}')">${i}</button>`).join('');
-  document.getElementById('tipoFilters').innerHTML =
-    `<button class="filter-btn active" onclick="setTipo('')">Todos</button>` +
-    tipos.map(t=>`<button class="filter-btn" onclick="setTipo('${t}')">${t}</button>`).join('');
+// ── OBRAS ──────────────────────────────────────────────────
+function populateObraResearcherSelect(){
+  const sel = document.getElementById('obraResearcher');
+  const approved = allResearchers.filter(r=>r.status==='aprovada');
+  sel.innerHTML = '<option value="">Selecione a pesquisadora…</option>' +
+    approved.map(r=>`<option value="${r.id}">${r.nome}</option>`).join('');
 }
 
-function setArea(v){ filtroArea=v; document.querySelectorAll('#areaFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todas'))); renderResearchers(); }
-function setInst(v){ filtroInst=v; document.querySelectorAll('#instFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todas'))); renderResearchers(); }
-function setTipo(v){ filtroTipo=v; document.querySelectorAll('#tipoFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todos'))); renderWorks(); }
-
-function renderResearchers(){
-  const grid = document.getElementById('researchersGrid');
-  let list = allResearchers.filter(r=>{
-    const q=busca.toLowerCase();
-    return (!q || r.nome?.toLowerCase().includes(q) || r.area_principal?.toLowerCase().includes(q) || r.instituicao?.toLowerCase().includes(q))
-      && (!filtroArea || r.area_principal===filtroArea)
-      && (!filtroInst || r.instituicao===filtroInst);
-  });
-  if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma pesquisadora encontrada.</div>'; return; }
-  grid.innerHTML = list.map(r=>{
-    const links = [
-      r.lattes ? `<a class="rc-link" href="${r.lattes}" target="_blank">Lattes</a>` : '',
-      r.orcid ? `<a class="rc-link" href="${r.orcid}" target="_blank">ORCID</a>` : '',
-      r.linkedin ? `<a class="rc-link" href="${r.linkedin}" target="_blank">LinkedIn</a>` : '',
-      r.google_scholar ? `<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>` : '',
-    ].filter(Boolean).join('');
-    const wc = allWorks.filter(w=>w.researcher_id===r.id).length;
-    return `<div class="researcher-card" onclick="openModal('${r.id}')">
-      <div class="rc-top">
-        <div class="rc-avatar">${initials(r.nome)}</div>
-        <div><div class="rc-name">${r.nome}</div><div class="rc-inst">${r.instituicao||''}</div></div>
-      </div>
-      <span class="rc-area">${r.area_principal||''}</span>
-      <p class="rc-bio">${r.mini_bio||''}</p>
-      <div class="rc-links">${links}</div>
-      ${wc?`<div style="font-size:.78rem;color:var(--verde);font-weight:500;padding-top:.75rem;border-top:1px solid var(--cinza-claro)">↗ ${wc} publicaç${wc===1?'ão':'ões'}</div>`:''}
-    </div>`;
-  }).join('');
+function showAddObra(){
+  document.getElementById('addObraForm').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function renderWorks(){
-  const grid = document.getElementById('worksGrid');
-  let list = allWorks.filter(w=>!filtroTipo||w.tipo===filtroTipo);
-  if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
-  grid.innerHTML = list.map(w=>{
+function renderObras(){
+  const tbody = document.getElementById('obrasTable');
+  if(!allWorks.length){ tbody.innerHTML='<tr><td colspan="5" class="empty">Nenhuma publicação cadastrada.</td></tr>'; return; }
+  tbody.innerHTML = allWorks.map(w=>{
     const author = allResearchers.find(r=>r.id===w.researcher_id)?.nome||'—';
-    const tags = (w.tags||[]).map(t=>`<span class="wc-tag">${t}</span>`).join('');
-    return `<div class="work-card">
-      <div class="wc-top"><span class="wc-type">${w.tipo}</span><span class="wc-year">${w.ano||''}</span></div>
-      <div class="wc-title">${w.titulo}</div>
-      <div class="wc-author">${author}</div>
-      <p class="wc-resumo">${w.resumo||''}</p>
-      <div class="wc-tags">${tags}</div>
-      <div class="wc-actions">
-        ${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank">🛒 Comprar</a>`:''}
-        ${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank">Acessar →</a>`:''}
+    return `<tr>
+      <td style="max-width:280px"><strong>${w.titulo}</strong></td>
+      <td>${author}</td>
+      <td>${w.tipo||'—'}</td>
+      <td>${w.ano||'—'}</td>
+      <td><button class="btn btn-red" onclick="deleteWork('${w.id}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function saveObra(){
+  const titulo = document.getElementById('obraTitulo').value.trim();
+  const tipo = document.getElementById('obraTipo').value;
+  if(!titulo||!tipo){ alert('Preencha título e tipo.'); return; }
+  await db.from('works').insert([{
+    researcher_id: document.getElementById('obraResearcher').value||null,
+    titulo, tipo,
+    ano: parseInt(document.getElementById('obraAno').value)||null,
+    resumo: document.getElementById('obraResumo').value.trim()||null,
+    area_conhecimento: document.getElementById('obraArea').value||null,
+    tags: document.getElementById('obraTags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    link_acesso: document.getElementById('obraAcesso').value.trim()||null,
+    link_compra: document.getElementById('obraCompra').value.trim()||null,
+  }]);
+  toast('Publicação salva!');
+  document.getElementById('addObraForm').style.display='none';
+  await loadAll();
+}
+
+async function deleteWork(id){
+  if(!confirm('Remover esta publicação?')) return;
+  await db.from('works').delete().eq('id',id);
+  toast('Publicação removida.'); await loadAll();
+}
+
+// ── BLOG ──────────────────────────────────────────────────
+let blogTab = 'publicados';
+let allComments = [];
+let capaFile = null, headerFile = null;
+
+// Editor rico (contenteditable)
+function richCmd(cmd){ document.execCommand(cmd, false, null); document.getElementById('blogEditor').focus(); }
+function richHeading(tag){
+  document.execCommand('formatBlock', false, tag);
+  document.getElementById('blogEditor').focus();
+}
+function richBlockquote(){
+  document.execCommand('formatBlock', false, 'blockquote');
+  document.getElementById('blogEditor').focus();
+}
+function richLink(){
+  const url = prompt('URL do link:');
+  if(url){ document.execCommand('createLink', false, url); }
+  document.getElementById('blogEditor').focus();
+}
+
+// Placeholder no editor
+document.addEventListener('DOMContentLoaded', () => {
+  const ed = document.getElementById('blogEditor');
+  if(!ed) return;
+  ed.addEventListener('focus', () => { if(ed.innerHTML === ed.dataset.placeholder) ed.innerHTML = ''; });
+  ed.addEventListener('blur', () => { if(!ed.innerHTML.trim()) ed.innerHTML = ''; });
+  // Estilos do editor
+  ed.style.cssText += ';min-height:320px;padding:1.25rem;font-family:DM Sans,sans-serif;font-size:.95rem;line-height:1.75;outline:none;';
+});
+
+// Upload fotos do blog
+function previewFotoBlog(tipo, input){
+  const file = input.files[0];
+  if(!file) return;
+  if(tipo === 'capa') capaFile = file;
+  else headerFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById(tipo+'Preview');
+    prev.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+    document.getElementById(tipo+'RemoveBtn').style.display = 'inline-flex';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeFotoBlog(tipo){
+  if(tipo === 'capa'){ capaFile = null; document.getElementById('capaUrl').value = ''; document.getElementById('capaInput').value = ''; document.getElementById('capaPreview').innerHTML = '🖼️'; document.getElementById('capaRemoveBtn').style.display = 'none'; }
+  else { headerFile = null; document.getElementById('headerUrl').value = ''; document.getElementById('headerInput').value = ''; document.getElementById('headerPreview').innerHTML = '🖼️'; document.getElementById('headerRemoveBtn').style.display = 'none'; }
+}
+
+async function uploadBlogFoto(file, postId, tipo){
+  if(!file) return null;
+  const ext = file.name.split('.').pop();
+  const path = `blog/${postId}-${tipo}.${ext}`;
+  const { error } = await db.storage.from('blog-images').upload(path, file, {upsert: true, contentType: file.type});
+  if(error){ console.warn('Erro upload foto blog:', error.message); return null; }
+  const { data } = db.storage.from('blog-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function switchBlogTab(tab){
+  blogTab = tab;
+  ['publicados','rascunhos','comentarios'].forEach(t => {
+    const btn = document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(btn){ btn.style.borderBottomColor = t===tab ? 'var(--verde)' : 'transparent'; btn.style.color = t===tab ? 'var(--verde)' : 'var(--cinza)'; }
+  });
+  renderBlogPosts();
+}
+
+async function saveBlog(publish){
+  const titulo = document.getElementById('blogTitulo').value.trim();
+  if(!titulo){ alert('Preencha o título.'); return; }
+  const editorEl = document.getElementById('blogEditor');
+  const conteudo = editorEl.innerHTML || editorEl.value || '';
+  const editId = document.getElementById('blogEditId').value;
+
+  const btnP = document.getElementById('btnPublicar');
+  const btnR = document.getElementById('btnRascunho');
+  btnP.disabled = true; btnR.disabled = true;
+
+  let foto_capa = document.getElementById('capaUrl').value || null;
+  let foto_header = document.getElementById('headerUrl').value || null;
+
+  const payload = {
+    titulo,
+    resumo: document.getElementById('blogResumo').value.trim()||null,
+    conteudo,
+    categoria: document.getElementById('blogCategoria').value.trim()||'Artigo',
+    emoji: document.getElementById('blogEmoji').value.trim()||'✍️',
+    autor: document.getElementById('blogAutor').value.trim()||null,
+    publicado: publish,
+  };
+
+  let postId = editId;
+
+  if(editId){
+    await db.from('blog_posts').update(payload).eq('id', editId);
+  } else {
+    const { data } = await db.from('blog_posts').insert([payload]).select().single();
+    postId = data?.id;
+  }
+
+  // Upload fotos se houver novos arquivos
+  if(postId){
+    if(capaFile){ foto_capa = await uploadBlogFoto(capaFile, postId, 'capa'); }
+    if(headerFile){ foto_header = await uploadBlogFoto(headerFile, postId, 'header'); }
+    if(capaFile || headerFile){
+      const update = {};
+      if(foto_capa) update.foto_capa = foto_capa;
+      if(foto_header) update.foto_header = foto_header;
+      await db.from('blog_posts').update(update).eq('id', postId);
+    }
+  }
+
+  toast(editId ? (publish ? 'Artigo atualizado!' : 'Rascunho salvo!') : (publish ? 'Artigo publicado!' : 'Rascunho salvo!'));
+  btnP.disabled = false; btnR.disabled = false;
+  cancelEditPost();
+  await loadAll();
+}
+
+function cancelEditPost(){
+  document.getElementById('blogEditId').value = '';
+  document.getElementById('blogFormTitle').textContent = 'Novo artigo';
+  document.getElementById('blogCancelEdit').style.display = 'none';
+  ['blogTitulo','blogResumo','blogCategoria','blogEmoji','blogAutor'].forEach(id => document.getElementById(id).value = '');
+  const ed = document.getElementById('blogEditor');
+  if(ed.contentEditable === 'true') ed.innerHTML = '';
+  else ed.value = '';
+  capaFile = null; headerFile = null;
+  removeFotoBlog('capa'); removeFotoBlog('header');
+}
+
+function editPost(id){
+  const p = allPosts.find(x => x.id === id);
+  if(!p) return;
+  document.getElementById('blogEditId').value = p.id;
+  document.getElementById('blogTitulo').value = p.titulo || '';
+  document.getElementById('blogResumo').value = p.resumo || '';
+  document.getElementById('blogCategoria').value = p.categoria || '';
+  document.getElementById('blogEmoji').value = p.emoji || '';
+  document.getElementById('blogAutor').value = p.autor || '';
+  const ed = document.getElementById('blogEditor');
+  if(ed.contentEditable === 'true') ed.innerHTML = p.conteudo || '';
+  else ed.value = p.conteudo || '';
+  // Fotos existentes
+  if(p.foto_capa){
+    document.getElementById('capaUrl').value = p.foto_capa;
+    document.getElementById('capaPreview').innerHTML = `<img src="${p.foto_capa}" style="width:100%;height:100%;object-fit:cover">`;
+    document.getElementById('capaRemoveBtn').style.display = 'inline-flex';
+  }
+  if(p.foto_header){
+    document.getElementById('headerUrl').value = p.foto_header;
+    document.getElementById('headerPreview').innerHTML = `<img src="${p.foto_header}" style="width:100%;height:100%;object-fit:cover">`;
+    document.getElementById('headerRemoveBtn').style.display = 'inline-flex';
+  }
+  document.getElementById('blogFormTitle').textContent = '✏️ Editando: '+p.titulo.substring(0,30)+'…';
+  document.getElementById('blogCancelEdit').style.display = 'inline-flex';
+  document.getElementById('page-blog').scrollIntoView({behavior:'smooth'});
+}
+
+function renderBlogPosts(){
+  const el = document.getElementById('blogPostsList');
+  if(blogTab === 'comentarios'){ renderComments(); return; }
+  const filtered = allPosts.filter(p => blogTab === 'publicados' ? p.publicado : !p.publicado);
+  if(!filtered.length){
+    el.innerHTML = `<div class="empty">${blogTab === 'publicados' ? 'Nenhum artigo publicado.' : 'Nenhum rascunho salvo.'}</div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(p => {
+    const capaThumb = p.foto_capa ? `<img src="${p.foto_capa}" style="width:100%;height:60px;object-fit:cover;border-radius:8px 8px 0 0;display:block;margin:-1rem -1rem .75rem">` : '';
+    return `<div style="background:white;border-radius:12px;padding:1rem;border:1.5px solid var(--cinza-claro);margin-bottom:.75rem;overflow:hidden">
+      ${capaThumb}
+      <div style="font-weight:600;font-size:.88rem;margin-bottom:.3rem">${p.emoji||'✍️'} ${p.titulo}</div>
+      <div style="font-size:.72rem;color:var(--cinza);margin-bottom:.75rem">
+        ${new Date(p.created_at).toLocaleDateString('pt-BR')} ·
+        ${p.autor ? 'por ' + p.autor + ' · ' : ''}
+        <span style="color:${p.publicado ? 'var(--verde)' : 'var(--cinza)'}">
+          ${p.publicado ? '🌐 Publicado' : '💾 Rascunho'}
+        </span>
+      </div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+        <button class="btn btn-outline" style="font-size:.72rem;padding:.3rem .7rem" onclick="editPost('${p.id}')">✏️ Editar</button>
+        ${p.publicado
+          ? `<button class="btn btn-outline" style="font-size:.72rem;padding:.3rem .7rem" onclick="unpublishPost('${p.id}')">📥 Despublicar</button>`
+          : `<button class="btn btn-green" style="font-size:.72rem;padding:.3rem .7rem" onclick="publishPost('${p.id}')">🌐 Publicar</button>`
+        }
+        <button class="btn btn-red" style="font-size:.72rem;padding:.3rem .7rem" onclick="deletePost('${p.id}')">🗑</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function renderBooks(){
-  const grid = document.getElementById('booksGrid');
-  const books = allWorks.filter(w=>w.tipo==='Livro'&&w.link_compra);
-  if(!books.length){ grid.innerHTML='<div class="empty" style="color:rgba(255,255,255,.6)">Nenhum livro à venda no momento.</div>'; return; }
-  grid.innerHTML = books.map(b=>{
-    const author = allResearchers.find(r=>r.id===b.researcher_id)?.nome||'—';
-    return `<div class="book-card">
-      <div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div>
-      <div class="book-title">${b.titulo}</div>
-      <div class="book-author">${author}</div>
-      <a class="book-btn" href="${b.link_compra}" target="_blank">🛒 Adquirir</a>
-    </div>`;
-  }).join('');
+// ── COMENTÁRIOS ───────────────────────────────────────────
+async function loadComments(){
+  const { data } = await db.from('comments').select('*, blog_posts(titulo)').order('created_at',{ascending:false});
+  allComments = data || [];
 }
 
-function renderSobreStats(){
-  const el = document.getElementById('sobreStats');
-  const livros = allWorks.filter(w=>w.tipo==='Livro').length;
-  const insts = new Set(allResearchers.map(r=>r.instituicao)).size;
-  el.innerHTML = [
-    {num:allResearchers.length,label:'Pesquisadoras cadastradas'},
-    {num:allWorks.length,label:'Publicações catalogadas'},
-    {num:livros,label:'Livros disponíveis'},
-    {num:insts,label:'Instituições representadas'},
-  ].map(s=>`<div class="sobre-stat"><div class="sobre-stat-num">${s.num}</div><div class="sobre-stat-label">${s.label}</div></div>`).join('');
+async function renderComments(){
+  const el = document.getElementById('blogPostsList');
+  if(!allComments.length){ el.innerHTML='<div class="empty">Nenhum comentário ainda.</div>'; return; }
+
+  const pendentes = allComments.filter(c => !c.aprovado);
+  const aprovados = allComments.filter(c => c.aprovado);
+
+  let html = '';
+  if(pendentes.length){
+    html += `<div style="font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--terra);margin-bottom:.5rem">⏳ Aguardando aprovação (${pendentes.length})</div>`;
+    html += pendentes.map(c => commentCard(c, false)).join('');
+  }
+  if(aprovados.length){
+    html += `<div style="font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--verde);margin:.75rem 0 .5rem">✓ Aprovados (${aprovados.length})</div>`;
+    html += aprovados.map(c => commentCard(c, true)).join('');
+  }
+  el.innerHTML = html;
 }
 
-function renderBlogPreview(posts){
-  const grid = document.getElementById('blogGrid');
-  if(!posts.length){ grid.innerHTML='<div class="empty">Nenhum artigo publicado ainda.</div>'; return; }
-  grid.innerHTML = posts.map(p=>{
-    const capaHtml = p.foto_capa
-      ? `<div class="blog-card-img" style="position:relative;overflow:hidden"><img src="${p.foto_capa}" alt="${p.titulo}" loading="lazy" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></div>`
-      : `<div class="blog-card-img">${p.emoji||'✍️'}</div>`;
-    return `<div class="blog-card" onclick="location.href='blog.html?post=${p.id}'">
-      ${capaHtml}
-      <div class="blog-card-body">
-        <span class="blog-card-cat">${p.categoria||'Artigo'}</span>
-        <div class="blog-card-title">${p.titulo}</div>
-        <div class="blog-card-meta">${new Date(p.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</div>
-        <p class="blog-card-excerpt">${p.resumo||''}</p>
+function commentCard(c, aprovado){
+  const postTitle = c.blog_posts?.titulo || '—';
+  return `<div style="background:white;border-radius:12px;padding:.9rem;border:1.5px solid ${aprovado ? 'var(--cinza-claro)' : 'rgba(196,132,58,.3)'};margin-bottom:.6rem">
+    <div style="font-size:.72rem;color:var(--cinza);margin-bottom:.4rem">📄 ${postTitle}</div>
+    <div style="font-weight:600;font-size:.85rem">${escHtml(c.nome)}</div>
+    <div style="font-size:.82rem;color:#444;margin:.4rem 0 .65rem;line-height:1.5">${escHtml(c.texto)}</div>
+    <div style="font-size:.7rem;color:var(--cinza);margin-bottom:.6rem">${new Date(c.created_at).toLocaleDateString('pt-BR')}</div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+      ${!aprovado ? `<button class="btn btn-green" style="font-size:.7rem;padding:.3rem .65rem" onclick="approveComment('${c.id}')">✓ Aprovar</button>` : ''}
+      <button class="btn btn-red" style="font-size:.7rem;padding:.3rem .65rem" onclick="deleteComment('${c.id}')">🗑 Excluir</button>
+    </div>
+  </div>`;
+}
+
+function escHtml(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function approveComment(id){
+  await db.from('comments').update({aprovado:true}).eq('id',id);
+  toast('Comentário aprovado!');
+  await loadComments();
+  renderComments();
+}
+
+async function deleteComment(id){
+  if(!confirm('Excluir este comentário?')) return;
+  await db.from('comments').delete().eq('id',id);
+  toast('Comentário excluído.');
+  await loadComments();
+  renderComments();
+}
+
+async function publishPost(id){ await db.from('blog_posts').update({publicado:true}).eq('id',id); toast('Artigo publicado!'); await loadAll(); }
+async function unpublishPost(id){ await db.from('blog_posts').update({publicado:false}).eq('id',id); toast('Movido para rascunhos.'); await loadAll(); }
+async function deletePost(id){
+  if(!confirm('Excluir este artigo permanentemente?')) return;
+  await db.from('blog_posts').delete().eq('id',id);
+  toast('Artigo excluído.'); await loadAll();
+}
+
+// ── CADASTRO COM IA ────────────────────────────────────────
+const chatHistory = [];
+
+async function sendChat(){
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  addChatMsg(msg,'user');
+  input.value='';
+  document.getElementById('btnSend').disabled=true;
+  addChatMsg('Analisando as informações…','ai',true);
+
+  const systemPrompt = `Você é um assistente especializado em extrair dados de pesquisadoras acadêmicas.
+O usuário vai enviar textos, bios, links ou informações sobre uma pesquisadora.
+Você deve extrair e retornar os dados em formato JSON válido, com esta estrutura:
+{
+  "nome": "Nome completo com título (Dra., Profa., Msc., etc.)",
+  "mini_bio": "Biografia em até 250 caracteres",
+  "area_principal": "Uma das: Ciências Exatas e da Terra | Ciências Biológicas | Engenharias | Ciências da Saúde | Ciências Agrárias | Ciências Sociais Aplicadas | Ciências Humanas | Linguística, Letras e Artes | Multidisciplinar",
+  "instituicao": "Instituição principal",
+  "lattes": "URL do Lattes ou null",
+  "orcid": "URL do ORCID ou null",
+  "linkedin": "URL do LinkedIn ou null",
+  "email": "E-mail ou null",
+  "confianca": "alta | media | baixa",
+  "observacao": "Breve observação sobre o que foi identificado ou o que faltou"
+}
+Responda APENAS com o JSON, sem explicações.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system: systemPrompt,
+        messages:[...chatHistory,{role:'user',content:msg}]
+      })
+    });
+    const data = await response.json();
+    const rawText = data.content?.map(c=>c.text||'').join('');
+    
+    // Remover mensagem de "analisando"
+    document.querySelector('.msg-ai.thinking')?.remove();
+
+    // Tentar parsear JSON
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if(jsonMatch){
+      iaData = JSON.parse(jsonMatch[0]);
+      chatHistory.push({role:'user',content:msg},{role:'assistant',content:rawText});
+      addChatMsg(`✓ Identifiquei os dados de **${iaData.nome||'pesquisadora'}**! Confira ao lado e ajuste se necessário. Confiança: ${iaData.confianca||'—'}. ${iaData.observacao||''}`, 'ai');
+      showIaResult();
+    } else {
+      addChatMsg('Não consegui extrair os dados estruturados. Tente enviar mais informações como nome completo, instituição e área de pesquisa.','ai');
+    }
+  } catch(e) {
+    document.querySelector('.msg-ai.thinking')?.remove();
+    addChatMsg('Erro ao conectar com a IA. Verifique a chave da API no config.js.','ai');
+  }
+  document.getElementById('btnSend').disabled=false;
+}
+
+function addChatMsg(text, type, thinking=false){
+  const div = document.createElement('div');
+  div.className = `msg msg-${type}${thinking?' thinking':''}`;
+  div.innerHTML = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  document.getElementById('chatMessages').appendChild(div);
+  div.scrollIntoView({behavior:'smooth'});
+}
+
+function showIaResult(){
+  document.getElementById('iaEmptyState').style.display='none';
+  document.getElementById('iaResultCard').style.display='block';
+  const areas = ['Ciências Exatas e da Terra','Ciências Biológicas','Engenharias','Ciências da Saúde','Ciências Agrárias','Ciências Sociais Aplicadas','Ciências Humanas','Linguística, Letras e Artes','Multidisciplinar'];
+  document.getElementById('iaFields').innerHTML = `
+    <div class="form-grid single">
+      <div class="form-group"><label>Nome completo</label><input type="text" id="ia_nome" value="${iaData.nome||''}"></div>
+      <div class="form-group"><label>Mini bio</label><textarea id="ia_bio">${iaData.mini_bio||''}</textarea></div>
+      <div class="form-group"><label>Área principal</label>
+        <select id="ia_area">${areas.map(a=>`<option value="${a}" ${iaData.area_principal===a?'selected':''}>${a}</option>`).join('')}</select>
       </div>
+      <div class="form-group"><label>Instituição</label><input type="text" id="ia_inst" value="${iaData.instituicao||''}"></div>
+      <div class="form-group"><label>Lattes</label><input type="url" id="ia_lattes" value="${iaData.lattes||''}"></div>
+      <div class="form-group"><label>ORCID</label><input type="url" id="ia_orcid" value="${iaData.orcid||''}"></div>
+      <div class="form-group"><label>LinkedIn</label><input type="url" id="ia_linkedin" value="${iaData.linkedin||''}"></div>
+      <div class="form-group"><label>E-mail</label><input type="email" id="ia_email" value="${iaData.email||''}"></div>
     </div>`;
-  }).join('');
 }
 
-function openModal(id){
-  const r = allResearchers.find(r=>r.id===id); if(!r) return;
-  const rWorks = allWorks.filter(w=>w.researcher_id===id);
-
-  const links = [
-    r.lattes?`<a class="rc-link" href="${r.lattes}" target="_blank">🔬 Lattes</a>`:'',
-    r.orcid?`<a class="rc-link" href="${r.orcid}" target="_blank">ORCID</a>`:'',
-    r.linkedin?`<a class="rc-link" href="${r.linkedin}" target="_blank">LinkedIn</a>`:'',
-    r.google_scholar?`<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>`:'',
-    r.research_gate?`<a class="rc-link" href="${r.research_gate}" target="_blank">ResearchGate</a>`:'',
-    r.email?`<a class="rc-link" href="mailto:${r.email}" target="_blank">✉ E-mail</a>`:'',
-    r.site?`<a class="rc-link" href="${r.site}" target="_blank">🌐 Site</a>`:'',
-  ].filter(Boolean).join('');
-
-  const worksHtml = rWorks.length
-    ? `<div class="modal-works-title">📄 Publicações (${rWorks.length})</div>
-       ${rWorks.map(w=>`
-        <div class="modal-work-item">
-          <div class="modal-work-title">${w.titulo}</div>
-          <div class="modal-work-meta">
-            <span class="wc-type">${w.tipo}</span>
-            ${w.ano?`<span>${w.ano}</span>`:''}
-          </div>
-          ${w.resumo?`<div style="font-size:.82rem;color:var(--cinza);line-height:1.6;margin-top:.4rem">${w.resumo}</div>`:''}
-          <div class="modal-work-actions">
-            ${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank" style="font-size:.75rem;padding:.35rem .8rem">🛒 Comprar</a>`:''}
-            ${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank" style="font-size:.75rem;padding:.35rem .8rem">Acessar →</a>`:''}
-          </div>
-        </div>`).join('')}`
-    : `<div class="modal-works-title">📄 Publicações</div><p class="modal-works-empty">Nenhuma publicação cadastrada ainda.</p>`;
-
-  // Header com foto ou iniciais
-  const avatarHtml = r.foto_url
-    ? `<div class="modal-header-avatar"><img src="${r.foto_url}" alt="${r.nome}"></div>`
-    : `<div class="modal-header-avatar">${initials(r.nome)}</div>`;
-
-  document.getElementById('modalHeader').innerHTML = `
-    ${avatarHtml}
-    <div class="modal-name">${r.nome}</div>
-    <div class="modal-inst">${r.instituicao||''}</div>
-    <span class="modal-area-badge">${r.area_principal||''}</span>`;
-
-  document.getElementById('modalContent').innerHTML = `
-    <p class="modal-bio">${r.mini_bio||''}</p>
-    <div class="modal-links">${links}</div>
-    ${worksHtml}`;
-
-  document.getElementById('modalOverlay').classList.add('open');
-  document.body.style.overflow='hidden';
+function clearIaResult(){
+  document.getElementById('iaEmptyState').style.display='block';
+  document.getElementById('iaResultCard').style.display='none';
+  iaData={};
 }
 
-document.getElementById('modalClose').onclick = ()=>{ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; };
-document.getElementById('modalOverlay').onclick = e=>{ if(e.target===e.currentTarget){ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; } };
-document.getElementById('searchInput').addEventListener('input',function(){ busca=this.value; renderResearchers(); });
-document.getElementById('navToggle').onclick = ()=>document.getElementById('navLinks').classList.toggle('open');
+async function saveIaResearcher(){
+  const nome = document.getElementById('ia_nome').value.trim();
+  if(!nome){ alert('Nome obrigatório.'); return; }
+  const { error } = await db.from('researchers').insert([{
+    nome,
+    mini_bio: document.getElementById('ia_bio').value.trim()||null,
+    area_principal: document.getElementById('ia_area').value,
+    instituicao: document.getElementById('ia_inst').value.trim()||null,
+    lattes: document.getElementById('ia_lattes').value.trim()||null,
+    orcid: document.getElementById('ia_orcid').value.trim()||null,
+    linkedin: document.getElementById('ia_linkedin').value.trim()||null,
+    email: document.getElementById('ia_email').value.trim()||null,
+    status: 'aprovada',
+    destaque: false,
+  }]);
+  if(error){ alert('Erro ao salvar: '+error.message); return; }
+  const msg = document.getElementById('iaSaveMsg');
+  msg.textContent='✓ Pesquisadora cadastrada com sucesso!'; msg.style.display='block';
+  toast('Pesquisadora cadastrada!'); clearIaResult(); await loadAll();
+  addChatMsg(`✓ **${nome}** foi cadastrada no portal! Você pode adicionar publicações na aba "Publicações".`,'ai');
+}
 
-loadAll();
+// ── CADASTRO MANUAL ───────────────────────────────────────
+let mObraCount = 0;
+let mObras = [];
+
+document.getElementById('m_bio').addEventListener('input', function(){
+  document.getElementById('m_bioCount').textContent = this.value.length + '/300 caracteres';
+});
+
+function mAddObra(){
+  const id = ++mObraCount;
+  const div = document.createElement('div');
+  div.id = 'm_obra_' + id;
+  div.style.cssText = 'background:var(--areia);border-radius:12px;padding:1.25rem;border:1.5px solid var(--cinza-claro);margin-bottom:.75rem;position:relative';
+  div.innerHTML = `
+    <button onclick="mRemoveObra(${id})" style="position:absolute;top:.75rem;right:.75rem;background:none;border:none;color:var(--cinza);cursor:pointer;font-size:1.1rem" title="Remover">✕</button>
+    <div class="form-grid">
+      <div class="form-group full"><label>Título *</label><input type="text" id="mo${id}_titulo" placeholder="Título completo da obra"></div>
+      <div class="form-group"><label>Tipo *</label><select id="mo${id}_tipo"><option value="">Selecione…</option><option>Livro</option><option>Tese de Doutorado</option><option>Dissertação de Mestrado</option><option>TCC</option><option>Artigo Científico</option><option>Capítulo de Livro</option><option>Monografia</option><option>Relatório Técnico</option></select></div>
+      <div class="form-group"><label>Ano</label><input type="number" id="mo${id}_ano" placeholder="2023" min="1950" max="2099"></div>
+      <div class="form-group full"><label>Resumo</label><textarea id="mo${id}_resumo" placeholder="Breve descrição…" style="min-height:70px"></textarea></div>
+      <div class="form-group"><label>Link de acesso</label><input type="url" id="mo${id}_acesso" placeholder="https://…"></div>
+      <div class="form-group"><label>Link de compra</label><input type="url" id="mo${id}_compra" placeholder="https://…"></div>
+      <div class="form-group full"><label>Tags (separadas por vírgula)</label><input type="text" id="mo${id}_tags" placeholder="Ex: saúde pública, epidemiologia"></div>
+    </div>`;
+  document.getElementById('m_obrasContainer').appendChild(div);
+  mObras.push(id);
+}
+
+function mRemoveObra(id){
+  document.getElementById('m_obra_' + id)?.remove();
+  mObras = mObras.filter(o => o !== id);
+}
+
+function mGetObra(id){
+  return {
+    titulo: document.getElementById('mo'+id+'_titulo')?.value.trim()||'',
+    tipo: document.getElementById('mo'+id+'_tipo')?.value||'',
+    ano: parseInt(document.getElementById('mo'+id+'_ano')?.value)||null,
+    resumo: document.getElementById('mo'+id+'_resumo')?.value.trim()||null,
+    link_acesso: document.getElementById('mo'+id+'_acesso')?.value.trim()||null,
+    link_compra: document.getElementById('mo'+id+'_compra')?.value.trim()||null,
+    tags: (document.getElementById('mo'+id+'_tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
+  };
+}
+
+let mFotoFile = null;
+
+function mPreviewFoto(input){
+  const file = input.files[0];
+  if(!file) return;
+  mFotoFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('m_fotoPreview').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+    document.getElementById('m_fotoRemoveBtn').style.display = 'inline-flex';
+    document.getElementById('m_fotoStatus').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+function mRemoverFoto(){
+  mFotoFile = null;
+  document.getElementById('m_fotoInput').value = '';
+  document.getElementById('m_fotoPreview').innerHTML = '👤';
+  document.getElementById('m_fotoRemoveBtn').style.display = 'none';
+  document.getElementById('m_fotoStatus').textContent = 'Nenhuma foto selecionada';
+}
+
+function mLimpar(){
+  ['m_nome','m_bio','m_lattes','m_orcid','m_linkedin','m_scholar','m_researchgate','m_email','m_site'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('m_area').value='';
+  document.getElementById('m_inst').value='';
+  document.getElementById('m_destaque').checked=false;
+  document.getElementById('m_bioCount').textContent='0/300 caracteres';
+  document.getElementById('m_obrasContainer').innerHTML='';
+  document.getElementById('m_erro').style.display='none';
+  mRemoverFoto();
+  mObras=[]; mObraCount=0;
+}
+
+async function mSalvar(){
+  const nome = document.getElementById('m_nome').value.trim();
+  const bio = document.getElementById('m_bio').value.trim();
+  const area = document.getElementById('m_area').value;
+  const inst = document.getElementById('m_inst').value;
+  const errEl = document.getElementById('m_erro');
+  errEl.style.display='none';
+
+  if(!nome || !bio || !area || !inst){
+    errEl.textContent = 'Preencha os campos obrigatórios: Nome, Mini bio, Área e Instituição.';
+    errEl.style.display='block';
+    errEl.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+
+  const btn = document.querySelector('#page-cadastro-manual .btn-primary-lg');
+  btn.textContent='Salvando…'; btn.disabled=true;
+
+  try {
+    const { data: researcher, error } = await db.from('researchers').insert([{
+      nome,
+      mini_bio: bio,
+      area_principal: area,
+      instituicao: inst,
+      lattes: document.getElementById('m_lattes').value.trim()||null,
+      orcid: document.getElementById('m_orcid').value.trim()||null,
+      linkedin: document.getElementById('m_linkedin').value.trim()||null,
+      google_scholar: document.getElementById('m_scholar').value.trim()||null,
+      research_gate: document.getElementById('m_researchgate').value.trim()||null,
+      email: document.getElementById('m_email').value.trim()||null,
+      site: document.getElementById('m_site').value.trim()||null,
+      status: 'aprovada',
+      destaque: document.getElementById('m_destaque').checked,
+    }]).select().single();
+
+    if(error) throw error;
+
+    // Upload de foto se houver
+    if(mFotoFile && researcher?.id){
+      const ext = mFotoFile.name.split('.').pop();
+      const path = `${researcher.id}.${ext}`;
+      const { error: upErr } = await db.storage.from('avatars').upload(path, mFotoFile, {upsert:true, contentType:mFotoFile.type});
+      if(!upErr){
+        const { data: urlData } = db.storage.from('avatars').getPublicUrl(path);
+        await db.from('researchers').update({foto_url: urlData.publicUrl}).eq('id', researcher.id);
+      }
+    }
+
+    // Salvar obras
+    const obrasData = mObras
+      .map(id => mGetObra(id))
+      .filter(o => o.titulo && o.tipo)
+      .map(o => ({...o, researcher_id: researcher.id, area_conhecimento: area}));
+    if(obrasData.length){
+      const { error: obrasErr } = await db.from('works').insert(obrasData);
+      if(obrasErr) throw new Error('Erro ao salvar publicações: ' + obrasErr.message);
+    }
+
+    toast('Pesquisadora cadastrada com sucesso!');
+    mLimpar();
+    await loadAll();
+    showPage('pesquisadoras');
+  } catch(e){
+    errEl.textContent = 'Erro ao salvar: ' + e.message;
+    errEl.style.display='block';
+  }
+  btn.textContent='✓ Cadastrar pesquisadora'; btn.disabled=false;
+}
+
+// INIT
+initAuth();
 </script>
 </body>
 </html>
