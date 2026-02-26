@@ -468,13 +468,14 @@ function renderDashboard(){
   ].map(s=>`<div class="stat-card"><div class="stat-card-num">${s.num}</div><div class="stat-card-label">${s.label}</div></div>`).join('');
 
   const recent = allResearchers.slice(0,5);
+  // CORREÇÃO: O clique agora chama 'verPesquisadora' para abrir a edição/detalhes
   document.getElementById('recentInscricoes').innerHTML = recent.length ?
-    recent.map(r=>`<tr>
+    recent.map(r=>`<tr onclick="verPesquisadora('${r.id}')" style="cursor:pointer">
       <td><strong>${r.nome}</strong></td>
       <td>${r.area_principal||'—'}</td>
       <td><span class="badge badge-${r.status}">${r.status}</span></td>
       <td>${new Date(r.created_at).toLocaleDateString('pt-BR')}</td>
-      <td><button class="btn btn-outline" onclick="showPage('inscricoes')">Ver</button></td>
+      <td><button class="btn btn-outline">Editar</button></td>
     </tr>`).join('') : '<tr><td colspan="5" class="empty">Nenhuma inscrição ainda.</td></tr>';
 }
 
