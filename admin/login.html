@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Admin Pesquisadoras ES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../config.js"></script>
+<style>
+  :root{--verde:#2D6A4F;--areia:#F8F4EE;--terra:#C4843A;--preto:#1A1A1A;--cinza:#6B6B6B;--cinza-claro:#E8E4DE;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--areia);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+  .login-box{background:white;border-radius:24px;padding:3rem;max-width:420px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.1);}
+  .login-logo{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--verde);text-align:center;margin-bottom:.5rem;}
+  .login-logo span{color:var(--terra);}
+  .login-subtitle{text-align:center;font-size:.82rem;color:var(--cinza);margin-bottom:2rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;}
+  h2{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;margin-bottom:.3rem;text-align:center;}
+  .login-desc{text-align:center;font-size:.85rem;color:var(--cinza);margin-bottom:2rem;}
+  .form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.25rem;}
+  label{font-size:.82rem;font-weight:500;}
+  input{font-family:'DM Sans',sans-serif;font-size:.95rem;padding:.8rem 1rem;border:1.5px solid var(--cinza-claro);border-radius:10px;outline:none;transition:border .2s;width:100%;}
+  input:focus{border-color:var(--verde);}
+  .btn{width:100%;background:var(--verde);color:white;font-size:.95rem;font-weight:500;padding:1rem;border-radius:100px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:.5rem;}
+  .btn:hover{background:#235438;}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  .error{background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:.75rem 1rem;font-size:.85rem;color:#b91c1c;margin-top:1rem;display:none;}
+  .back-link{text-align:center;margin-top:1.5rem;font-size:.82rem;color:var(--cinza);}
+  .back-link a{color:var(--verde);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="login-logo">Pesquisadoras<span>ES</span></div>
+  <div class="login-subtitle">Área Administrativa</div>
+  <h2>Entrar</h2>
+  <p class="login-desc">Acesso restrito à equipe do portal.</p>
+  <div class="form-group">
+    <label>E-mail</label>
+    <input type="email" id="email" placeholder="admin@pesquisadorases.com.br" autocomplete="email">
+  </div>
+  <div class="form-group">
+    <label>Senha</label>
+    <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
+  </div>
+  <button class="btn" id="btnLogin" onclick="login()">Entrar</button>
+  <div class="error" id="errMsg"></div>
+  <div class="back-link"><a href="../index.html">← Voltar ao portal</a></div>
+</div>
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Redirecionar se já logado
+db.auth.getSession().then(({data})=>{ if(data.session) location.href='painel.html'; });
+
+async function login(){
+  const btn=document.getElementById('btnLogin');
+  const err=document.getElementById('errMsg');
+  btn.textContent='Entrando…'; btn.disabled=true; err.style.display='none';
+  const { error } = await db.auth.signInWithPassword({
+    email: document.getElementById('email').value,
+    password: document.getElementById('senha').value
+  });
+  if(error){ err.textContent=error.message==='Invalid login credentials'?'E-mail ou senha incorretos.':error.message; err.style.display='block'; btn.textContent='Entrar'; btn.disabled=false; }
+  else location.href='painel.html';
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Enter') login(); });
+</script>
+</body>
+</html>
