@@ -400,6 +400,7 @@
         </div>
         <div class="form-group"><label>Área principal *</label><select id="m_area"><option value="">Selecione…</option><option>Ciências Exatas e da Terra</option><option>Ciências Biológicas</option><option>Engenharias</option><option>Ciências da Saúde</option><option>Ciências Agrárias</option><option>Ciências Sociais Aplicadas</option><option>Ciências Humanas</option><option>Linguística, Letras e Artes</option><option>Multidisciplinar</option></select></div>
         <div class="form-group"><label>Instituição *</label><select id="m_inst"><option value="">Selecione…</option><option>UFES - Universidade Federal do Espírito Santo</option><option>IFES - Instituto Federal do Espírito Santo</option><option>UVV - Universidade Vila Velha</option><option>FUCAPE</option><option>EMESCAM</option><option>FDV - Faculdade de Direito de Vitória</option><option>MULTIVIX</option><option>FAESA</option><option>Outra</option></select></div>
+        <div class="form-group"><label>Cidade (ES)</label><select id="m_estado"><option value="">Selecione…</option><option>Afonso Cláudio</option><option>Água Doce do Norte</option><option>Águia Branca</option><option>Alegre</option><option>Alfredo Chaves</option><option>Alto Rio Novo</option><option>Anchieta</option><option>Apiacá</option><option>Aracruz</option><option>Atílio Vivácqua</option><option>Baixo Guandu</option><option>Barra de São Francisco</option><option>Boa Esperança</option><option>Bom Jesus do Norte</option><option>Brejetuba</option><option>Cachoeiro de Itapemirim</option><option>Cariacica</option><option>Castelo</option><option>Colatina</option><option>Conceição da Barra</option><option>Conceição do Castelo</option><option>Divino de São Lourenço</option><option>Domingos Martins</option><option>Dores do Rio Preto</option><option>Ecoporanga</option><option>Fundão</option><option>Governador Lindenberg</option><option>Guaçuí</option><option>Guarapari</option><option>Ibatiba</option><option>Ibiraçu</option><option>Ibitirama</option><option>Iconha</option><option>Irupi</option><option>Itaguaçu</option><option>Itapemirim</option><option>Itarana</option><option>Iúna</option><option>Jaguaré</option><option>Jerônimo Monteiro</option><option>João Neiva</option><option>Laranja da Terra</option><option>Linhares</option><option>Mantenópolis</option><option>Marataízes</option><option>Marechal Floriano</option><option>Marilândia</option><option>Mimoso do Sul</option><option>Montanha</option><option>Mucurici</option><option>Muniz Freire</option><option>Muqui</option><option>Nova Venécia</option><option>Pancas</option><option>Pedro Canário</option><option>Pinheiros</option><option>Piúma</option><option>Ponto Belo</option><option>Presidente Kennedy</option><option>Rio Bananal</option><option>Rio Novo do Sul</option><option>Santa Leopoldina</option><option>Santa Maria de Jetibá</option><option>Santa Teresa</option><option>São Domingos do Norte</option><option>São Gabriel da Palha</option><option>São José do Calçado</option><option>São Mateus</option><option>São Roque do Canaã</option><option>Serra</option><option>Sooretama</option><option>Vargem Alta</option><option>Venda Nova do Imigrante</option><option>Viana</option><option>Vila Pavão</option><option>Vila Valério</option><option>Vila Velha</option><option>Vitória</option></select></div>
         <!-- FOTO DE PERFIL -->
         <div class="form-group full">
           <label>📷 Foto de perfil <span style="font-weight:400;color:var(--cinza)">(opcional — formato quadrado recomendado)</span></label>
@@ -643,6 +644,7 @@ function showPage(name){
 }
 
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+function showSuccessToast(msg){ toast(msg); }
 
 // ── LOAD ALL DATA ──────────────────────────────────────────
 async function loadAll(){
@@ -664,12 +666,83 @@ async function loadAll(){
 function renderDashboard(){
   const pendentes = allResearchers.filter(r=>r.status==='pendente').length;
   const aprovadas = allResearchers.filter(r=>r.status==='aprovada').length;
+  // Contagem por estado
+  const estadoCounts = {};
+  allResearchers.filter(r=>r.status==='aprovada' && r.estado).forEach(r=>{
+    estadoCounts[r.estado] = (estadoCounts[r.estado]||0)+1;
+  });
+  const estadosOrdenados = Object.entries(estadoCounts).sort((a,b)=>b[1]-a[1]);
+
   document.getElementById('dashStats').innerHTML = [
     {num:aprovadas, label:'Pesquisadoras aprovadas'},
     {num:pendentes, label:'Aguardando aprovação'},
-    {num:allWorks.length, label:'Publicações cadastradas'},
+    {num:allWorks.filter(w=>w.status==='aprovada'||!w.status).length, label:'Publicações cadastradas'},
     {num:allPosts.filter(p=>p.publicado).length, label:'Artigos publicados'},
   ].map(s=>`<div class="stat-card"><div class="stat-card-num">${s.num}</div><div class="stat-card-label">${s.label}</div></div>`).join('');
+
+  // Estatísticas por estado
+  if(estadosOrdenados.length){
+    const maxVal = estadosOrdenados[0][1];
+    const estadosHtml = estadosOrdenados.map(([uf, count])=>`
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem">
+        <div style="font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600;color:var(--preto);width:28px;flex-shrink:0">${uf}</div>
+        <div style="flex:1;background:var(--cinza-claro);border-radius:100px;height:8px;overflow:hidden">
+          <div style="width:${Math.round(count/maxVal*100)}%;height:100%;background:var(--verde);border-radius:100px;transition:width .4s"></div>
+        </div>
+        <div style="font-size:.78rem;color:var(--cinza);width:20px;text-align:right;flex-shrink:0">${count}</div>
+      </div>`).join('');
+    const existingCard = document.getElementById('dashEstadosCard');
+    if(existingCard) existingCard.remove();
+    const card = document.createElement('div');
+    card.id = 'dashEstadosCard';
+    card.className = 'table-wrap';
+    card.style.cssText = 'padding:1.5rem;margin-bottom:1.5rem';
+    card.innerHTML = `<div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:1rem">📍 Pesquisadoras por cidade</div>${estadosHtml}`;
+    document.getElementById('dashStats').after(card);
+  }
+
+  // Busca/filtro de pesquisadoras
+  const existingSearch = document.getElementById('dashSearchCard');
+  if(!existingSearch){
+    const searchCard = document.createElement('div');
+    searchCard.id = 'dashSearchCard';
+    searchCard.className = 'table-wrap';
+    searchCard.style.cssText = 'padding:1.25rem;margin-bottom:1.5rem';
+    searchCard.innerHTML = `
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:1rem">🔍 Buscar pesquisadoras</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.75rem;align-items:end;flex-wrap:wrap">
+        <div>
+          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Nome</label>
+          <input id="srch_nome" type="text" placeholder="Buscar por nome…" oninput="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Área</label>
+          <select id="srch_area" onchange="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none">
+            <option value="">Todas as áreas</option>
+            <option>Ciências Exatas e da Terra</option><option>Ciências Biológicas</option><option>Engenharias</option>
+            <option>Ciências da Saúde</option><option>Ciências Agrárias</option><option>Ciências Sociais Aplicadas</option>
+            <option>Ciências Humanas</option><option>Linguística, Letras e Artes</option><option>Multidisciplinar</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Instituição</label>
+          <select id="srch_inst" onchange="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none">
+            <option value="">Todas</option>
+            <option>UFES - Universidade Federal do Espírito Santo</option><option>IFES - Instituto Federal do Espírito Santo</option>
+            <option>UVV - Universidade Vila Velha</option><option>FUCAPE</option><option>EMESCAM</option>
+            <option>FDV - Faculdade de Direito de Vitória</option><option>MULTIVIX</option><option>FAESA</option><option>Outra</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Cidade</label>
+          <select id="srch_estado" onchange="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none"><option value="">Todas</option><option>Afonso Cláudio</option><option>Água Doce do Norte</option><option>Águia Branca</option><option>Alegre</option><option>Alfredo Chaves</option><option>Alto Rio Novo</option><option>Anchieta</option><option>Apiacá</option><option>Aracruz</option><option>Atílio Vivácqua</option><option>Baixo Guandu</option><option>Barra de São Francisco</option><option>Boa Esperança</option><option>Bom Jesus do Norte</option><option>Brejetuba</option><option>Cachoeiro de Itapemirim</option><option>Cariacica</option><option>Castelo</option><option>Colatina</option><option>Conceição da Barra</option><option>Conceição do Castelo</option><option>Divino de São Lourenço</option><option>Domingos Martins</option><option>Dores do Rio Preto</option><option>Ecoporanga</option><option>Fundão</option><option>Governador Lindenberg</option><option>Guaçuí</option><option>Guarapari</option><option>Ibatiba</option><option>Ibiraçu</option><option>Ibitirama</option><option>Iconha</option><option>Irupi</option><option>Itaguaçu</option><option>Itapemirim</option><option>Itarana</option><option>Iúna</option><option>Jaguaré</option><option>Jerônimo Monteiro</option><option>João Neiva</option><option>Laranja da Terra</option><option>Linhares</option><option>Mantenópolis</option><option>Marataízes</option><option>Marechal Floriano</option><option>Marilândia</option><option>Mimoso do Sul</option><option>Montanha</option><option>Mucurici</option><option>Muniz Freire</option><option>Muqui</option><option>Nova Venécia</option><option>Pancas</option><option>Pedro Canário</option><option>Pinheiros</option><option>Piúma</option><option>Ponto Belo</option><option>Presidente Kennedy</option><option>Rio Bananal</option><option>Rio Novo do Sul</option><option>Santa Leopoldina</option><option>Santa Maria de Jetibá</option><option>Santa Teresa</option><option>São Domingos do Norte</option><option>São Gabriel da Palha</option><option>São José do Calçado</option><option>São Mateus</option><option>São Roque do Canaã</option><option>Serra</option><option>Sooretama</option><option>Vargem Alta</option><option>Venda Nova do Imigrante</option><option>Viana</option><option>Vila Pavão</option><option>Vila Valério</option><option>Vila Velha</option><option>Vitória</option></select>
+        </div>
+        <button onclick="clearSearch()" class="btn btn-outline" style="padding:.6rem .9rem;font-size:.78rem;white-space:nowrap">Limpar</button>
+      </div>
+      <div id="srch_status" style="font-size:.78rem;color:var(--cinza);margin-top:.75rem"></div>
+      <div id="srch_results" style="margin-top:.75rem"></div>`;
+    document.getElementById('dashStats').parentNode.insertBefore(searchCard, document.querySelector('#page-dashboard .table-wrap'));
+  }
 
   const recent = allResearchers.slice(0,5);
   document.getElementById('recentInscricoes').innerHTML = recent.length ?
@@ -681,6 +754,63 @@ function renderDashboard(){
       <td><button class="btn btn-outline" onclick="openResearcherModal('${r.id}')">Ver / Editar</button></td>
     </tr>`).join('') : '<tr><td colspan="5" class="empty">Nenhuma inscrição ainda.</td></tr>';
 }
+
+function clearSearch(){
+  ['srch_nome','srch_area','srch_inst','srch_estado'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  const res = document.getElementById('srch_results');
+  const status = document.getElementById('srch_status');
+  if(res) res.innerHTML='';
+  if(status) status.textContent='';
+}
+
+function renderSearchResults(){
+  const nome = (document.getElementById('srch_nome')?.value||'').trim().toLowerCase();
+  const area = document.getElementById('srch_area')?.value||'';
+  const inst = document.getElementById('srch_inst')?.value||'';
+  const estado = document.getElementById('srch_estado')?.value||'';
+
+  if(!nome && !area && !inst && !estado){
+    document.getElementById('srch_results').innerHTML='';
+    document.getElementById('srch_status').textContent='';
+    return;
+  }
+
+  let filtered = allResearchers.filter(r=>{
+    if(nome && !r.nome?.toLowerCase().includes(nome)) return false;
+    if(area && r.area_principal !== area) return false;
+    if(inst && r.instituicao !== inst) return false;
+    if(estado && r.estado !== estado) return false;
+    return true;
+  });
+
+  document.getElementById('srch_status').textContent = `${filtered.length} resultado${filtered.length!==1?'s':''} encontrado${filtered.length!==1?'s':''}`;
+
+  if(!filtered.length){
+    document.getElementById('srch_results').innerHTML='<div style="font-size:.85rem;color:var(--cinza);padding:.5rem 0">Nenhuma pesquisadora encontrada com esses filtros.</div>';
+    return;
+  }
+
+  document.getElementById('srch_results').innerHTML = `
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="background:var(--areia);font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);padding:.6rem .75rem;text-align:left;border-bottom:1px solid var(--cinza-claro)">Nome</th>
+        <th style="background:var(--areia);font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);padding:.6rem .75rem;text-align:left;border-bottom:1px solid var(--cinza-claro)">Área</th>
+        <th style="background:var(--areia);font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);padding:.6rem .75rem;text-align:left;border-bottom:1px solid var(--cinza-claro)">Instituição</th>
+        <th style="background:var(--areia);font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);padding:.6rem .75rem;text-align:left;border-bottom:1px solid var(--cinza-claro)">Cidade</th>
+        <th style="background:var(--areia);font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);padding:.6rem .75rem;text-align:left;border-bottom:1px solid var(--cinza-claro)">Status</th>
+        <th style="background:var(--areia);padding:.6rem .75rem;border-bottom:1px solid var(--cinza-claro)"></th>
+      </tr></thead>
+      <tbody>${filtered.map(r=>`<tr>
+        <td style="padding:.7rem .75rem;font-size:.85rem;border-bottom:1px solid rgba(0,0,0,.04)"><strong>${r.nome}</strong></td>
+        <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--cinza);border-bottom:1px solid rgba(0,0,0,.04)">${r.area_principal||'—'}</td>
+        <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--cinza);border-bottom:1px solid rgba(0,0,0,.04)">${r.instituicao||'—'}</td>
+        <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--cinza);border-bottom:1px solid rgba(0,0,0,.04)">${r.estado||'—'}</td>
+        <td style="padding:.7rem .75rem;border-bottom:1px solid rgba(0,0,0,.04)"><span class="badge badge-${r.status}">${r.status}</span></td>
+        <td style="padding:.7rem .75rem;border-bottom:1px solid rgba(0,0,0,.04)"><button class="btn btn-outline" style="font-size:.75rem;padding:.3rem .7rem" onclick="openResearcherModal('${r.id}')">Ver / Editar</button></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
 
 // ── INSCRIÇÕES ──────────────────────────────────────────────
 function renderInscricoes(){
@@ -1336,6 +1466,18 @@ function mAddObra(){
     <button onclick="mRemoveObra(${id})" style="position:absolute;top:.75rem;right:.75rem;background:none;border:none;color:var(--cinza);cursor:pointer;font-size:1.1rem" title="Remover">✕</button>
     <div class="form-grid">
       <div class="form-group full"><label>Título *</label><input type="text" id="mo${id}_titulo" placeholder="Título completo da obra"></div>
+      <div class="form-group full">
+        <label>Foto/capa da publicação <span style="font-weight:400;color:var(--cinza)">(opcional — JPG/PNG, máx 1MB)</span></label>
+        <div style="display:flex;gap:1rem;align-items:center;margin-top:.35rem;flex-wrap:wrap">
+          <img id="mo${id}_fotoPreview" style="width:60px;height:80px;border-radius:8px;border:1.5px solid var(--cinza-claro);object-fit:cover;display:none;flex-shrink:0">
+          <div>
+            <button type="button" class="btn btn-outline" style="font-size:.78rem;padding:.35rem .8rem" onclick="document.getElementById('mo${id}_foto').click()">Escolher imagem</button>
+            <button type="button" class="btn btn-outline" id="mo${id}_fotoRemoveBtn" style="font-size:.78rem;padding:.35rem .8rem;display:none" onclick="mRemoveObraFoto(${id})">✕ Remover</button>
+            <input type="file" id="mo${id}_foto" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="mPreviewObraFoto(${id}, this)">
+            <div id="mo${id}_fotoStatus" style="font-size:.72rem;color:var(--cinza);margin-top:.3rem"></div>
+          </div>
+        </div>
+      </div>
       <div class="form-group"><label>Tipo *</label><select id="mo${id}_tipo"><option value="">Selecione…</option><option>Livro</option><option>Tese de Doutorado</option><option>Dissertação de Mestrado</option><option>TCC</option><option>Artigo Científico</option><option>Capítulo de Livro</option><option>Monografia</option><option>Relatório Técnico</option></select></div>
       <div class="form-group"><label>Ano</label><input type="number" id="mo${id}_ano" placeholder="2023" min="1950" max="2099"></div>
       <div class="form-group full"><label>Resumo</label><textarea id="mo${id}_resumo" placeholder="Breve descrição…" style="min-height:70px"></textarea></div>
@@ -1361,10 +1503,35 @@ function mGetObra(id){
     link_acesso: document.getElementById('mo'+id+'_acesso')?.value.trim()||null,
     link_compra: document.getElementById('mo'+id+'_compra')?.value.trim()||null,
     tags: (document.getElementById('mo'+id+'_tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
+    _fotoFile: mObraFotos[id] || null,
   };
 }
 
 let mFotoFile = null;
+let mObraFotos = {};
+
+function mPreviewObraFoto(id, input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 1048576){ alert('Máximo 1MB para foto da publicação.'); input.value=''; return; }
+  mObraFotos[id] = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('mo'+id+'_fotoPreview');
+    prev.src = e.target.result; prev.style.display='block';
+    document.getElementById('mo'+id+'_fotoRemoveBtn').style.display='inline-flex';
+    document.getElementById('mo'+id+'_fotoStatus').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+function mRemoveObraFoto(id){
+  delete mObraFotos[id];
+  document.getElementById('mo'+id+'_foto').value='';
+  document.getElementById('mo'+id+'_fotoPreview').style.display='none';
+  document.getElementById('mo'+id+'_fotoRemoveBtn').style.display='none';
+  document.getElementById('mo'+id+'_fotoStatus').textContent='';
+}
 
 function mPreviewFoto(input){
   const file = input.files[0];
@@ -1393,12 +1560,13 @@ function mLimpar(){
   });
   document.getElementById('m_area').value='';
   document.getElementById('m_inst').value='';
+  document.getElementById('m_estado').value='';
   document.getElementById('m_destaque').checked=false;
   document.getElementById('m_bioCount').textContent='0/300 caracteres';
   document.getElementById('m_obrasContainer').innerHTML='';
   document.getElementById('m_erro').style.display='none';
   mRemoverFoto();
-  mObras=[]; mObraCount=0;
+  mObras=[]; mObraCount=0; mObraFotos={};
 }
 
 async function mSalvar(){
@@ -1425,6 +1593,7 @@ async function mSalvar(){
       mini_bio: bio,
       area_principal: area,
       instituicao: inst,
+      estado: document.getElementById('m_estado').value || null,
       lattes: document.getElementById('m_lattes').value.trim()||null,
       orcid: document.getElementById('m_orcid').value.trim()||null,
       linkedin: document.getElementById('m_linkedin').value.trim()||null,
@@ -1450,11 +1619,27 @@ async function mSalvar(){
     }
 
     // Salvar obras
-    const obrasData = mObras
+    const obrasRaw = mObras
       .map(id => mGetObra(id))
-      .filter(o => o.titulo && o.tipo)
-      .map(o => ({...o, researcher_id: researcher.id, area_conhecimento: area}));
-    if(obrasData.length){
+      .filter(o => o.titulo && o.tipo);
+
+    if(obrasRaw.length){
+      btn.textContent='Salvando publicações…';
+      for(let i = 0; i < obrasRaw.length; i++){
+        const o = obrasRaw[i];
+        if(o._fotoFile){
+          const ts = Date.now();
+          const rand = Math.random().toString(36).substring(2,7);
+          const path = `${researcher.id}/${ts}_${rand}_${o._fotoFile.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;
+          const { error: upErr } = await db.storage.from('works-photos').upload(path, o._fotoFile, {contentType: o._fotoFile.type});
+          if(!upErr){
+            const { data: urlData } = db.storage.from('works-photos').getPublicUrl(path);
+            o.foto_publicacao = urlData.publicUrl;
+          }
+        }
+        delete o._fotoFile;
+      }
+      const obrasData = obrasRaw.map(o => ({...o, researcher_id: researcher.id, area_conhecimento: area, status: 'aprovada'}));
       const { error: obrasErr } = await db.from('works').insert(obrasData);
       if(obrasErr) throw new Error('Erro ao salvar publicações: ' + obrasErr.message);
     }
