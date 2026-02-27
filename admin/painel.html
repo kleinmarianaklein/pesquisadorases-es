@@ -151,6 +151,53 @@
     <h1 class="page-title">Dashboard</h1>
     <p class="page-sub">Visão geral do portal.</p>
     <div class="stats-row" id="dashStats"></div>
+
+    <!-- Busca/filtro -->
+    <div class="table-wrap" style="padding:1.25rem;margin-bottom:1.5rem">
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:1rem">🔍 Buscar pesquisadoras</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.75rem;align-items:end">
+        <div>
+          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Nome</label>
+          <input id="srch_nome" type="text" placeholder="Buscar por nome…" oninput="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Área</label>
+          <select id="srch_area" onchange="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none">
+            <option value="">Todas as áreas</option>
+            <option>Ciências Exatas e da Terra</option><option>Ciências Biológicas</option><option>Engenharias</option>
+            <option>Ciências da Saúde</option><option>Ciências Agrárias</option><option>Ciências Sociais Aplicadas</option>
+            <option>Ciências Humanas</option><option>Linguística, Letras e Artes</option><option>Multidisciplinar</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Instituição</label>
+          <select id="srch_inst" onchange="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none">
+            <option value="">Todas</option>
+            <option>UFES - Universidade Federal do Espírito Santo</option><option>IFES - Instituto Federal do Espírito Santo</option>
+            <option>UVV - Universidade Vila Velha</option><option>FUCAPE</option><option>EMESCAM</option>
+            <option>FDV - Faculdade de Direito de Vitória</option><option>MULTIVIX</option><option>FAESA</option><option>Outra</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Cidade</label>
+          <select id="srch_estado" onchange="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none">
+            <option value="">Todas</option>
+            <option>Afonso Cláudio</option><option>Água Doce do Norte</option><option>Águia Branca</option><option>Alegre</option><option>Alfredo Chaves</option><option>Alto Rio Novo</option><option>Anchieta</option><option>Apiacá</option><option>Aracruz</option><option>Atílio Vivácqua</option><option>Baixo Guandu</option><option>Barra de São Francisco</option><option>Boa Esperança</option><option>Bom Jesus do Norte</option><option>Brejetuba</option><option>Cachoeiro de Itapemirim</option><option>Cariacica</option><option>Castelo</option><option>Colatina</option><option>Conceição da Barra</option><option>Conceição do Castelo</option><option>Divino de São Lourenço</option><option>Domingos Martins</option><option>Dores do Rio Preto</option><option>Ecoporanga</option><option>Fundão</option><option>Governador Lindenberg</option><option>Guaçuí</option><option>Guarapari</option><option>Ibatiba</option><option>Ibiraçu</option><option>Ibitirama</option><option>Iconha</option><option>Irupi</option><option>Itaguaçu</option><option>Itapemirim</option><option>Itarana</option><option>Iúna</option><option>Jaguaré</option><option>Jerônimo Monteiro</option><option>João Neiva</option><option>Laranja da Terra</option><option>Linhares</option><option>Mantenópolis</option><option>Marataízes</option><option>Marechal Floriano</option><option>Marilândia</option><option>Mimoso do Sul</option><option>Montanha</option><option>Mucurici</option><option>Muniz Freire</option><option>Muqui</option><option>Nova Venécia</option><option>Pancas</option><option>Pedro Canário</option><option>Pinheiros</option><option>Piúma</option><option>Ponto Belo</option><option>Presidente Kennedy</option><option>Rio Bananal</option><option>Rio Novo do Sul</option><option>Santa Leopoldina</option><option>Santa Maria de Jetibá</option><option>Santa Teresa</option><option>São Domingos do Norte</option><option>São Gabriel da Palha</option><option>São José do Calçado</option><option>São Mateus</option><option>São Roque do Canaã</option><option>Serra</option><option>Sooretama</option><option>Vargem Alta</option><option>Venda Nova do Imigrante</option><option>Viana</option><option>Vila Pavão</option><option>Vila Valério</option><option>Vila Velha</option><option>Vitória</option>
+          </select>
+        </div>
+        <button onclick="clearSearch()" class="btn btn-outline" style="padding:.6rem .9rem;font-size:.78rem;white-space:nowrap">Limpar</button>
+      </div>
+      <div id="srch_status" style="font-size:.78rem;color:var(--cinza);margin-top:.75rem"></div>
+      <div id="srch_results" style="margin-top:.75rem"></div>
+    </div>
+
+    <!-- Estatísticas por cidade -->
+    <div class="table-wrap" id="dashCidadesCard" style="padding:1.5rem;margin-bottom:1.5rem;display:none">
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:1rem">📍 Pesquisadoras por cidade</div>
+      <div id="dashCidadesChart"></div>
+    </div>
+
+    <!-- Inscrições recentes -->
     <div class="table-wrap">
       <table>
         <thead><tr><th>Inscrições recentes</th><th>Área</th><th>Status</th><th>Data</th><th></th></tr></thead>
@@ -639,8 +686,10 @@ async function logout(){ await db.auth.signOut(); location.href='login.html'; }
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
+  const page = document.getElementById('page-'+name);
+  if(page) page.classList.add('active');
+  const nav = document.getElementById('nav-'+name);
+  if(nav) nav.classList.add('active');
 }
 
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
@@ -666,82 +715,34 @@ async function loadAll(){
 function renderDashboard(){
   const pendentes = allResearchers.filter(r=>r.status==='pendente').length;
   const aprovadas = allResearchers.filter(r=>r.status==='aprovada').length;
-  // Contagem por estado
-  const estadoCounts = {};
-  allResearchers.filter(r=>r.status==='aprovada' && r.estado).forEach(r=>{
-    estadoCounts[r.estado] = (estadoCounts[r.estado]||0)+1;
-  });
-  const estadosOrdenados = Object.entries(estadoCounts).sort((a,b)=>b[1]-a[1]);
 
   document.getElementById('dashStats').innerHTML = [
     {num:aprovadas, label:'Pesquisadoras aprovadas'},
     {num:pendentes, label:'Aguardando aprovação'},
-    {num:allWorks.filter(w=>w.status==='aprovada'||!w.status).length, label:'Publicações cadastradas'},
+    {num:allWorks.length, label:'Publicações cadastradas'},
     {num:allPosts.filter(p=>p.publicado).length, label:'Artigos publicados'},
   ].map(s=>`<div class="stat-card"><div class="stat-card-num">${s.num}</div><div class="stat-card-label">${s.label}</div></div>`).join('');
 
-  // Estatísticas por estado
-  if(estadosOrdenados.length){
-    const maxVal = estadosOrdenados[0][1];
-    const estadosHtml = estadosOrdenados.map(([uf, count])=>`
+  // Gráfico de cidades
+  const cidadeCounts = {};
+  allResearchers.filter(r=>r.status==='aprovada' && r.estado).forEach(r=>{
+    cidadeCounts[r.estado] = (cidadeCounts[r.estado]||0)+1;
+  });
+  const cidadesOrdenadas = Object.entries(cidadeCounts).sort((a,b)=>b[1]-a[1]);
+  const cidadesCard = document.getElementById('dashCidadesCard');
+  if(cidadesOrdenadas.length){
+    const maxVal = cidadesOrdenadas[0][1];
+    document.getElementById('dashCidadesChart').innerHTML = cidadesOrdenadas.map(([cidade, count])=>`
       <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem">
-        <div style="font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600;color:var(--preto);width:28px;flex-shrink:0">${uf}</div>
+        <div style="font-size:.78rem;font-weight:600;color:var(--preto);min-width:130px;flex-shrink:0">${cidade}</div>
         <div style="flex:1;background:var(--cinza-claro);border-radius:100px;height:8px;overflow:hidden">
-          <div style="width:${Math.round(count/maxVal*100)}%;height:100%;background:var(--verde);border-radius:100px;transition:width .4s"></div>
+          <div style="width:${Math.round(count/maxVal*100)}%;height:100%;background:var(--verde);border-radius:100px"></div>
         </div>
         <div style="font-size:.78rem;color:var(--cinza);width:20px;text-align:right;flex-shrink:0">${count}</div>
       </div>`).join('');
-    const existingCard = document.getElementById('dashEstadosCard');
-    if(existingCard) existingCard.remove();
-    const card = document.createElement('div');
-    card.id = 'dashEstadosCard';
-    card.className = 'table-wrap';
-    card.style.cssText = 'padding:1.5rem;margin-bottom:1.5rem';
-    card.innerHTML = `<div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:1rem">📍 Pesquisadoras por cidade</div>${estadosHtml}`;
-    document.getElementById('dashStats').after(card);
-  }
-
-  // Busca/filtro de pesquisadoras
-  const existingSearch = document.getElementById('dashSearchCard');
-  if(!existingSearch){
-    const searchCard = document.createElement('div');
-    searchCard.id = 'dashSearchCard';
-    searchCard.className = 'table-wrap';
-    searchCard.style.cssText = 'padding:1.25rem;margin-bottom:1.5rem';
-    searchCard.innerHTML = `
-      <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:1rem">🔍 Buscar pesquisadoras</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.75rem;align-items:end;flex-wrap:wrap">
-        <div>
-          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Nome</label>
-          <input id="srch_nome" type="text" placeholder="Buscar por nome…" oninput="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none">
-        </div>
-        <div>
-          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Área</label>
-          <select id="srch_area" onchange="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none">
-            <option value="">Todas as áreas</option>
-            <option>Ciências Exatas e da Terra</option><option>Ciências Biológicas</option><option>Engenharias</option>
-            <option>Ciências da Saúde</option><option>Ciências Agrárias</option><option>Ciências Sociais Aplicadas</option>
-            <option>Ciências Humanas</option><option>Linguística, Letras e Artes</option><option>Multidisciplinar</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Instituição</label>
-          <select id="srch_inst" onchange="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none">
-            <option value="">Todas</option>
-            <option>UFES - Universidade Federal do Espírito Santo</option><option>IFES - Instituto Federal do Espírito Santo</option>
-            <option>UVV - Universidade Vila Velha</option><option>FUCAPE</option><option>EMESCAM</option>
-            <option>FDV - Faculdade de Direito de Vitória</option><option>MULTIVIX</option><option>FAESA</option><option>Outra</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);display:block;margin-bottom:.3rem">Cidade</label>
-          <select id="srch_estado" onchange="renderSearchResults()" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--cinza-claro);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none"><option value="">Todas</option><option>Afonso Cláudio</option><option>Água Doce do Norte</option><option>Águia Branca</option><option>Alegre</option><option>Alfredo Chaves</option><option>Alto Rio Novo</option><option>Anchieta</option><option>Apiacá</option><option>Aracruz</option><option>Atílio Vivácqua</option><option>Baixo Guandu</option><option>Barra de São Francisco</option><option>Boa Esperança</option><option>Bom Jesus do Norte</option><option>Brejetuba</option><option>Cachoeiro de Itapemirim</option><option>Cariacica</option><option>Castelo</option><option>Colatina</option><option>Conceição da Barra</option><option>Conceição do Castelo</option><option>Divino de São Lourenço</option><option>Domingos Martins</option><option>Dores do Rio Preto</option><option>Ecoporanga</option><option>Fundão</option><option>Governador Lindenberg</option><option>Guaçuí</option><option>Guarapari</option><option>Ibatiba</option><option>Ibiraçu</option><option>Ibitirama</option><option>Iconha</option><option>Irupi</option><option>Itaguaçu</option><option>Itapemirim</option><option>Itarana</option><option>Iúna</option><option>Jaguaré</option><option>Jerônimo Monteiro</option><option>João Neiva</option><option>Laranja da Terra</option><option>Linhares</option><option>Mantenópolis</option><option>Marataízes</option><option>Marechal Floriano</option><option>Marilândia</option><option>Mimoso do Sul</option><option>Montanha</option><option>Mucurici</option><option>Muniz Freire</option><option>Muqui</option><option>Nova Venécia</option><option>Pancas</option><option>Pedro Canário</option><option>Pinheiros</option><option>Piúma</option><option>Ponto Belo</option><option>Presidente Kennedy</option><option>Rio Bananal</option><option>Rio Novo do Sul</option><option>Santa Leopoldina</option><option>Santa Maria de Jetibá</option><option>Santa Teresa</option><option>São Domingos do Norte</option><option>São Gabriel da Palha</option><option>São José do Calçado</option><option>São Mateus</option><option>São Roque do Canaã</option><option>Serra</option><option>Sooretama</option><option>Vargem Alta</option><option>Venda Nova do Imigrante</option><option>Viana</option><option>Vila Pavão</option><option>Vila Valério</option><option>Vila Velha</option><option>Vitória</option></select>
-        </div>
-        <button onclick="clearSearch()" class="btn btn-outline" style="padding:.6rem .9rem;font-size:.78rem;white-space:nowrap">Limpar</button>
-      </div>
-      <div id="srch_status" style="font-size:.78rem;color:var(--cinza);margin-top:.75rem"></div>
-      <div id="srch_results" style="margin-top:.75rem"></div>`;
-    document.getElementById('dashStats').parentNode.insertBefore(searchCard, document.querySelector('#page-dashboard .table-wrap'));
+    cidadesCard.style.display = 'block';
+  } else {
+    cidadesCard.style.display = 'none';
   }
 
   const recent = allResearchers.slice(0,5);
@@ -759,10 +760,8 @@ function clearSearch(){
   ['srch_nome','srch_area','srch_inst','srch_estado'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.value='';
   });
-  const res = document.getElementById('srch_results');
-  const status = document.getElementById('srch_status');
-  if(res) res.innerHTML='';
-  if(status) status.textContent='';
+  document.getElementById('srch_results').innerHTML='';
+  document.getElementById('srch_status').textContent='';
 }
 
 function renderSearchResults(){
@@ -777,7 +776,7 @@ function renderSearchResults(){
     return;
   }
 
-  let filtered = allResearchers.filter(r=>{
+  const filtered = allResearchers.filter(r=>{
     if(nome && !r.nome?.toLowerCase().includes(nome)) return false;
     if(area && r.area_principal !== area) return false;
     if(inst && r.instituicao !== inst) return false;
@@ -811,6 +810,7 @@ function renderSearchResults(){
         <td style="padding:.7rem .75rem;border-bottom:1px solid rgba(0,0,0,.04)"><button class="btn btn-outline" style="font-size:.75rem;padding:.3rem .7rem" onclick="openResearcherModal('${r.id}')">Ver / Editar</button></td>
       </tr>`).join('')}</tbody>
     </table>`;
+}
 
 // ── INSCRIÇÕES ──────────────────────────────────────────────
 function renderInscricoes(){
