@@ -187,7 +187,7 @@ let filtered = [];
 // ── LOAD DATA ──────────────────────────────────────────────
 async function loadData(){
   const [{ data: works, error: wErr }, { data: researchers, error: rErr }] = await Promise.all([
-    db.from('works').select('*').order('created_at', { ascending: false }),
+    db.from('works').select('*, researchers!inner(id, nome, instituicao, area_principal, status)').eq('researchers.status', 'aprovada').order('created_at', { ascending: false }),
     db.from('researchers').select('id, nome, instituicao, area_principal').eq('status', 'aprovada')
   ]);
 
@@ -196,12 +196,12 @@ async function loadData(){
     return;
   }
 
-  allWorks = works || [];
   allResearchers = researchers || [];
 
-  // Enrich works with researcher data
+  // Enrich works with researcher data and filter to approved only
   const resMap = {};
   allResearchers.forEach(r => { resMap[r.id] = r; });
+  allWorks = (works || []).filter(w => resMap[w.researcher_id]);
   allWorks.forEach(w => {
     const r = resMap[w.researcher_id];
     w._autor = r ? r.nome : '';
