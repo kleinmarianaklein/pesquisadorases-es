@@ -536,9 +536,16 @@ function buildReview(){
     ${links?`<p style="font-size:.82rem;color:var(--cinza);margin-bottom:.75rem"><strong>Links:</strong></p><ul style="font-size:.82rem;color:var(--cinza);padding-left:1.25rem;margin-bottom:1rem">${links}</ul>`:''}
     ${obrasHtml?`<p style="font-size:.82rem;color:var(--cinza);margin-bottom:.5rem"><strong>Publicações (${obras.length}):</strong></p><ul style="font-size:.82rem;color:var(--cinza);padding-left:1.25rem">${obrasHtml}</ul>`:'<p style="font-size:.82rem;color:var(--cinza)">Nenhuma publicação adicionada.</p>'}`;
 }
+  <div class="form-group">
+  <label>
+    <input type="checkbox" id="o${id}_adquirir"> 
+    Este livro/publicação pode ser adquirido na internet?
+  </label>
+</div>
 // Armazenar arquivos de obras para upload depois
 let obrasArquivos = {}; // { id: File }
-
+  }
+  
 function validarFotoObra(id, input){
   const file = input.files[0];
   if(!file) return;
