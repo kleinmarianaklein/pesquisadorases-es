@@ -473,15 +473,26 @@ function addObra(){
     <button class="obra-remove" onclick="removeObra(${id})" title="Remover">✕</button>
     <div class="form-grid" style="margin-top:.5rem">
       <div class="form-group full"><label>Título <span class="req">*</span></label><input type="text" id="o${id}_titulo" placeholder="Título completo da obra"></div>
-      <div class="form-group">
-        <label>Tipo <span class="req">*</span></label>
-        <select id="o${id}_tipo">
-          <option value="">Selecione…</option>
-          <option>Livro</option><option>Tese de Doutorado</option><option>Dissertação de Mestrado</option>
-          <option>TCC</option><option>Artigo Científico</option><option>Capítulo de Livro</option>
-          <option>Monografia</option><option>Relatório Técnico</option>
-        </select>
+      
+      <!-- NOVO: Upload de foto -->
+      <div class="form-group full">
+        <label>Foto da publicação (máx 1MB)</label>
+        <div style="display:flex;gap:1rem;align-items:flex-start;">
+          <div style="flex-shrink:0;">
+            <img id="o${id}_fotoPreview" style="width:60px;height:80px;border-radius:8px;border:1px solid var(--cinza-claro);object-fit:cover;display:none;">
+          </div>
+          <input type="file" id="o${id}_foto" accept="image/*" onchange="validarFotoObra(${id}, this)" style="display:none;">
+          <button type="button" class="btn-escolher-foto" onclick="document.getElementById('o${id}_foto').click()" style="align-self:center;">Escolher imagem</button>
+        </div>
+        <div style="font-size:.72rem;color:var(--cinza);margin-top:.3rem;">JPG, PNG ou WebP. Máximo 1MB.</div>
       </div>
+
+      <div class="form-group"><label>Tipo <span class="req">*</span></label><select id="o${id}_tipo">
+        <option value="">Selecione…</option>
+        <option>Livro</option><option>Tese de Doutorado</option><option>Dissertação de Mestrado</option>
+        <option>TCC</option><option>Artigo Científico</option><option>Capítulo de Livro</option>
+        <option>Monografia</option><option>Relatório Técnico</option>
+      </select></div>
       <div class="form-group"><label>Ano <span class="req">*</span></label><input type="number" id="o${id}_ano" placeholder="2023" min="1950" max="2030"></div>
       <div class="form-group full"><label>Resumo</label><textarea id="o${id}_resumo" placeholder="Breve descrição da obra (opcional)…" style="min-height:80px"></textarea></div>
       <div class="form-group"><label>Link de acesso (repositório, DOI)</label><input type="url" id="o${id}_acesso" placeholder="https://..."></div>
@@ -525,7 +536,90 @@ function buildReview(){
     ${links?`<p style="font-size:.82rem;color:var(--cinza);margin-bottom:.75rem"><strong>Links:</strong></p><ul style="font-size:.82rem;color:var(--cinza);padding-left:1.25rem;margin-bottom:1rem">${links}</ul>`:''}
     ${obrasHtml?`<p style="font-size:.82rem;color:var(--cinza);margin-bottom:.5rem"><strong>Publicações (${obras.length}):</strong></p><ul style="font-size:.82rem;color:var(--cinza);padding-left:1.25rem">${obrasHtml}</ul>`:'<p style="font-size:.82rem;color:var(--cinza)">Nenhuma publicação adicionada.</p>'}`;
 }
+// Armazenar arquivos de obras para upload depois
+let obrasArquivos = {}; // { id: File }
 
+function validarFotoObra(id, input){
+  const file = input.files[0];
+  if(!file) return;
+  
+  // Validar tamanho (máximo 1MB = 1048576 bytes)
+  if(file.size > 1048576){
+    alert('Arquivo muito grande! Máximo 1MB.');
+    input.value = '';
+    return;
+  }
+  
+  // Validar tipo
+  if(!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)){
+    alert('Tipo de arquivo inválido. Use JPG, PNG ou WebP.');
+    input.value = '';
+    return;
+  }
+  
+  // Mostrar preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById(`o${id}_fotoPreview`).src = e.target.result;
+    document.getElementById(`o${id}_fotoPreview`).style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+  
+  // Armazenar arquivo para upload posterior
+  obrasArquivos[id] = file;
+}
+// Inserir publicações se houver
+const obrasData = obras
+  .map(id => getObraData(id))
+  .filter(o => o.titulo && o.tipo)
+  .map(o => ({...o, researcher_id: researcher.id, area_conhecimento: document.getElementById('area_principal').value}));
+
+if(obrasData.length){
+  // Upload de fotos das obras
+  for(let o of obrasData){
+    if(o.arquivo){
+      btn.textContent = `Enviando foto da publicação ${obrasData.indexOf(o)+1}/${obrasData.length}…`;
+      const fotoUrl = await uploadObraFoto(researcher.id, o.arquivo);
+      o.foto_publicacao = fotoUrl;
+    }
+    delete o.arquivo; // Remover arquivo do objeto antes de inserir
+  }
+  
+  const { error: worksError } = await db.from('works').insert(obrasData);
+  if(worksError) console.warn('Aviso ao salvar publicações:', worksError.message);
+}
+// Modificar getObraData() para incluir arquivo
+function getObraData(id){
+  return {
+    titulo: document.getElementById('o'+id+'_titulo')?.value.trim()||'',
+    tipo: document.getElementById('o'+id+'_tipo')?.value||'',
+    ano: parseInt(document.getElementById('o'+id+'_ano')?.value)||null,
+    resumo: document.getElementById('o'+id+'_resumo')?.value.trim()||'',
+    link_acesso: document.getElementById('o'+id+'_acesso')?.value.trim()||null,
+    link_compra: document.getElementById('o'+id+'_compra')?.value.trim()||null,
+    tags: (document.getElementById('o'+id+'_tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
+    arquivo: obrasArquivos[id] || null, // ← Adicionar
+  };
+}
+  async function uploadObraFoto(researcherId, file){
+  try {
+    const fileName = `${researcherId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const { data, error } = await db.storage
+      .from('works-photos')
+      .upload(fileName, file);
+    
+    if(error) throw new Error(error.message);
+    
+    const { data: publicUrl } = db.storage
+      .from('works-photos')
+      .getPublicUrl(fileName);
+    
+    return publicUrl.publicUrl;
+  } catch(e) {
+    console.error('Erro ao fazer upload de foto da publicação:', e);
+    return null;
+  }
+}
 async function submitForm(){
   const btn = document.getElementById('btnSubmit');
   btn.textContent = 'Enviando…'; btn.disabled = true;
