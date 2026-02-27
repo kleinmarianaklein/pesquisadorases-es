@@ -177,6 +177,12 @@
           <option>Outra</option>
         </select>
       </div>
+      <div class="form-group">
+        <label>Cidade (ES) <span class="req">*</span></label>
+        <select id="estado">
+          <option value="">Selecione…</option><option>Afonso Cláudio</option><option>Água Doce do Norte</option><option>Águia Branca</option><option>Alegre</option><option>Alfredo Chaves</option><option>Alto Rio Novo</option><option>Anchieta</option><option>Apiacá</option><option>Aracruz</option><option>Atílio Vivácqua</option><option>Baixo Guandu</option><option>Barra de São Francisco</option><option>Boa Esperança</option><option>Bom Jesus do Norte</option><option>Brejetuba</option><option>Cachoeiro de Itapemirim</option><option>Cariacica</option><option>Castelo</option><option>Colatina</option><option>Conceição da Barra</option><option>Conceição do Castelo</option><option>Divino de São Lourenço</option><option>Domingos Martins</option><option>Dores do Rio Preto</option><option>Ecoporanga</option><option>Fundão</option><option>Governador Lindenberg</option><option>Guaçuí</option><option>Guarapari</option><option>Ibatiba</option><option>Ibiraçu</option><option>Ibitirama</option><option>Iconha</option><option>Irupi</option><option>Itaguaçu</option><option>Itapemirim</option><option>Itarana</option><option>Iúna</option><option>Jaguaré</option><option>Jerônimo Monteiro</option><option>João Neiva</option><option>Laranja da Terra</option><option>Linhares</option><option>Mantenópolis</option><option>Marataízes</option><option>Marechal Floriano</option><option>Marilândia</option><option>Mimoso do Sul</option><option>Montanha</option><option>Mucurici</option><option>Muniz Freire</option><option>Muqui</option><option>Nova Venécia</option><option>Pancas</option><option>Pedro Canário</option><option>Pinheiros</option><option>Piúma</option><option>Ponto Belo</option><option>Presidente Kennedy</option><option>Rio Bananal</option><option>Rio Novo do Sul</option><option>Santa Leopoldina</option><option>Santa Maria de Jetibá</option><option>Santa Teresa</option><option>São Domingos do Norte</option><option>São Gabriel da Palha</option><option>São José do Calçado</option><option>São Mateus</option><option>São Roque do Canaã</option><option>Serra</option><option>Sooretama</option><option>Vargem Alta</option><option>Venda Nova do Imigrante</option><option>Viana</option><option>Vila Pavão</option><option>Vila Valério</option><option>Vila Velha</option><option>Vitória</option>
+        </select>
+      </div>
     </div>
     <div class="form-group full" style="margin-top:.5rem">
       <label>Foto de perfil <span style="font-weight:400;color:var(--cinza)">(opcional — formato quadrado recomendado)</span></label>
@@ -527,6 +533,12 @@ function validateStep1(){
     err.style.display = 'block';
     return false;
   }
+  const estado = document.getElementById('estado').value;
+  if(!estado){
+    err.textContent = '❌ Preenchimento obrigatório: Selecione sua cidade';
+    err.style.display = 'block';
+    return false;
+  }
   if(!responsabilidade){
     err.textContent = '❌ Aceite os termos: Marque "Me responsabilizo..." para continuar';
     err.style.display = 'block';
@@ -628,6 +640,7 @@ function buildReview(){
   const bio = document.getElementById('mini_bio').value.trim();
   const area = document.getElementById('area_principal').value;
   const inst = document.getElementById('instituicao').value;
+  const estado = document.getElementById('estado').value;
   const email = document.getElementById('email').value.trim();
   const links = ['lattes','orcid','linkedin','google_scholar','research_gate','site']
     .map(k=>{ const v=document.getElementById(k)?.value.trim(); return v?`<li><strong>${k}:</strong> ${v}</li>`:''; }).join('');
@@ -637,6 +650,7 @@ function buildReview(){
     <p style="font-size:.88rem;color:var(--cinza);margin-bottom:.5rem"><strong>E-mail:</strong> ${email}</p>
     <p style="font-size:.88rem;color:var(--cinza);margin-bottom:.5rem"><strong>Área:</strong> ${area}</p>
     <p style="font-size:.88rem;color:var(--cinza);margin-bottom:.5rem"><strong>Instituição:</strong> ${inst}</p>
+    <p style="font-size:.88rem;color:var(--cinza);margin-bottom:.5rem"><strong>Cidade:</strong> ${estado}</p>
     <p style="font-size:.88rem;color:var(--cinza);margin-bottom:1rem">${bio}</p>
     ${links?`<p style="font-size:.82rem;color:var(--cinza);margin-bottom:.75rem"><strong>Links:</strong></p><ul style="font-size:.82rem;color:var(--cinza);padding-left:1.25rem;margin-bottom:1rem">${links}</ul>`:''}
     ${obrasHtml?`<p style="font-size:.82rem;color:var(--cinza);margin-bottom:.5rem"><strong>Publicações (${obras.length}):</strong></p><ul style="font-size:.82rem;color:var(--cinza);padding-left:1.25rem">${obrasHtml}</ul>`:'<p style="font-size:.82rem;color:var(--cinza)">Nenhuma publicação adicionada.</p>'}`;
@@ -666,7 +680,8 @@ async function submitForm(){
       mini_bio: document.getElementById('mini_bio').value.trim(),
       area_principal: document.getElementById('area_principal').value,
       instituicao: document.getElementById('instituicao').value,
-      email: document.getElementById('email').value.trim()||null,
+      estado: document.getElementById('estado').value || null,
+      email: document.getElementById('email').value.trim() || '',
       lattes: document.getElementById('lattes').value.trim()||null,
       orcid: document.getElementById('orcid').value.trim()||null,
       linkedin: document.getElementById('linkedin').value.trim()||null,
