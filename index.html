@@ -563,7 +563,7 @@ function renderWorks(){
 
 function renderBooks(){
   const grid = document.getElementById('booksGrid');
-  const books = allWorks.filter(w=>w.tipo==='Livro'&&w.link_compra);
+const books = allWorks.filter(w=>w.tipo==='Livro'&&(w.link_compra || w.para_adquirir));
   if(!books.length){ grid.innerHTML='<div class="empty" style="color:rgba(255,255,255,.6)">Nenhum livro à venda no momento.</div>'; return; }
   grid.innerHTML = books.map(b=>{
     const author = allResearchers.find(r=>r.id===b.researcher_id)?.nome||'—';
