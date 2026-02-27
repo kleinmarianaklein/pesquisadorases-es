@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inscrição — Pesquisadoras ES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  :root{--verde:#2D6A4F;--verde-claro:#52B788;--areia:#F8F4EE;--terra:#C4843A;--preto:#1A1A1A;--cinza:#6B6B6B;--cinza-claro:#E8E4DE;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--areia);color:var(--preto);}
+  nav{position:sticky;top:0;z-index:100;background:rgba(248,244,238,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--cinza-claro);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1.5rem,5vw,4rem);height:64px;}
+  .nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--verde);text-decoration:none;}
+  .nav-logo span{color:var(--terra);}
+  .nav-links{display:flex;gap:2rem;list-style:none;align-items:center;}
+  .nav-links a{font-size:.85rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--cinza);text-decoration:none;}
+  .nav-links a:hover{color:var(--verde);}
+
+  .hero-form{background:var(--verde);color:white;padding:clamp(3rem,6vw,5rem) clamp(1.5rem,5vw,4rem);text-align:center;}
+  .hero-form-tag{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:var(--verde-claro);margin-bottom:1rem;display:block;}
+  .hero-form h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:700;margin-bottom:1rem;}
+  .hero-form p{font-size:1rem;color:rgba(255,255,255,.75);max-width:500px;margin:0 auto;}
+
+  .form-wrapper{max-width:760px;margin:0 auto;padding:clamp(2rem,5vw,4rem) clamp(1.5rem,5vw,2rem);}
+
+  .step-indicator{display:flex;gap:0;margin-bottom:2.5rem;border-radius:12px;overflow:hidden;border:1.5px solid var(--cinza-claro);}
+  .step{flex:1;padding:.75rem;text-align:center;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .2s;color:var(--cinza);background:white;}
+  .step.active{background:var(--verde);color:white;}
+  .step.done{background:rgba(45,106,79,.1);color:var(--verde);}
+
+  .form-section{display:none;}
+  .form-section.active{display:block;}
+
+  .section-header{margin-bottom:2rem;}
+  .section-header h2{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;margin-bottom:.4rem;}
+  .section-header p{font-size:.88rem;color:var(--cinza);}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+  .form-grid.single{grid-template-columns:1fr;}
+  .form-group{display:flex;flex-direction:column;gap:.4rem;}
+  .form-group.full{grid-column:1/-1;}
+  label{font-size:.82rem;font-weight:500;color:var(--preto);}
+  label .req{color:var(--terra);}
+  input,select,textarea{font-family:'DM Sans',sans-serif;font-size:.95rem;color:var(--preto);padding:.75rem 1rem;border:1.5px solid var(--cinza-claro);border-radius:10px;background:white;outline:none;transition:border .2s;width:100%;}
+  input:focus,select:focus,textarea:focus{border-color:var(--verde);}
+  textarea{resize:vertical;min-height:120px;}
+  .hint{font-size:.72rem;color:var(--cinza);}
+
+  /* obras dinâmicas */
+  .obra-item{background:white;border-radius:14px;padding:1.25rem;border:1.5px solid var(--cinza-claro);margin-bottom:1rem;position:relative;}
+  .obra-remove{position:absolute;top:.75rem;right:.75rem;background:none;border:none;color:var(--cinza);cursor:pointer;font-size:1.1rem;}
+  .obra-remove:hover{color:#e53e3e;}
+  .btn-add-obra{width:100%;padding:.75rem;border:1.5px dashed var(--cinza-claro);border-radius:10px;background:transparent;color:var(--cinza);font-family:'DM Sans',sans-serif;font-size:.88rem;cursor:pointer;transition:all .2s;margin-top:.5rem;}
+  .btn-add-obra:hover{border-color:var(--verde);color:var(--verde);}
+
+  .form-nav{display:flex;justify-content:space-between;margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--cinza-claro);}
+  .btn-primary{display:inline-flex;align-items:center;gap:.5rem;background:var(--verde);color:white;font-size:.9rem;font-weight:500;padding:.9rem 2rem;border-radius:100px;text-decoration:none;transition:all .25s;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .btn-primary:hover{background:#235438;}
+  .btn-ghost{background:transparent;color:var(--cinza);border:1.5px solid var(--cinza-claro);font-size:.9rem;font-weight:500;padding:.9rem 2rem;border-radius:100px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+  .btn-ghost:hover{border-color:var(--verde);color:var(--verde);}
+
+  .success-state{text-align:center;padding:4rem 2rem;display:none;}
+  .success-icon{font-size:4rem;margin-bottom:1.5rem;}
+  .success-state h2{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;margin-bottom:1rem;}
+  .success-state p{color:var(--cinza);font-size:1rem;max-width:420px;margin:0 auto 2rem;}
+
+  .error-msg{background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:.75rem 1rem;font-size:.85rem;color:#b91c1c;margin-top:.5rem;display:none;}
+
+  footer{background:var(--preto);color:rgba(255,255,255,.6);padding:3rem clamp(1.5rem,5vw,4rem);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;margin-top:0;}
+  .footer-brand{font-family:'Playfair Display',serif;font-size:1.1rem;color:white;text-decoration:none;}
+  .footer-brand span{color:var(--verde-claro);}
+  footer a{color:var(--verde-claro);text-decoration:none;}
+  footer p{font-size:.82rem;}
+
+  /* UPLOAD FOTO */
+  .foto-upload-area{display:flex;gap:2rem;align-items:flex-start;flex-wrap:wrap;}
+  .foto-preview-wrap{flex-shrink:0;}
+  .foto-preview{width:120px;height:120px;border-radius:12px;background:var(--cinza-claro);border:2px dashed var(--cinza-claro);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;transition:border .2s;position:relative;}
+  .foto-preview:hover{border-color:var(--verde);}
+  .foto-preview img{width:100%;height:100%;object-fit:cover;display:none;}
+  .foto-preview .foto-placeholder{display:flex;flex-direction:column;align-items:center;gap:.4rem;color:var(--cinza);font-size:.75rem;text-align:center;padding:.5rem;}
+  .foto-preview .foto-placeholder span{font-size:2rem;}
+  .foto-preview .foto-remove{display:none;position:absolute;top:4px;right:4px;background:rgba(0,0,0,.5);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:.7rem;align-items:center;justify-content:center;}
+  .foto-upload-info{flex:1;min-width:200px;}
+  .foto-upload-info h4{font-size:.88rem;font-weight:600;margin-bottom:.4rem;}
+  .foto-upload-info p{font-size:.78rem;color:var(--cinza);line-height:1.6;margin-bottom:.75rem;}
+  .btn-escolher-foto{display:inline-flex;align-items:center;gap:.5rem;font-size:.82rem;font-weight:500;padding:.55rem 1.1rem;border-radius:100px;border:1.5px solid var(--verde);color:var(--verde);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+  .btn-escolher-foto:hover{background:rgba(45,106,79,.06);}
+  
+  /* Canvas de corte */
+  .crop-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:1.5rem;}
+  .crop-modal.open{display:flex;}
+  .crop-box{background:white;border-radius:20px;padding:2rem;max-width:480px;width:100%;}
+  .crop-box h3{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;margin-bottom:1rem;}
+  .crop-canvas-wrap{width:100%;aspect-ratio:1;background:#111;border-radius:12px;overflow:hidden;position:relative;cursor:crosshair;touch-action:none;}
+  canvas#cropCanvas{width:100%;height:100%;display:block;}
+  .crop-actions{display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;gap:1rem;flex-wrap:wrap;}
+  .crop-hint{font-size:.78rem;color:var(--cinza);}
+  
+  .form-group label { display: flex; align-items: center; }
+  .form-group label input[type="checkbox"] { width: auto; margin: 0; }
+  
+  @media(max-width:600px){.form-grid{grid-template-columns:1fr;}.nav-links{display:none;}.foto-upload-area{flex-direction:column;}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">Pesquisadoras<span>ES</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Início</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="index.html#sobre">Sobre</a></li>
+  </ul>
+</nav>
+
+<div class="hero-form">
+  <span class="hero-form-tag">Faça parte do portal</span>
+  <h1>Inscrição de Pesquisadora</h1>
+  <p>Preencha seus dados e suas publicações. Sua inscrição passará por aprovação e em breve seu perfil estará visível.</p>
+</div>
+
+<div class="form-wrapper">
+  <!-- Indicador de etapas -->
+  <div class="step-indicator">
+    <div class="step active" id="step1">1 · Dados pessoais</div>
+    <div class="step" id="step2">2 · Links & contato</div>
+    <div class="step" id="step3">3 · Publicações</div>
+    <div class="step" id="step4">4 · Revisão</div>
+  </div>
+
+  <!-- ETAPA 1: Dados pessoais -->
+  <div class="form-section active" id="section1">
+    <div class="section-header">
+      <h2>Dados pessoais</h2>
+      <p>Informações que aparecerão no seu perfil público.</p>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Nome completo <span class="req">*</span></label>
+        <input type="text" id="nome" placeholder="Ex: Dra. Maria da Silva Santos">
+      </div>
+      <div class="form-group full">
+        <label>Mini bio <span class="req">*</span></label>
+        <textarea id="mini_bio" placeholder="Apresentação breve da sua trajetória acadêmica e áreas de pesquisa (até 300 caracteres)…" maxlength="300"></textarea>
+        <span class="hint" id="bioCount">0/300 caracteres</span>
+      </div>
+      <div class="form-group"><label>E-mail <span class="req">*</span></label><input type="email" id="email" placeholder="seu.email@..." required></div>
+      <div class="form-group">
+        <label>Área principal <span class="req">*</span></label>
+        <select id="area_principal">
+          <option value="">Selecione…</option>
+          <option>Ciências Exatas e da Terra</option>
+          <option>Ciências Biológicas</option>
+          <option>Engenharias</option>
+          <option>Ciências da Saúde</option>
+          <option>Ciências Agrárias</option>
+          <option>Ciências Sociais Aplicadas</option>
+          <option>Ciências Humanas</option>
+          <option>Linguística, Letras e Artes</option>
+          <option>Multidisciplinar</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Instituição <span class="req">*</span></label>
+        <select id="instituicao">
+          <option value="">Selecione…</option>
+          <option>UFES - Universidade Federal do Espírito Santo</option>
+          <option>IFES - Instituto Federal do Espírito Santo</option>
+          <option>UVV - Universidade Vila Velha</option>
+          <option>FUCAPE</option>
+          <option>EMESCAM</option>
+          <option>FDV - Faculdade de Direito de Vitória</option>
+          <option>MULTIVIX</option>
+          <option>FAESA</option>
+          <option>Outra</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group full" style="margin-top:.5rem">
+      <label>Foto de perfil <span style="font-weight:400;color:var(--cinza)">(opcional — formato quadrado recomendado)</span></label>
+      <div class="foto-upload-area" style="margin-top:.5rem">
+        <div class="foto-preview-wrap">
+          <div class="foto-preview" id="fotoPreview" onclick="document.getElementById('fotoInput').click()">
+            <img id="fotoImg" alt="Preview">
+            <div class="foto-placeholder"><span>👤</span>clique para<br>adicionar</div>
+            <button class="foto-remove" id="fotoRemove" onclick="removeFoto(event)" title="Remover foto">✕</button>
+          </div>
+        </div>
+        <div class="foto-upload-info">
+          <h4>Foto de rosto</h4>
+          <p>Escolha uma foto quadrada ou selecione qualquer imagem e use a ferramenta de corte para ajustar. Formatos aceitos: JPG ou PNG. Tamanho máximo: 5MB.</p>
+          <button class="btn-escolher-foto" onclick="document.getElementById('fotoInput').click()">📷 Escolher foto</button>
+        </div>
+      </div>
+      <input type="file" id="fotoInput" accept="image/jpeg,image/png" style="display:none" onchange="onFotoSelected(event)">
+    </div>
+
+    <div id="err1" class="error-msg">Por favor, preencha todos os campos obrigatórios.</div>
+    <div class="form-nav">
+      <span></span>
+      <div class="form-group full">
+        <label>
+          <input type="checkbox" id="responsabilidade" required>
+          <span style="margin-left:.5rem;">Me responsabilizo pelas informações prestadas por mim neste cadastro.</span>
+        </label>
+        <div class="error-msg" id="errResponsabilidade" style="margin-top:.5rem;">Você deve aceitar os termos para continuar.</div>
+      </div>
+      <button class="btn-primary" onclick="goStep(2)">Próximo →</button>
+    </div>
+  </div>
+
+  <!-- ETAPA 2: Links -->
+  <div class="form-section" id="section2">
+    <div class="section-header">
+      <h2>Links & contato</h2>
+      <p>Pelo menos um link acadêmico é recomendado. E-mail é opcional.</p>
+    </div>
+    <div class="form-grid single">
+      <div class="form-group">
+        <label>Currículo Lattes</label>
+        <input type="url" id="lattes" placeholder="http://lattes.cnpq.br/SEUNUMERO">
+      </div>
+      <div class="form-group">
+        <label>ORCID</label>
+        <input type="url" id="orcid" placeholder="https://orcid.org/0000-0000-0000-0000">
+      </div>
+      <div class="form-group">
+        <label>LinkedIn</label>
+        <input type="url" id="linkedin" placeholder="https://linkedin.com/in/seuprofile">
+      </div>
+      <div class="form-group">
+        <label>Google Scholar</label>
+        <input type="url" id="google_scholar" placeholder="https://scholar.google.com/citations?user=…">
+      </div>
+      <div class="form-group">
+        <label>ResearchGate</label>
+        <input type="url" id="research_gate" placeholder="https://researchgate.net/profile/…">
+      </div>
+      <div class="form-group">
+        <label>E-mail público (opcional)</label>
+        <input type="email" id="email2" placeholder="contato@universidade.br">
+      </div>
+      <div class="form-group">
+        <label>Site ou blog (opcional)</label>
+        <input type="url" id="site" placeholder="https://meusite.com.br">
+      </div>
+    </div>
+    <div class="form-nav">
+      <button class="btn-ghost" onclick="goStep(1)">← Voltar</button>
+      <button class="btn-primary" onclick="goStep(3)">Próximo →</button>
+    </div>
+  </div>
+
+  <!-- ETAPA 3: Publicações -->
+  <div class="form-section" id="section3">
+    <div class="section-header">
+      <h2>Suas publicações</h2>
+      <p>Adicione teses, livros, artigos e outros trabalhos. Você pode adicionar mais depois.</p>
+    </div>
+    <div id="obrasContainer"></div>
+    <button class="btn-add-obra" onclick="addObra()">+ Adicionar publicação</button>
+    <div class="form-nav">
+      <button class="btn-ghost" onclick="goStep(2)">← Voltar</button>
+      <button class="btn-primary" onclick="goStep(4)">Revisar inscrição →</button>
+    </div>
+  </div>
+
+  <!-- ETAPA 4: Revisão -->
+  <div class="form-section" id="section4">
+    <div class="section-header">
+      <h2>Revisão da inscrição</h2>
+      <p>Confira seus dados antes de enviar. Sua inscrição passará por análise.</p>
+    </div>
+    <div id="reviewContent" style="background:white;border-radius:16px;padding:2rem;border:1.5px solid var(--cinza-claro);margin-bottom:1.5rem;"></div>
+    <div id="errSubmit" class="error-msg"></div>
+    <div class="form-nav">
+      <button class="btn-ghost" onclick="goStep(3)">← Voltar</button>
+      <button class="btn-primary" id="btnSubmit" onclick="submitForm()">✓ Enviar inscrição</button>
+    </div>
+  </div>
+
+  <!-- SUCESSO -->
+  <div class="success-state" id="successState">
+    <div class="success-icon">🎉</div>
+    <h2>Inscrição enviada!</h2>
+    <p>Recebemos sua inscrição. Em breve nossa equipe vai analisar e você será notificada.</p>
+    <a href="index.html" class="btn-primary">Voltar ao início</a>
+  </div>
+</div>
+
+<!-- MODAL DE CORTE -->
+<div class="crop-modal" id="cropModal">
+  <div class="crop-box">
+    <h3>✂️ Ajustar foto</h3>
+    <div class="crop-canvas-wrap" id="cropWrap">
+      <canvas id="cropCanvas"></canvas>
+    </div>
+    <div class="crop-actions">
+      <span class="crop-hint">Arraste para reposicionar · Scroll para zoom</span>
+      <div style="display:flex;gap:.75rem">
+        <button class="btn-ghost" style="padding:.6rem 1.2rem;font-size:.85rem" onclick="cancelCrop()">Cancelar</button>
+        <button class="btn-primary" style="padding:.6rem 1.4rem;font-size:.85rem" onclick="applyCrop()">✓ Usar esta foto</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="index.html" class="footer-brand">Pesquisadoras<span>ES</span></a>
+  <p>Dando visibilidade à ciência feita por mulheres no Espírito Santo.</p>
+  <p><a href="admin/login.html">Área administrativa</a></p>
+</footer>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ════════════════════════════════════════════════════════════════════════════════
+// VARIÁVEIS GLOBAIS
+// ════════════════════════════════════════════════════════════════════════════════
+let cropImage = null, cropScale = 1, cropOffsetX = 0, cropOffsetY = 0;
+let cropDragging = false, cropLastX = 0, cropLastY = 0;
+let croppedBlob = null;
+let obras = [];
+let obraCount = 0;
+let obrasArquivos = {};
+
+// ════════════════════════════════════════════════════════════════════════════════
+// UPLOAD E CORTE DE FOTO DE PERFIL
+// ════════════════════════════════════════════════════════════════════════════════
+function onFotoSelected(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 5 * 1024 * 1024){ alert('A foto deve ter no máximo 5MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => openCrop(ev.target.result);
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function openCrop(src){
+  cropImage = new Image();
+  cropImage.onload = () => {
+    document.getElementById('cropModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => {
+      const canvas = document.getElementById('cropCanvas');
+      const wrap = document.getElementById('cropWrap');
+      const size = wrap.offsetWidth || 400;
+      canvas.width = size;
+      canvas.height = size;
+      const scaleX = size / cropImage.width;
+      const scaleY = size / cropImage.height;
+      cropScale = Math.max(scaleX, scaleY);
+      cropOffsetX = (size - cropImage.width * cropScale) / 2;
+      cropOffsetY = (size - cropImage.height * cropScale) / 2;
+      drawCrop();
+    });
+  };
+  cropImage.src = src;
+}
+
+function drawCrop(){
+  const canvas = document.getElementById('cropCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(cropImage, cropOffsetX, cropOffsetY, cropImage.width * cropScale, cropImage.height * cropScale);
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 1;
+  [1/3, 2/3].forEach(f => {
+    ctx.beginPath(); ctx.moveTo(canvas.width*f,0); ctx.lineTo(canvas.width*f,canvas.height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,canvas.height*f); ctx.lineTo(canvas.width,canvas.height*f); ctx.stroke();
+  });
+}
+
+function applyCrop(){
+  const canvas = document.getElementById('cropCanvas');
+  canvas.toBlob(blob => {
+    croppedBlob = blob;
+    const url = URL.createObjectURL(blob);
+    const img = document.getElementById('fotoImg');
+    img.src = url; img.style.display = 'block';
+    document.querySelector('.foto-placeholder').style.display = 'none';
+    document.getElementById('fotoRemove').style.display = 'flex';
+    cancelCrop();
+  }, 'image/jpeg', 0.92);
+}
+
+function cancelCrop(){
+  document.getElementById('cropModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function removeFoto(e){
+  e.stopPropagation();
+  croppedBlob = null;
+  document.getElementById('fotoImg').style.display = 'none';
+  document.getElementById('fotoImg').src = '';
+  document.querySelector('.foto-placeholder').style.display = 'flex';
+  document.getElementById('fotoRemove').style.display = 'none';
+}
+
+// Eventos do canvas de corte
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.getElementById('cropCanvas');
+  canvas.addEventListener('mousedown', e => { cropDragging=true; cropLastX=e.offsetX; cropLastY=e.offsetY; });
+  canvas.addEventListener('mousemove', e => {
+    if(!cropDragging) return;
+    cropOffsetX += e.offsetX - cropLastX; cropOffsetY += e.offsetY - cropLastY;
+    cropLastX=e.offsetX; cropLastY=e.offsetY; drawCrop();
+  });
+  canvas.addEventListener('mouseup', () => cropDragging=false);
+  canvas.addEventListener('mouseleave', () => cropDragging=false);
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const cx = canvas.width/2, cy = canvas.height/2;
+    cropOffsetX = cx + (cropOffsetX - cx) * delta;
+    cropOffsetY = cy + (cropOffsetY - cy) * delta;
+    cropScale *= delta;
+    drawCrop();
+  }, { passive: false });
+  let lastTouch = null;
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); lastTouch = e.touches[0]; });
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if(!lastTouch) return;
+    const t = e.touches[0];
+    cropOffsetX += t.clientX - lastTouch.clientX;
+    cropOffsetY += t.clientY - lastTouch.clientY;
+    lastTouch = t; drawCrop();
+  }, { passive: false });
+  canvas.addEventListener('touchend', () => lastTouch=null);
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// UPLOAD DE FOTOS
+// ════════════════════════════════════════════════════════════════════════════════
+async function uploadFoto(researcherId){
+  if(!croppedBlob) return null;
+  const fileName = `${researcherId}.jpg`;
+  const { data, error } = await db.storage.from('avatars').upload(fileName, croppedBlob, {
+    contentType: 'image/jpeg', upsert: true
+  });
+  if(error){ console.warn('Erro no upload da foto:', error.message); return null; }
+  const { data: urlData } = db.storage.from('avatars').getPublicUrl(fileName);
+  return urlData.publicUrl;
+}
+
+async function uploadObraFoto(researcherId, file){
+  try {
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    const fileName = `${researcherId}/${timestamp}_${randomStr}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const { data, error } = await db.storage.from('works-photos').upload(fileName, file);
+    if(error) throw new Error(error.message);
+    const { data: publicUrl } = db.storage.from('works-photos').getPublicUrl(fileName);
+    return publicUrl.publicUrl;
+  } catch(e) {
+    console.error('Erro ao fazer upload de foto da publicação:', e);
+    return null;
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// NAVEGAÇÃO ENTRE SEÇÕES
+// ════════════════════════════════════════════════════════════════════════════════
+function goStep(n){
+  if(n===2 && !validateStep1()) return;
+  if(n===4) buildReview();
+  for(let i=1;i<=4;i++){
+    document.getElementById('section'+i).classList.toggle('active',i===n);
+    const st = document.getElementById('step'+i);
+    st.classList.remove('active','done');
+    if(i===n) st.classList.add('active');
+    else if(i<n) st.classList.add('done');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// VALIDAÇÃO DA SEÇÃO 1
+// ════════════════════════════════════════════════════════════════════════════════
+function validateStep1(){
+  const nome = document.getElementById('nome').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const bio = document.getElementById('mini_bio').value.trim();
+  const area = document.getElementById('area_principal').value;
+  const inst = document.getElementById('instituicao').value;
+  const responsabilidade = document.getElementById('responsabilidade').checked;
+  const err = document.getElementById('err1');
+
+  if(!nome){
+    err.textContent = '❌ Preenchimento obrigatório: Digite seu nome completo';
+    err.style.display = 'block';
+    return false;
+  }
+  if(!email){
+    err.textContent = '❌ Preenchimento obrigatório: Digite seu e-mail';
+    err.style.display = 'block';
+    return false;
+  }
+  if(!email.includes('@')){
+    err.textContent = '❌ E-mail inválido: Digite um e-mail válido (ex: seu@email.com)';
+    err.style.display = 'block';
+    return false;
+  }
+  if(!bio){
+    err.textContent = '❌ Preenchimento obrigatório: Escreva uma mini bio';
+    err.style.display = 'block';
+    return false;
+  }
+  if(bio.length < 20){
+    err.textContent = '❌ Mini bio muito curta: Escreva pelo menos 20 caracteres';
+    err.style.display = 'block';
+    return false;
+  }
+  if(!area){
+    err.textContent = '❌ Preenchimento obrigatório: Selecione sua área principal';
+    err.style.display = 'block';
+    return false;
+  }
+  if(!inst){
+    err.textContent = '❌ Preenchimento obrigatório: Selecione sua instituição';
+    err.style.display = 'block';
+    return false;
+  }
+  if(!responsabilidade){
+    err.textContent = '❌ Aceite os termos: Marque "Me responsabilizo..." para continuar';
+    err.style.display = 'block';
+    return false;
+  }
+
+  err.style.display = 'none';
+  return true;
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// PUBLICAÇÕES
+// ════════════════════════════════════════════════════════════════════════════════
+document.getElementById('mini_bio').addEventListener('input',function(){
+  document.getElementById('bioCount').textContent = this.value.length+'/300 caracteres';
+});
+
+function addObra(){
+  const id = ++obraCount;
+  const div = document.createElement('div');
+  div.className = 'obra-item';
+  div.id = 'obra_'+id;
+  div.innerHTML = `
+    <button class="obra-remove" onclick="removeObra(${id})" title="Remover">✕</button>
+    <div class="form-grid" style="margin-top:.5rem">
+      <div class="form-group full"><label>Título <span class="req">*</span></label><input type="text" id="o${id}_titulo" placeholder="Título completo da obra"></div>
+      <div class="form-group full">
+        <label>Foto da publicação (máx 1MB)</label>
+        <div style="display:flex;gap:1rem;align-items:flex-start;">
+          <div style="flex-shrink:0;">
+            <img id="o${id}_fotoPreview" style="width:60px;height:80px;border-radius:8px;border:1px solid var(--cinza-claro);object-fit:cover;display:none;">
+          </div>
+          <input type="file" id="o${id}_foto" accept="image/*" onchange="validarFotoObra(${id}, this)" style="display:none;">
+          <button type="button" class="btn-escolher-foto" onclick="document.getElementById('o${id}_foto').click()" style="align-self:center;">Escolher imagem</button>
+        </div>
+        <div style="font-size:.72rem;color:var(--cinza);margin-top:.3rem;">JPG, PNG ou WebP. Máximo 1MB.</div>
+      </div>
+      <div class="form-group"><label>Tipo <span class="req">*</span></label><select id="o${id}_tipo"><option value="">Selecione…</option><option>Livro</option><option>Tese de Doutorado</option><option>Dissertação de Mestrado</option><option>TCC</option><option>Artigo Científico</option><option>Capítulo de Livro</option><option>Monografia</option><option>Relatório Técnico</option></select></div>
+      <div class="form-group"><label>Ano <span class="req">*</span></label><input type="number" id="o${id}_ano" placeholder="2023" min="1950" max="2030"></div>
+      <div class="form-group full"><label>Resumo</label><textarea id="o${id}_resumo" placeholder="Breve descrição da obra (opcional)…" style="min-height:80px"></textarea></div>
+      <div class="form-group"><label>Link de acesso (repositório, DOI)</label><input type="url" id="o${id}_acesso" placeholder="https://..."></div>
+      <div class="form-group"><label>Link de compra (para livros)</label><input type="url" id="o${id}_compra" placeholder="https://..."></div>
+      <div class="form-group full"><label>Tags / palavras-chave</label><input type="text" id="o${id}_tags" placeholder="Ex: saúde pública, epidemiologia, ES (separe por vírgula)"></div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="o${id}_adquirir"> 
+          Este livro/publicação pode ser adquirido na internet?
+        </label>
+      </div>
+    </div>`;
+  document.getElementById('obrasContainer').appendChild(div);
+  obras.push(id);
+}
+
+function removeObra(id){
+  document.getElementById('obra_'+id)?.remove();
+  obras = obras.filter(o=>o!==id);
+}
+
+function validarFotoObra(id, input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 1048576){
+    alert('❌ Arquivo muito grande!\n\nTamanho máximo: 1MB\nTamanho do seu arquivo: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
+    input.value = '';
+    return;
+  }
+  if(!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)){
+    alert('❌ Tipo de arquivo inválido!\n\nAceitamos: JPG, PNG ou WebP');
+    input.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById(`o${id}_fotoPreview`).src = e.target.result;
+    document.getElementById(`o${id}_fotoPreview`).style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+  obrasArquivos[id] = file;
+  console.log(`✓ Foto adicionada à publicação ${id}`);
+}
+
+function getObraData(id){
+  return {
+    titulo: document.getElementById('o'+id+'_titulo')?.value.trim()||'',
+    tipo: document.getElementById('o'+id+'_tipo')?.value||'',
+    ano: parseInt(document.getElementById('o'+id+'_ano')?.value)||null,
+    resumo: document.getElementById('o'+id+'_resumo')?.value.trim()||'',
+    link_acesso: document.getElementById('o'+id+'_acesso')?.value.trim()||null,
+    link_compra: document.getElementById('o'+id+'_compra')?.value.trim()||null,
+    tags: (document.getElementById('o'+id+'_tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
+    para_adquirir: document.getElementById('o'+id+'_adquirir')?.checked || false,
+    arquivo: obrasArquivos[id] || null,
+  };
+}
+
+function buildReview(){
+  const nome = document.getElementById('nome').value.trim();
+  const bio = document.getElementById('mini_bio').value.trim();
+  const area = document.getElementById('area_principal').value;
+  const inst = document.getElementById('instituicao').value;
+  const email = document.getElementById('email').value.trim();
+  const links = ['lattes','orcid','linkedin','google_scholar','research_gate','site']
+    .map(k=>{ const v=document.getElementById(k)?.value.trim(); return v?`<li><strong>${k}:</strong> ${v}</li>`:''; }).join('');
+  const obrasHtml = obras.map(id=>{ const o=getObraData(id); return o.titulo?`<li><strong>${o.titulo}</strong> (${o.tipo}, ${o.ano||'?'})</li>`:''; }).filter(Boolean).join('');
+  document.getElementById('reviewContent').innerHTML = `
+    <h3 style="font-family:'Playfair Display',serif;margin-bottom:1rem">${nome}</h3>
+    <p style="font-size:.88rem;color:var(--cinza);margin-bottom:.5rem"><strong>E-mail:</strong> ${email}</p>
+    <p style="font-size:.88rem;color:var(--cinza);margin-bottom:.5rem"><strong>Área:</strong> ${area}</p>
+    <p style="font-size:.88rem;color:var(--cinza);margin-bottom:.5rem"><strong>Instituição:</strong> ${inst}</p>
+    <p style="font-size:.88rem;color:var(--cinza);margin-bottom:1rem">${bio}</p>
+    ${links?`<p style="font-size:.82rem;color:var(--cinza);margin-bottom:.75rem"><strong>Links:</strong></p><ul style="font-size:.82rem;color:var(--cinza);padding-left:1.25rem;margin-bottom:1rem">${links}</ul>`:''}
+    ${obrasHtml?`<p style="font-size:.82rem;color:var(--cinza);margin-bottom:.5rem"><strong>Publicações (${obras.length}):</strong></p><ul style="font-size:.82rem;color:var(--cinza);padding-left:1.25rem">${obrasHtml}</ul>`:'<p style="font-size:.82rem;color:var(--cinza)">Nenhuma publicação adicionada.</p>'}`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// ENVIAR FORMULÁRIO
+// ════════════════════════════════════════════════════════════════════════════════
+async function submitForm(){
+  const btn = document.getElementById('btnSubmit');
+  const err = document.getElementById('errSubmit');
+  
+  if(!validateStep1()){
+    window.scrollTo(0, 0);
+    return;
+  }
+  
+  btn.textContent = 'Enviando…';
+  btn.disabled = true;
+  err.style.display = 'none';
+
+  try {
+    console.log('1️⃣ Iniciando envio...');
+    
+    const { data: researcher, error } = await db.from('researchers').insert([{
+      nome: document.getElementById('nome').value.trim(),
+      mini_bio: document.getElementById('mini_bio').value.trim(),
+      area_principal: document.getElementById('area_principal').value,
+      instituicao: document.getElementById('instituicao').value,
+      email: document.getElementById('email').value.trim()||null,
+      lattes: document.getElementById('lattes').value.trim()||null,
+      orcid: document.getElementById('orcid').value.trim()||null,
+      linkedin: document.getElementById('linkedin').value.trim()||null,
+      google_scholar: document.getElementById('google_scholar').value.trim()||null,
+      research_gate: document.getElementById('research_gate').value.trim()||null,
+      site: document.getElementById('site').value.trim()||null,
+      status: 'pendente',
+      destaque: false,
+    }]).select().single();
+
+    if(error){
+      const code = error.code ? ' (código: ' + error.code + ')' : '';
+      throw new Error((error.message || JSON.stringify(error)) + code);
+    }
+
+    console.log('2️⃣ Pesquisadora criada:', researcher.id);
+
+    if(croppedBlob){
+      btn.textContent = 'Enviando foto…';
+      console.log('3️⃣ Fazendo upload de foto...');
+      const fotoUrl = await uploadFoto(researcher.id);
+      if(fotoUrl){
+        await db.from('researchers').update({ foto_url: fotoUrl }).eq('id', researcher.id);
+        console.log('✓ Foto de perfil salva');
+      }
+    }
+
+    const obrasDataRaw = obras
+      .map(id => getObraData(id))
+      .filter(o => o.titulo && o.tipo);
+
+    if(obrasDataRaw.length){
+      console.log(`4️⃣ Salvando ${obrasDataRaw.length} publicação(ões)...`);
+      for(let i = 0; i < obrasDataRaw.length; i++){
+        const o = obrasDataRaw[i];
+        if(o.arquivo){
+          btn.textContent = `Enviando foto da publicação ${i+1}/${obrasDataRaw.length}…`;
+          const fotoUrl = await uploadObraFoto(researcher.id, o.arquivo);
+          o.foto_publicacao = fotoUrl || null;
+        }
+        delete o.arquivo;
+      }
+      
+      const obrasData = obrasDataRaw.map(o => ({
+        ...o, 
+        researcher_id: researcher.id, 
+        area_conhecimento: document.getElementById('area_principal').value,
+        status: 'pendente'
+      }));
+      
+      const { error: worksError } = await db.from('works').insert(obrasData);
+      if(worksError){
+        console.warn('⚠️ Aviso ao salvar publicações:', worksError.message);
+      } else {
+        console.log('✓ Publicações salvas');
+      }
+    }
+
+    console.log('✅ INSCRIÇÃO ENVIADA COM SUCESSO!');
+    document.querySelector('.form-wrapper').querySelectorAll('.form-section,.step-indicator').forEach(el=>el.style.display='none');
+    document.getElementById('successState').style.display='block';
+    window.scrollTo(0, 0);
+
+  } catch(e) {
+    console.error('❌ ERRO:', e);
+    err.innerHTML = `<strong>❌ Erro ao enviar:</strong> ${e.message}<br><br><small>Se o erro persistir, tente novamente ou entre em contato com a administração.</small>`;
+    err.style.display = 'block';
+    btn.textContent = '✓ Enviar inscrição';
+    btn.disabled = false;
+    window.scrollTo(0, document.getElementById('errSubmit').offsetTop - 200);
+  }
+}
+</script>
+</body>
+</html>
