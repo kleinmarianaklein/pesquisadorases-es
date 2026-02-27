@@ -244,135 +244,7 @@
       <tbody id="pesquisadoraObrasTable"><tr><td colspan="5" class="loading"><div class="spinner"></div></td></tr></tbody>
     </table>
   </div>
-</div>
-  { let currentResearcherId = null;
-
-// Mostrar detalhes de pesquisadora
-async function showResearcherDetails(id){
-  currentResearcherId = id;
-  const { data: researcher, error } = await db.from('researchers').select('*').eq('id', id).single();
-  
-  if(error || !researcher){
-    alert('Erro ao carregar dados da pesquisadora');
-    return;
-  }
-  
-  // Preencher formulário
-  document.getElementById('detNome').value = researcher.nome || '';
-  document.getElementById('detArea').value = researcher.area_principal || '';
-  document.getElementById('detInst').value = researcher.instituicao || '';
-  document.getElementById('detEmail').value = researcher.email || '';
-  document.getElementById('detBio').value = researcher.mini_bio || '';
-  document.getElementById('detLattes').value = researcher.lattes || '';
-  document.getElementById('detOrcid').value = researcher.orcid || '';
-  document.getElementById('detLinkedin').value = researcher.linkedin || '';
-  document.getElementById('detScholar').value = researcher.google_scholar || '';
-  document.getElementById('detResearchGate').value = researcher.research_gate || '';
-  document.getElementById('detSite').value = researcher.site || '';
-  
-  loadPesquisadoraObras();
-  showPage('pesquisadora-detalhes');
-}
-
-// Carregar publicações da pesquisadora
-async function loadPesquisadoraObras(){
-  const { data: obras, error } = await db
-    .from('works')
-    .select('*')
-    .eq('researcher_id', currentResearcherId)
-    .order('ano', { ascending: false });
-  
-  if(error){
-    console.error('Erro ao carregar publicações:', error);
-    document.getElementById('pesquisadoraObrasTable').innerHTML = '<tr><td colspan="5" class="empty">Erro ao carregar publicações</td></tr>';
-    return;
-  }
-  
-  if(!obras.length){
-    document.getElementById('pesquisadoraObrasTable').innerHTML = '<tr><td colspan="5" class="empty">Nenhuma publicação cadastrada</td></tr>';
-    return;
-  }
-  
-  document.getElementById('pesquisadoraObrasTable').innerHTML = obras.map(o => `
-    <tr>
-      <td>${o.titulo}</td>
-      <td>${o.tipo}</td>
-      <td>${o.ano || '—'}</td>
-      <td>${(o.autores_adicionais || '').substring(0, 40)}${(o.autores_adicionais || '').length > 40 ? '...' : ''}</td>
-      <td>
-        <div class="actions-cell">
-          <button class="btn btn-terra" onclick="editarObra(${o.id})">Editar</button>
-          <button class="btn btn-red" onclick="deletarObra(${o.id})">Deletar</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-}
-
-function showAddObraParaPesquisadora(){
-  document.getElementById('addObraParaPesquisadora').style.display = 'block';
-}
-
-async function salvarNovaObraParaPesquisadora(){
-  const titulo = document.getElementById('newObraTitulo').value.trim();
-  const tipo = document.getElementById('newObraTipo').value;
-  const ano = parseInt(document.getElementById('newObraAno').value) || null;
-  const resumo = document.getElementById('newObraResumo').value.trim();
-  const link_acesso = document.getElementById('newObraAcesso').value.trim() || null;
-  const link_compra = document.getElementById('newObraCompra').value.trim() || null;
-  const tags = document.getElementById('newObraTags').value.split(',').map(t => t.trim()).filter(Boolean);
-  
-  if(!titulo || !tipo){
-    alert('Preencha título e tipo da publicação');
-    return;
-  }
-  
-  const { error } = await db.from('works').insert([{
-    researcher_id: currentResearcherId,
-    titulo,
-    tipo,
-    ano,
-    resumo,
-    link_acesso,
-    link_compra,
-    tags,
-    area_conhecimento: document.getElementById('detArea').value,
-    status: 'aprovada'
-  }]);
-  
-  if(error){
-    alert('Erro ao salvar: ' + error.message);
-    return;
-  }
-  
-  document.getElementById('addObraParaPesquisadora').style.display = 'none';
-  document.getElementById('newObraTitulo').value = '';
-  document.getElementById('newObraTipo').value = '';
-  document.getElementById('newObraAno').value = '';
-  document.getElementById('newObraResumo').value = '';
-  document.getElementById('newObraAcesso').value = '';
-  document.getElementById('newObraCompra').value = '';
-  document.getElementById('newObraTags').value = '';
-  
-  loadPesquisadoraObras();
-  <button class="btn btn-outline" onclick="showResearcherDetails('${p.id}')">Detalhes</button>
-  showSuccessToast('Publicação adicionada!');
-}
-
-async function deletarObra(obraId){
-  if(!confirm('Tem certeza que deseja deletar esta publicação?')) return;
-  
-  const { error } = await db.from('works').delete().eq('id', obraId);
-  
-  if(error){
-    alert('Erro ao deletar: ' + error.message);
-    return;
-  }
-  
-  loadPesquisadoraObras();
-  showSuccessToast('Publicação deletada!');
-}
-  <!-- PUBLICAÇÕES -->
+</div>  <!-- PUBLICAÇÕES -->
   <div class="page" id="page-obras">
     <h1 class="page-title">Publicações</h1>
     <p class="page-sub">Gerencie as obras cadastradas.</p>
@@ -623,6 +495,133 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let allResearchers = [], allWorks = [], allPosts = [];
+let currentResearcherId = null;
+
+// Mostrar detalhes de pesquisadora
+async function showResearcherDetails(id){
+  currentResearcherId = id;
+  const { data: researcher, error } = await db.from('researchers').select('*').eq('id', id).single();
+  
+  if(error || !researcher){
+    alert('Erro ao carregar dados da pesquisadora');
+    return;
+  }
+  
+  // Preencher formulário
+  document.getElementById('detNome').value = researcher.nome || '';
+  document.getElementById('detArea').value = researcher.area_principal || '';
+  document.getElementById('detInst').value = researcher.instituicao || '';
+  document.getElementById('detEmail').value = researcher.email || '';
+  document.getElementById('detBio').value = researcher.mini_bio || '';
+  document.getElementById('detLattes').value = researcher.lattes || '';
+  document.getElementById('detOrcid').value = researcher.orcid || '';
+  document.getElementById('detLinkedin').value = researcher.linkedin || '';
+  document.getElementById('detScholar').value = researcher.google_scholar || '';
+  document.getElementById('detResearchGate').value = researcher.research_gate || '';
+  document.getElementById('detSite').value = researcher.site || '';
+  
+  loadPesquisadoraObras();
+  showPage('pesquisadora-detalhes');
+}
+
+// Carregar publicações da pesquisadora
+async function loadPesquisadoraObras(){
+  const { data: obras, error } = await db
+    .from('works')
+    .select('*')
+    .eq('researcher_id', currentResearcherId)
+    .order('ano', { ascending: false });
+  
+  if(error){
+    console.error('Erro ao carregar publicações:', error);
+    document.getElementById('pesquisadoraObrasTable').innerHTML = '<tr><td colspan="5" class="empty">Erro ao carregar publicações</td></tr>';
+    return;
+  }
+  
+  if(!obras.length){
+    document.getElementById('pesquisadoraObrasTable').innerHTML = '<tr><td colspan="5" class="empty">Nenhuma publicação cadastrada</td></tr>';
+    return;
+  }
+  
+  document.getElementById('pesquisadoraObrasTable').innerHTML = obras.map(o => `
+    <tr>
+      <td>${o.titulo}</td>
+      <td>${o.tipo}</td>
+      <td>${o.ano || '—'}</td>
+      <td>${(o.autores_adicionais || '').substring(0, 40)}${(o.autores_adicionais || '').length > 40 ? '...' : ''}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn btn-terra" onclick="editarObra(${o.id})">Editar</button>
+          <button class="btn btn-red" onclick="deletarObra(${o.id})">Deletar</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function showAddObraParaPesquisadora(){
+  document.getElementById('addObraParaPesquisadora').style.display = 'block';
+}
+
+async function salvarNovaObraParaPesquisadora(){
+  const titulo = document.getElementById('newObraTitulo').value.trim();
+  const tipo = document.getElementById('newObraTipo').value;
+  const ano = parseInt(document.getElementById('newObraAno').value) || null;
+  const resumo = document.getElementById('newObraResumo').value.trim();
+  const link_acesso = document.getElementById('newObraAcesso').value.trim() || null;
+  const link_compra = document.getElementById('newObraCompra').value.trim() || null;
+  const tags = document.getElementById('newObraTags').value.split(',').map(t => t.trim()).filter(Boolean);
+  
+  if(!titulo || !tipo){
+    alert('Preencha título e tipo da publicação');
+    return;
+  }
+  
+  const { error } = await db.from('works').insert([{
+    researcher_id: currentResearcherId,
+    titulo,
+    tipo,
+    ano,
+    resumo,
+    link_acesso,
+    link_compra,
+    tags,
+    area_conhecimento: document.getElementById('detArea').value,
+    status: 'aprovada'
+  }]);
+  
+  if(error){
+    alert('Erro ao salvar: ' + error.message);
+    return;
+  }
+  
+  document.getElementById('addObraParaPesquisadora').style.display = 'none';
+  document.getElementById('newObraTitulo').value = '';
+  document.getElementById('newObraTipo').value = '';
+  document.getElementById('newObraAno').value = '';
+  document.getElementById('newObraResumo').value = '';
+  document.getElementById('newObraAcesso').value = '';
+  document.getElementById('newObraCompra').value = '';
+  document.getElementById('newObraTags').value = '';
+  
+  loadPesquisadoraObras();
+  showSuccessToast('Publicação adicionada!');
+}
+
+async function deletarObra(obraId){
+  if(!confirm('Tem certeza que deseja deletar esta publicação?')) return;
+  
+  const { error } = await db.from('works').delete().eq('id', obraId);
+  
+  if(error){
+    alert('Erro ao deletar: ' + error.message);
+    return;
+  }
+  
+  loadPesquisadoraObras();
+  showSuccessToast('Publicação deletada!');
+}
+
 let iaData = {};
 
 // AUTH CHECK
