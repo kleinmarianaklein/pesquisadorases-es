@@ -177,12 +177,201 @@
     <p class="page-sub">Gerencie as pesquisadoras aprovadas no portal.</p>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Nome</th><th>Área</th><th>Instituição</th><th>Destaque</th><th>Ações</th></tr></thead>
+<thead><tr><th>Nome</th><th>Área</th><th>Instituição</th><th>Destaque</th><th>Publicações</th><th>Ações</th></tr></thead>
         <tbody id="pesquisadorasTable"><tr><td colspan="5" class="loading"><div class="spinner"></div></td></tr></tbody>
       </table>
     </div>
   </div>
+<!-- DETALHES DA PESQUISADORA -->
+<div class="page" id="page-pesquisadora-detalhes">
+  <div style="margin-bottom:2rem;">
+    <button class="btn btn-outline" onclick="showPage('pesquisadoras')">← Voltar</button>
+  </div>
+  
+  <div class="form-card">
+    <h3>Informações da pesquisadora</h3>
+    <div class="form-grid">
+      <div class="form-group"><label>Nome</label><input type="text" id="detNome" readonly></div>
+      <div class="form-group"><label>Área</label><input type="text" id="detArea" readonly></div>
+      <div class="form-group"><label>Instituição</label><input type="text" id="detInst" readonly></div>
+      <div class="form-group"><label>E-mail</label><input type="text" id="detEmail" readonly></div>
+      <div class="form-group full"><label>Bio</label><textarea id="detBio" readonly style="min-height:80px;"></textarea></div>
+    </div>
+    
+    <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--cinza-claro);">
+      <h4 style="font-size:.95rem;font-weight:600;margin-bottom:1rem;">Links</h4>
+      <div class="form-grid">
+        <div class="form-group"><label>Lattes</label><input type="text" id="detLattes" readonly></div>
+        <div class="form-group"><label>ORCID</label><input type="text" id="detOrcid" readonly></div>
+        <div class="form-group"><label>LinkedIn</label><input type="text" id="detLinkedin" readonly></div>
+        <div class="form-group"><label>Google Scholar</label><input type="text" id="detScholar" readonly></div>
+        <div class="form-group"><label>ResearchGate</label><input type="text" id="detResearchGate" readonly></div>
+        <div class="form-group"><label>Website</label><input type="text" id="detSite" readonly></div>
+      </div>
+    </div>
+  </div>
 
+  <!-- PUBLICAÇÕES DA PESQUISADORA -->
+  <h2 class="page-title" style="margin-top:2.5rem;margin-bottom:.5rem;">Publicações associadas</h2>
+  <div style="margin-bottom:1rem;">
+    <button class="btn btn-green" onclick="showAddObraParaPesquisadora()">+ Adicionar publicação</button>
+  </div>
+
+  <!-- Formulário de adição de publicação -->
+  <div id="addObraParaPesquisadora" style="display:none;" class="form-card">
+    <h3>Nova publicação</h3>
+    <div class="form-grid">
+      <div class="form-group full"><label>Título *</label><input type="text" id="newObraTitulo" placeholder="Título completo"></div>
+      <div class="form-group"><label>Tipo *</label>
+        <select id="newObraTipo"><option value="">Selecione…</option><option>Livro</option><option>Tese de Doutorado</option><option>Dissertação de Mestrado</option><option>TCC</option><option>Artigo Científico</option><option>Capítulo de Livro</option><option>Monografia</option><option>Relatório Técnico</option></select>
+      </div>
+      <div class="form-group"><label>Ano</label><input type="number" id="newObraAno" placeholder="2023"></div>
+      <div class="form-group full"><label>Resumo</label><textarea id="newObraResumo" placeholder="Breve descrição…"></textarea></div>
+      <div class="form-group"><label>Link de acesso</label><input type="url" id="newObraAcesso" placeholder="https://..."></div>
+      <div class="form-group"><label>Link de compra</label><input type="url" id="newObraCompra" placeholder="https://..."></div>
+      <div class="form-group full"><label>Tags</label><input type="text" id="newObraTags" placeholder="Ex: saúde pública, epidemiologia (separe por vírgula)"></div>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:1rem;">
+      <button class="btn btn-green" onclick="salvarNovaObraParaPesquisadora()">Salvar</button>
+      <button class="btn btn-outline" onclick="document.getElementById('addObraParaPesquisadora').style.display='none'">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Tabela de publicações -->
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Título</th><th>Tipo</th><th>Ano</th><th>Autores adicionais</th><th>Ações</th></tr></thead>
+      <tbody id="pesquisadoraObrasTable"><tr><td colspan="5" class="loading"><div class="spinner"></div></td></tr></tbody>
+    </table>
+  </div>
+</div>
+  let currentResearcherId = null;
+
+// Mostrar detalhes de pesquisadora
+async function showResearcherDetails(id){
+  currentResearcherId = id;
+  const { data: researcher, error } = await db.from('researchers').select('*').eq('id', id).single();
+  
+  if(error || !researcher){
+    alert('Erro ao carregar dados da pesquisadora');
+    return;
+  }
+  
+  // Preencher formulário
+  document.getElementById('detNome').value = researcher.nome || '';
+  document.getElementById('detArea').value = researcher.area_principal || '';
+  document.getElementById('detInst').value = researcher.instituicao || '';
+  document.getElementById('detEmail').value = researcher.email || '';
+  document.getElementById('detBio').value = researcher.mini_bio || '';
+  document.getElementById('detLattes').value = researcher.lattes || '';
+  document.getElementById('detOrcid').value = researcher.orcid || '';
+  document.getElementById('detLinkedin').value = researcher.linkedin || '';
+  document.getElementById('detScholar').value = researcher.google_scholar || '';
+  document.getElementById('detResearchGate').value = researcher.research_gate || '';
+  document.getElementById('detSite').value = researcher.site || '';
+  
+  loadPesquisadoraObras();
+  showPage('pesquisadora-detalhes');
+}
+
+// Carregar publicações da pesquisadora
+async function loadPesquisadoraObras(){
+  const { data: obras, error } = await db
+    .from('works')
+    .select('*')
+    .eq('researcher_id', currentResearcherId)
+    .order('ano', { ascending: false });
+  
+  if(error){
+    console.error('Erro ao carregar publicações:', error);
+    document.getElementById('pesquisadoraObrasTable').innerHTML = '<tr><td colspan="5" class="empty">Erro ao carregar publicações</td></tr>';
+    return;
+  }
+  
+  if(!obras.length){
+    document.getElementById('pesquisadoraObrasTable').innerHTML = '<tr><td colspan="5" class="empty">Nenhuma publicação cadastrada</td></tr>';
+    return;
+  }
+  
+  document.getElementById('pesquisadoraObrasTable').innerHTML = obras.map(o => `
+    <tr>
+      <td>${o.titulo}</td>
+      <td>${o.tipo}</td>
+      <td>${o.ano || '—'}</td>
+      <td>${(o.autores_adicionais || '').substring(0, 40)}${(o.autores_adicionais || '').length > 40 ? '...' : ''}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn btn-terra" onclick="editarObra(${o.id})">Editar</button>
+          <button class="btn btn-red" onclick="deletarObra(${o.id})">Deletar</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function showAddObraParaPesquisadora(){
+  document.getElementById('addObraParaPesquisadora').style.display = 'block';
+}
+
+async function salvarNovaObraParaPesquisadora(){
+  const titulo = document.getElementById('newObraTitulo').value.trim();
+  const tipo = document.getElementById('newObraTipo').value;
+  const ano = parseInt(document.getElementById('newObraAno').value) || null;
+  const resumo = document.getElementById('newObraResumo').value.trim();
+  const link_acesso = document.getElementById('newObraAcesso').value.trim() || null;
+  const link_compra = document.getElementById('newObraCompra').value.trim() || null;
+  const tags = document.getElementById('newObraTags').value.split(',').map(t => t.trim()).filter(Boolean);
+  
+  if(!titulo || !tipo){
+    alert('Preencha título e tipo da publicação');
+    return;
+  }
+  
+  const { error } = await db.from('works').insert([{
+    researcher_id: currentResearcherId,
+    titulo,
+    tipo,
+    ano,
+    resumo,
+    link_acesso,
+    link_compra,
+    tags,
+    area_conhecimento: document.getElementById('detArea').value,
+    status: 'aprovada'
+  }]);
+  
+  if(error){
+    alert('Erro ao salvar: ' + error.message);
+    return;
+  }
+  
+  document.getElementById('addObraParaPesquisadora').style.display = 'none';
+  document.getElementById('newObraTitulo').value = '';
+  document.getElementById('newObraTipo').value = '';
+  document.getElementById('newObraAno').value = '';
+  document.getElementById('newObraResumo').value = '';
+  document.getElementById('newObraAcesso').value = '';
+  document.getElementById('newObraCompra').value = '';
+  document.getElementById('newObraTags').value = '';
+  
+  loadPesquisadoraObras();
+  <button class="btn btn-outline" onclick="showResearcherDetails('${p.id}')">Detalhes</button>
+  showSuccessToast('Publicação adicionada!');
+}
+
+async function deletarObra(obraId){
+  if(!confirm('Tem certeza que deseja deletar esta publicação?')) return;
+  
+  const { error } = await db.from('works').delete().eq('id', obraId);
+  
+  if(error){
+    alert('Erro ao deletar: ' + error.message);
+    return;
+  }
+  
+  loadPesquisadoraObras();
+  showSuccessToast('Publicação deletada!');
+}
   <!-- PUBLICAÇÕES -->
   <div class="page" id="page-obras">
     <h1 class="page-title">Publicações</h1>
