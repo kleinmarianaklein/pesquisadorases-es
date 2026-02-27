@@ -455,7 +455,7 @@ async function loadAll(){
   try {
     const [resRes, worksRes, postsRes] = await Promise.all([
       db.from('researchers').select('*').eq('status','aprovada').order('destaque',{ascending:false}),
-      db.from('works').select('*').order('ano',{ascending:false}),
+      db.from('works').select('*, researchers!inner(status)').eq('researchers.status','aprovada').order('ano',{ascending:false}),
       db.from('blog_posts').select('*').eq('publicado',true).order('created_at',{ascending:false}).limit(3)
     ]);
     if(resRes.error) console.error('researchers:', resRes.error.message);
