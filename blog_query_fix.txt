@@ -1,0 +1,23 @@
+CORREÇÃO NO blog.html
+=====================
+
+Na função loadPosts() do blog.html, alterar a query para filtrar apenas posts do blog público:
+
+LOCALIZAR:
+  const { data, error } = await db.from('blog_posts')
+    .select('*').eq('publicado',true).order('created_at',{ascending:false});
+
+SUBSTITUIR POR:
+  const { data, error } = await db.from('blog_posts')
+    .select('*').eq('publicado',true).eq('secao','blog').order('created_at',{ascending:false});
+
+
+MIGRAÇÃO NO SUPABASE (SQL Editor)
+==================================
+Execute este SQL para adicionar a coluna 'secao' e marcar posts existentes como 'blog':
+
+  ALTER TABLE blog_posts 
+  ADD COLUMN IF NOT EXISTS secao TEXT NOT NULL DEFAULT 'blog';
+
+  UPDATE blog_posts SET secao = 'blog' WHERE secao IS NULL OR secao = '';
+
