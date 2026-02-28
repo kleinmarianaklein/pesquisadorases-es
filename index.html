@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> Pesquisadoras do ES — Movimento de visibilidade feminina na ciência </title>
+<title> Pesquisadoras do ES — Hub de visibilidade feminina na ciência </title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -327,7 +327,7 @@
 <div class="hero-banner">
   <div class="hero-banner-inner">
     <div class="hero-tag fade-up">Espírito Santo · Ciência & Conhecimento</div>
-    <h1 class="fade-up-2">Movimento de visibilidade feminina na ciência</h1>
+    <h1 class="fade-up-2">HUB de visibilidade feminina na ciência</h1>
     <p class="hero-banner-credit fade-up-3">
       By <a href="http://www.kickgroup.com.br" target="_blank">KICk</a>
     </p>
@@ -364,7 +364,7 @@
 <section id="blog-preview">
   <span class="section-tag">Do blog</span>
   <h2 class="section-title">Últimas <em>publicações</em></h2>
-  <p class="section-desc">Mande seu texto para nós: mulheres@kickgroup.com.br </p>
+  <p class="section-desc">Artigos, reflexões e notícias sobre ciência feita por mulheres no Espírito Santo.</p>
   <div class="blog-grid" id="blogGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
   <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary">Ver todos os artigos</a></div>
 </section>
@@ -427,6 +427,7 @@
 <footer>
   <a href="index.html" class="footer-brand">Pesquisadoras<span>ES</span></a>
   <p>Dando visibilidade à ciência feita por mulheres no Espírito Santo.</p>
+  <p>Contato: <a href="mailto:mulheres@kickgroup.com.br">mulheres@kickgroup.com.br</a></p>
   <p><a href="admin/login.html">Área administrativa</a></p>
 </footer>
 
@@ -568,7 +569,10 @@ const books = allWorks.filter(w=>w.tipo==='Livro'&&(w.link_compra || w.para_adqu
   grid.innerHTML = books.map(b=>{
     const author = allResearchers.find(r=>r.id===b.researcher_id)?.nome||'—';
     return `<div class="book-card">
-      <div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div>
+      <div class="book-cover">${b.foto_publicacao
+        ? `<img src="${b.foto_publicacao}" alt="${b.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;">`
+        : bookEmojis[b.area_conhecimento]||'📚'
+      }</div>
       <div class="book-title">${b.titulo}</div>
       <div class="book-author">${author}</div>
       <a class="book-btn" href="${b.link_compra}" target="_blank">🛒 Adquirir</a>
