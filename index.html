@@ -120,7 +120,9 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
 
 /* VIDEO WIDE BANNER */
 .video-wide-banner { width:100%; height:320px; overflow:hidden; position:relative; background:#000; }
-.video-wide-banner video { width:100%; height:100%; object-fit:cover; display:block; }
+.video-wide-banner video { width:100%; height:100%; object-fit:cover; object-position:center 30%; display:block; position:absolute; top:0; left:0; transition:opacity 0.5s; }
+#vid1 { object-position: center 45%; }
+.video-wide-banner video.hidden { opacity:0; pointer-events:none; }
 
 /* PESQUISADORAS */
 #pesquisadoras { background: var(--areia); }
@@ -267,6 +269,7 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
     <li><a href="#livros">Livros</a></li>
     <li><a href="blog.html">Blog</a></li>
     <li><a href="#sobre">Sobre</a></li>
+    <li><a href="sustentabilidade-privacidade.html">Sustentabilidade</a></li>
     <li><a href="inscricao.html" class="nav-btn">Inscreva-se</a></li>
   </ul>
   <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
@@ -334,26 +337,28 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
   <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary">Ver todos os artigos</a></div>
 </section>
 
-<div class="section-ticker" aria-hidden="true">
-  <div class="ticker-inner" style="animation-duration:20s">
-    <span>Pesquisadoras</span><span class="ticker-sep">—</span><span>Pesquisadoras</span><span class="ticker-sep">—</span>
-    <span>Pesquisadoras</span><span class="ticker-sep">—</span><span>Pesquisadoras</span><span class="ticker-sep">—</span>
-    <span>Pesquisadoras</span><span class="ticker-sep">—</span><span>Pesquisadoras</span><span class="ticker-sep">—</span>
-    <span>Pesquisadoras</span><span class="ticker-sep">—</span><span>Pesquisadoras</span><span class="ticker-sep">—</span>
-  </div>
-</div>
-
 <!-- VIDEO WIDE BANNER -->
 <div class="video-wide-banner">
-  <video
+  <video id="vid1"
     src="https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/Background/Inicial.mp4"
-    autoplay
-    muted
-    loop
-    playsinline
-    preload="auto"
+    autoplay muted playsinline preload="auto"
+  ></video>
+  <video id="vid2"
+    src="https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/Background/Inicial2.mp4"
+    muted playsinline preload="auto" class="hidden"
   ></video>
 </div>
+<script>
+(function(){
+  const v1=document.getElementById('vid1'),v2=document.getElementById('vid2');
+  v1.addEventListener('ended',()=>{
+    v1.classList.add('hidden'); v2.classList.remove('hidden'); v2.play();
+  });
+  v2.addEventListener('ended',()=>{
+    v2.classList.add('hidden'); v1.classList.remove('hidden'); v1.currentTime=0; v1.play();
+  });
+})();
+</script>
 
 <section id="pesquisadoras">
   <span class="section-eyebrow">Quem são elas</span>
@@ -421,7 +426,10 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
 <footer>
   <a href="index.html" class="footer-brand">Pesquisadoras<span>ES</span></a>
   <p>Dando visibilidade à ciência feita por mulheres no Espírito Santo.</p>
-  <p><a href="admin/login.html">Área administrativa</a></p>
+  <p>
+    <a href="sustentabilidade-privacidade.html">Sustentabilidade & Privacidade</a> ·
+    <a href="admin/login.html">Área administrativa</a>
+  </p>
 </footer>
 
 <div class="modal-overlay" id="modalOverlay">
