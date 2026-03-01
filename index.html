@@ -503,4 +503,10 @@ function openModal(id){
 }
 document.getElementById('modalClose').onclick=()=>{ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; };
 document.getElementById('modalOverlay').onclick=e=>{ if(e.target===e.currentTarget){ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; } };
-document.get
+document.getElementById('searchInput').addEventListener('input',function(){ busca=this.value; renderResearchers(); });
+document.getElementById('navToggle').onclick = ()=>document.getElementById('navLinks').classList.toggle('open');
+
+loadAll();
+</script>
+</body>
+</html>
