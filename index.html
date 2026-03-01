@@ -177,7 +177,8 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
 .books-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 1.25rem; margin-top: 2.5rem; position: relative; z-index: 1; }
 .book-card { background: rgba(255,255,255,0.08); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s; display: flex; flex-direction: column; gap: 0.75rem; }
 .book-card:hover { background: rgba(255,255,255,0.14); transform: translateY(-3px); }
-.book-cover { width: 100%; aspect-ratio: 3/4; background: linear-gradient(135deg,rgba(196,116,138,0.25),rgba(82,168,107,0.1)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 1px solid rgba(255,255,255,0.12); }
+.book-cover { width: 100%; aspect-ratio: 3/4; background: linear-gradient(135deg,rgba(196,116,138,0.25),rgba(82,168,107,0.1)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; }
+.book-cover img { width:100%; height:100%; object-fit:cover; display:block; border-radius:10px; }
 .book-title { font-family: 'DM Serif Display', serif; font-size: 0.95rem; color: white; line-height: 1.4; }
 .book-author { font-size: 0.73rem; color: rgba(255,255,255,0.45); }
 .book-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 0.73rem; font-weight: 700; margin-top: auto; padding: 0.5rem 1rem; border-radius: 100px; background: var(--rosa-vivo); color: white; text-decoration: none; transition: all 0.2s; cursor: pointer; font-family: 'Sora', sans-serif; border: none; }
@@ -479,9 +480,18 @@ function renderWorks(){
 }
 function renderBooks(){
   const grid=document.getElementById('booksGrid');
-  const books=allWorks.filter(w=>w.tipo==='Livro'&&(w.link_compra||w.para_adquirir));
+  const books=allWorks.filter(w=>w.link_compra||w.para_adquirir);
   if(!books.length){ grid.innerHTML='<div class="empty" style="color:rgba(255,255,255,.45)">Nenhum livro à venda no momento.</div>'; return; }
-  grid.innerHTML=books.map(b=>{ const author=allResearchers.find(r=>r.id===b.researcher_id)?.nome||'—'; return `<div class="book-card"><div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div><div class="book-title">${b.titulo}</div><div class="book-author">${author}</div><a class="book-btn" href="${b.link_compra}" target="_blank">🛒 Adquirir</a></div>`; }).join('');
+  grid.innerHTML=books.map(b=>{
+    const author=allResearchers.find(r=>r.id===b.researcher_id)?.nome||'—';
+    const fotoUrl=b.foto_publicacao
+      ? `https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/work-photos/${b.foto_publicacao}`
+      : null;
+    const coverHtml=fotoUrl
+      ? `<div class="book-cover"><img src="${fotoUrl}" alt="${b.titulo}" loading="lazy"></div>`
+      : `<div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div>`;
+    return `<div class="book-card">${coverHtml}<div class="book-title">${b.titulo}</div><div class="book-author">${author}</div><a class="book-btn" href="${b.link_compra}" target="_blank">🛒 Adquirir</a></div>`;
+  }).join('');
 }
 function renderSobreStats(){
   const el=document.getElementById('sobreStats'); const livros=allWorks.filter(w=>w.tipo==='Livro').length; const insts=new Set(allResearchers.map(r=>r.instituicao)).size;
