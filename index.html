@@ -83,7 +83,6 @@ nav {
 .ticker-sep { color: rgba(255,255,255,0.35) !important; }
 @keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }
 
-/* STATS STRIP */
 /* NUMEROS STRIP */
 .numeros-strip { background: var(--verde-escuro); padding: clamp(3rem,5vw,4.5rem) clamp(1.5rem,5vw,4rem); }
 .numeros-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 0; }
@@ -453,7 +452,8 @@ async function loadAll(){
     const [resRes, worksRes, postsRes] = await Promise.all([
       db.from('researchers').select('*').eq('status','aprovada').order('destaque',{ascending:false}),
       db.from('works').select('*, researchers!inner(status)').eq('researchers.status','aprovada').order('ano',{ascending:false}),
-      db.from('blog_posts').select('*').eq('publicado',true).order('created_at',{ascending:false}).limit(3)
+      // ── CORREÇÃO: filtrar apenas posts da seção "blog" (ou sem seção definida) ──
+      db.from('blog_posts').select('*').eq('publicado',true).or('secao.eq.blog,secao.is.null').order('created_at',{ascending:false}).limit(3)
     ]);
     allResearchers = resRes.data || []; allWorks = worksRes.data || [];
     const posts = postsRes.data || [];

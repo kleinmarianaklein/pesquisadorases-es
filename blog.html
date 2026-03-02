@@ -35,6 +35,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 /* CONTENT */
 .blog-content{max-width:1100px;margin:0 auto;padding:clamp(2rem,5vw,4rem) clamp(1.5rem,5vw,2rem);}
 
+/* FILTRO DE CATEGORIAS */
+.cat-filter-bar{margin-bottom:2rem;}
+.cat-filter-label{font-size:0.68rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--cinza);margin-bottom:0.75rem;display:block;}
+.cat-filters{display:flex;flex-wrap:wrap;gap:0.5rem;}
+.cat-btn{font-size:0.75rem;font-weight:600;padding:0.5rem 1.1rem;border-radius:100px;border:1.5px solid var(--cinza-claro);background:transparent;cursor:pointer;transition:all 0.2s;color:var(--cinza);font-family:'Sora',sans-serif;}
+.cat-btn:hover{border-color:var(--rosa-vivo);color:var(--rosa-vivo);}
+.cat-btn.active{background:var(--rosa-vivo);border-color:var(--rosa-vivo);color:white;}
+
 /* CARDS */
 .blog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;}
 .blog-card{background:var(--branco);border-radius:20px;overflow:hidden;cursor:pointer;transition:all 0.3s;border:1.5px solid var(--cinza-claro);}
@@ -88,6 +96,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .comment-success{background:rgba(196,116,138,0.08);border:1px solid rgba(196,116,138,0.25);border-radius:10px;padding:1rem 1.25rem;font-size:0.85rem;color:var(--rosa-vivo);margin-top:1rem;display:none;}
 .comment-error{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:0.75rem 1rem;font-size:0.82rem;color:#b91c1c;margin-top:0.5rem;display:none;}
 
+/* EMPTY STATE */
+.empty-cat{text-align:center;padding:3rem;color:var(--cinza);grid-column:1/-1;}
+.empty-cat span{font-size:2.5rem;display:block;margin-bottom:0.75rem;}
+
 .loading{text-align:center;padding:3rem;color:var(--cinza);}
 .spinner{width:32px;height:32px;border:3px solid var(--cinza-claro);border-top-color:var(--rosa-vivo);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1rem;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -133,6 +145,12 @@ footer a{color:var(--rosa-vivo);text-decoration:none;}
 <div class="blog-content">
   <!-- LISTA -->
   <div id="postList">
+    <!-- FILTRO DE CATEGORIAS -->
+    <div class="cat-filter-bar" id="catFilterBar" style="display:none">
+      <span class="cat-filter-label">Filtrar por categoria</span>
+      <div class="cat-filters" id="catFilters"></div>
+    </div>
+
     <div class="blog-grid" id="blogGrid">
       <div class="loading"><div class="spinner"></div>Carregando artigos…</div>
     </div>
@@ -178,8 +196,10 @@ footer a{color:var(--rosa-vivo);text-decoration:none;}
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentPostId = null;
+let allPosts = [];
+let filtroCategoria = '';
 
-// ── LISTA: apenas posts da seção "blog" (ou sem secao definida — retrocompatibilidade) ──
+// ── LISTA: apenas posts da seção "blog" (ou sem secao — retrocompatibilidade) ──
 async function loadPosts(){
   const grid = document.getElementById('blogGrid');
   const { data, error } = await db.from('blog_posts')
@@ -191,7 +211,46 @@ async function loadPosts(){
   if(error){ grid.innerHTML = `<div class="empty">Erro ao carregar: ${error.message}</div>`; return; }
   if(!data?.length){ grid.innerHTML = '<div class="empty">Nenhum artigo publicado ainda.</div>'; return; }
 
-  grid.innerHTML = data.map(p => {
+  allPosts = data;
+  buildCategoryFilters(data);
+  renderGrid(data);
+}
+
+// ── FILTRO DE CATEGORIAS ──────────────────────────────────
+function buildCategoryFilters(posts){
+  const cats = [...new Set(posts.map(p => p.categoria || 'Artigo').filter(Boolean))].sort();
+  if(cats.length <= 1){ return; } // não exibe filtro se só há 1 categoria
+
+  const bar = document.getElementById('catFilterBar');
+  const container = document.getElementById('catFilters');
+  bar.style.display = 'block';
+
+  container.innerHTML =
+    `<button class="cat-btn active" onclick="setCategoria('')">Todas (${posts.length})</button>` +
+    cats.map(c => {
+      const count = posts.filter(p => (p.categoria || 'Artigo') === c).length;
+      return `<button class="cat-btn" onclick="setCategoria('${esc(c)}')">${esc(c)} (${count})</button>`;
+    }).join('');
+}
+
+function setCategoria(cat){
+  filtroCategoria = cat;
+  // atualizar botões ativos
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    const label = b.textContent.replace(/\s*\(\d+\)$/, '').trim();
+    b.classList.toggle('active', cat === '' ? label === 'Todas' : label === cat);
+  });
+  const filtered = cat ? allPosts.filter(p => (p.categoria || 'Artigo') === cat) : allPosts;
+  renderGrid(filtered);
+}
+
+function renderGrid(posts){
+  const grid = document.getElementById('blogGrid');
+  if(!posts.length){
+    grid.innerHTML = `<div class="empty-cat"><span>🔍</span>Nenhum artigo na categoria selecionada.</div>`;
+    return;
+  }
+  grid.innerHTML = posts.map(p => {
     const capaHtml = p.foto_capa
       ? `<div class="blog-card-img"><img src="${p.foto_capa}" alt="${esc(p.titulo)}" loading="lazy"></div>`
       : `<div class="blog-card-img"><span class="emoji-fallback">${p.emoji || '✍️'}</span></div>`;
@@ -239,7 +298,9 @@ function showList(){
   document.getElementById('postList').style.display = 'block';
   document.getElementById('postView').style.display = 'none';
   history.pushState({}, '', 'blog.html');
-  loadPosts();
+  // Reaplica o filtro de categoria ao voltar
+  const filtered = filtroCategoria ? allPosts.filter(p => (p.categoria || 'Artigo') === filtroCategoria) : allPosts;
+  renderGrid(filtered);
 }
 
 // ── COMENTÁRIOS ────────────────────────────────────────────
