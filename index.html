@@ -484,9 +484,7 @@ function renderResearchers(){
 function renderWorks(){
   const grid=document.getElementById('worksGrid');
   // Ordenar por ano (mais recente primeiro) e pegar apenas os 8 primeiros
-  let list=allWorks
-    .sort((a,b)=>(b.ano||0)-(a.ano||0))
-    .slice(0,8);
+  let list=[...allWorks].sort((a,b)=>(b.ano||0)-(a.ano||0)).slice(0,8);
   if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
   grid.innerHTML=list.map(w=>{ const author=allResearchers.find(r=>r.id===w.researcher_id)?.nome||'—'; const tags=(w.tags||[]).map(t=>`<span class="wc-tag">${t}</span>`).join(''); return `<div class="work-card"><div class="wc-top"><span class="wc-type">${w.tipo}</span><span class="wc-year">${w.ano||''}</span></div><div class="wc-title">${w.titulo}</div><div class="wc-author">${author}</div><p class="wc-resumo">${w.resumo||''}</p><div class="wc-tags">${tags}</div><div class="wc-actions">${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank">🛒 Comprar</a>`:''}${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank">Acessar →</a>`:''}</div></div>`; }).join('');
 }
