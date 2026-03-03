@@ -331,7 +331,7 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
 <section id="blog-preview">
   <span class="section-eyebrow">Do blog</span>
   <h2 class="section-title">Últimas <em>publicações</em></h2>
-  <p class="section-desc">Mande o seu texto ou artigo: <a href="/cdn-cgi/l/email-protection#0c61796064697e697f4c67656f676b7e63797c226f6361226e7e" style="color:var(--verde)"><span class="__cf_email__" data-cfemail="dfb2aab3b7baadbaac9fb4b6bcb4b8adb0aaaff1bcb0b2f1bdad">[email&#160;protected]</span></a></p>
+  <p class="section-desc">Mande o seu texto ou artigo: <a href="/cdn-cgi/l/email-protection#e28f978e8a87908791a2898b818985908d9792cc818d8fcc8090" style="color:var(--verde)"><span class="__cf_email__" data-cfemail="771a021b1f12051204371c1e141c10051802075914181a591505">[email&#160;protected]</span></a></p>
   <div class="blog-grid" id="blogGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
   <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary">Ver todos os artigos</a></div>
 </section>
@@ -382,6 +382,7 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
   <span class="section-eyebrow">Produção científica</span>
   <h2 class="section-title">Obras & <em>Publicações</em></h2>
   <p class="section-desc">Teses, dissertações, artigos e livros das pesquisadoras capixabas.</p>
+  <div class="filters" id="tipoFilters" style="margin-top:1.5rem"></div>
   <div class="works-grid" id="worksGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
   <div style="text-align:center;margin-top:2rem"><a href="publicacoes.html" class="btn-primary">Ver todas as publicações</a></div>
 </section>
@@ -470,11 +471,14 @@ function renderStats(){ const insts=new Set(allResearchers.map(r=>r.instituicao)
 function renderFilters(){
   const areas=[...new Set(allResearchers.map(r=>r.area_principal).filter(Boolean))];
   const insts=[...new Set(allResearchers.map(r=>r.instituicao).filter(Boolean))];
+  const tipos=[...new Set(allWorks.map(w=>w.tipo).filter(Boolean))];
   document.getElementById('areaFilters').innerHTML=`<button class="filter-btn active" onclick="setArea('')">Todas</button>`+areas.map(a=>`<button class="filter-btn" onclick="setArea('${a}')">${a}</button>`).join('');
   document.getElementById('instFilters').innerHTML=`<button class="filter-btn active" onclick="setInst('')">Todas</button>`+insts.map(i=>`<button class="filter-btn" onclick="setInst('${i}')">${i}</button>`).join('');
+  document.getElementById('tipoFilters').innerHTML=`<button class="filter-btn active" onclick="setTipo('')">Todos</button>`+tipos.map(t=>`<button class="filter-btn" onclick="setTipo('${t}')">${t}</button>`).join('');
 }
 function setArea(v){ filtroArea=v; document.querySelectorAll('#areaFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todas'))); renderResearchers(); }
 function setInst(v){ filtroInst=v; document.querySelectorAll('#instFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todas'))); renderResearchers(); }
+function setTipo(v){ filtroTipo=v; document.querySelectorAll('#tipoFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todos'))); renderWorks(); }
 function renderResearchers(){
   const grid=document.getElementById('researchersGrid');
   let list=allResearchers.filter(r=>{ const q=busca.toLowerCase(); return (!q||r.nome?.toLowerCase().includes(q)||r.area_principal?.toLowerCase().includes(q)||r.instituicao?.toLowerCase().includes(q))&&(!filtroArea||r.area_principal===filtroArea)&&(!filtroInst||r.instituicao===filtroInst); });
@@ -483,8 +487,7 @@ function renderResearchers(){
 }
 function renderWorks(){
   const grid=document.getElementById('worksGrid');
-  // Ordenar por ano (mais recente primeiro) e pegar apenas os 8 primeiros
-  let list=[...allWorks].sort((a,b)=>(b.ano||0)-(a.ano||0)).slice(0,8);
+  let list=allWorks.filter(w=>!filtroTipo||w.tipo===filtroTipo).sort((a,b)=>(b.ano||0)-(a.ano||0)).slice(0,8);
   if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
   grid.innerHTML=list.map(w=>{ const author=allResearchers.find(r=>r.id===w.researcher_id)?.nome||'—'; const tags=(w.tags||[]).map(t=>`<span class="wc-tag">${t}</span>`).join(''); return `<div class="work-card"><div class="wc-top"><span class="wc-type">${w.tipo}</span><span class="wc-year">${w.ano||''}</span></div><div class="wc-title">${w.titulo}</div><div class="wc-author">${author}</div><p class="wc-resumo">${w.resumo||''}</p><div class="wc-tags">${tags}</div><div class="wc-actions">${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank">🛒 Comprar</a>`:''}${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank">Acessar →</a>`:''}</div></div>`; }).join('');
 }
