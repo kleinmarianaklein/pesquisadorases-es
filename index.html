@@ -7,7 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
+<script>
+const SUPABASE_URL = 'https://ktjsocalyzrpmaokxhzn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0anNvY2FseXpycG1hb2t4aHpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzY0NDEsImV4cCI6MjA4NzQ1MjQ0MX0.u44UYJRz72y3EeUNQ9acGw_4Ejl5jlNtHKEfyGUaKVI';
+</script>
 <style>
 :root {
   --verde:        #3A6B4A;
@@ -352,7 +355,7 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
     muted playsinline preload="auto" class="hidden"
   ></video>
 </div>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 (function(){
   const v1=document.getElementById('vid1'),v2=document.getElementById('vid2');
   v1.addEventListener('ended',()=>{
@@ -447,7 +450,7 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allResearchers = [], allWorks = [];
