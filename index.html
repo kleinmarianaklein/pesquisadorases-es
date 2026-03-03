@@ -470,6 +470,8 @@ async function loadAll(){
 function renderStats(){ const insts=new Set(allResearchers.map(r=>dedupeKey(r.instituicao||''))).size; document.getElementById('statP').textContent=allResearchers.length; document.getElementById('statO').textContent=allWorks.length; document.getElementById('statI').textContent=insts; }
 function dedupeKey(s){ return s.trim().replace(/\s+/g,' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
 function uniqueNormalized(arr){ const seen=new Map(); arr.filter(Boolean).forEach(v=>{ const k=dedupeKey(v); if(!seen.has(k)) seen.set(k,v.trim().replace(/\s+/g,' ')); }); return [...seen.values()].sort((a,b)=>dedupeKey(a).localeCompare(dedupeKey(b))); }
+function dedupeKey(s){ return s.trim().replace(/\s+/g,' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
+function uniqueNormalized(arr){ const seen=new Map(); arr.filter(Boolean).forEach(v=>{ const k=dedupeKey(v); if(!seen.has(k)) seen.set(k,v.trim()); }); return [...seen.values()].sort((a,b)=>dedupeKey(a).localeCompare(dedupeKey(b))); }
 function renderFilters(){
   const areas=uniqueNormalized(allResearchers.map(r=>r.area_principal));
   const insts=uniqueNormalized(allResearchers.map(r=>r.instituicao));
