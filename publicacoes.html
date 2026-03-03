@@ -124,76 +124,141 @@ footer a{color:var(--rosa-vivo);text-decoration:none;}
 </footer>
 
 <script>
-const{createClient}=supabase;
-const db=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-let allWorks=[],allResearchers=[],filtered=[];
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let allWorks = [], allResearchers = [], filtered = [];
+
+// ── Normalização: remove espaços extras, compara em uppercase para deduplicar ──
+function normalizeStr(str){ return String(str||'').trim().replace(/\s+/g,' '); }
+function uniqueNormalized(arr){
+  const seen = new Map();
+  arr.filter(Boolean).forEach(v => {
+    const key = normalizeStr(v).toUpperCase();
+    if (!seen.has(key)) seen.set(key, normalizeStr(v));
+  });
+  return [...seen.values()];
+}
 
 async function loadData(){
-  const[{data:works,error:wErr},{data:researchers,error:rErr}]=await Promise.all([
-    db.from('works').select('*,researchers!inner(id,nome,instituicao,area_principal,status)').eq('researchers.status','aprovada').order('created_at',{ascending:false}),
-    db.from('researchers').select('id,nome,instituicao,area_principal').eq('status','aprovada')
+  const [{ data: works, error: wErr }, { data: researchers, error: rErr }] = await Promise.all([
+    db.from('works')
+      .select('*,researchers!inner(id,nome,instituicao,area_principal,status)')
+      .eq('researchers.status','aprovada')
+      .order('created_at',{ascending:false}),
+    db.from('researchers')
+      .select('id,nome,instituicao,area_principal')
+      .eq('status','aprovada')
   ]);
-  if(wErr||rErr){document.getElementById('worksGrid').innerHTML='<div class="empty">Erro ao carregar publicações.</div>';return;}
-  allResearchers=researchers||[];
-  const resMap={};allResearchers.forEach(r=>{resMap[r.id]=r;});
-  allWorks=(works||[]).filter(w=>resMap[w.researcher_id]);
-  allWorks.forEach(w=>{const r=resMap[w.researcher_id];w._autor=r?r.nome:'';w._inst=r?r.instituicao:'';});
-  populateFilters();applyFilters();
+  if(wErr || rErr){
+    document.getElementById('worksGrid').innerHTML = '<div class="empty">Erro ao carregar publicações.</div>';
+    return;
+  }
+  allResearchers = researchers || [];
+  const resMap = {};
+  allResearchers.forEach(r => { resMap[r.id] = r; });
+  allWorks = (works || []).filter(w => resMap[w.researcher_id]);
+  allWorks.forEach(w => {
+    const r = resMap[w.researcher_id];
+    w._autor = r ? r.nome : '';
+    w._inst  = r ? r.instituicao : '';
+    // normaliza campos para comparação consistente
+    w._instNorm = normalizeStr(w._inst).toUpperCase();
+    w._areaNorm = normalizeStr(w.area_conhecimento||'').toUpperCase();
+    w._tipoNorm = normalizeStr(w.tipo||'').toUpperCase();
+  });
+  populateFilters();
+  applyFilters();
 }
 
 function populateFilters(){
-  const add=(selId,values)=>{const sel=document.getElementById(selId);values.forEach(v=>{const opt=document.createElement('option');opt.value=v;opt.textContent=v;sel.appendChild(opt);});};
-  add('filterAno',[...new Set(allWorks.map(w=>w.ano).filter(Boolean))].sort((a,b)=>b-a));
-  add('filterArea',[...new Set(allWorks.map(w=>w.area_conhecimento).filter(Boolean))].sort());
-  add('filterInst',[...new Set(allWorks.map(w=>w._inst).filter(Boolean))].sort());
-  add('filterTipo',[...new Set(allWorks.map(w=>w.tipo).filter(Boolean))].sort());
+  // Anos: únicos, ordenados desc (não precisam normalização — são números)
+  const anos = [...new Set(allWorks.map(w => w.ano).filter(Boolean))].sort((a,b) => b - a);
+  const selAno = document.getElementById('filterAno');
+  anos.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; selAno.appendChild(o); });
+
+  // Área, Instituição, Tipo: normalizados e deduplicados
+  const areas = uniqueNormalized(allWorks.map(w => w.area_conhecimento)).sort();
+  const insts  = uniqueNormalized(allWorks.map(w => w._inst)).sort();
+  const tipos  = uniqueNormalized(allWorks.map(w => w.tipo)).sort();
+
+  const populate = (selId, values) => {
+    const sel = document.getElementById(selId);
+    values.forEach(v => {
+      const o = document.createElement('option');
+      o.value = v; o.textContent = v; sel.appendChild(o);
+    });
+  };
+  populate('filterArea', areas);
+  populate('filterInst', insts);
+  populate('filterTipo', tipos);
 }
 
 function applyFilters(){
-  const q=document.getElementById('searchInput').value.trim().toLowerCase();
-  const ano=document.getElementById('filterAno').value;
-  const area=document.getElementById('filterArea').value;
-  const inst=document.getElementById('filterInst').value;
-  const tipo=document.getElementById('filterTipo').value;
-  filtered=allWorks.filter(w=>{
-    if(ano&&String(w.ano)!==ano)return false;
-    if(area&&w.area_conhecimento!==area)return false;
-    if(inst&&w._inst!==inst)return false;
-    if(tipo&&w.tipo!==tipo)return false;
-    if(q){const h=[w.titulo,w._autor,w.resumo,w.tipo,w.area_conhecimento,w._inst,...(Array.isArray(w.tags)?w.tags:[])].filter(Boolean).join(' ').toLowerCase();if(!h.includes(q))return false;}
+  const q    = document.getElementById('searchInput').value.trim().toLowerCase();
+  const ano  = document.getElementById('filterAno').value;
+  const area = normalizeStr(document.getElementById('filterArea').value).toUpperCase();
+  const inst = normalizeStr(document.getElementById('filterInst').value).toUpperCase();
+  const tipo = normalizeStr(document.getElementById('filterTipo').value).toUpperCase();
+
+  filtered = allWorks.filter(w => {
+    if(ano  && String(w.ano) !== ano)      return false;
+    if(area && w._areaNorm !== area)       return false;
+    if(inst && w._instNorm !== inst)       return false;
+    if(tipo && w._tipoNorm !== tipo)       return false;
+    if(q){
+      const hay = [w.titulo, w._autor, w.resumo, w.tipo, w.area_conhecimento, w._inst,
+                   ...(Array.isArray(w.tags) ? w.tags : [])].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
     return true;
   });
-  renderWorks();updateCount();
+  renderWorks();
+  updateCount();
 }
 
 function renderWorks(){
-  const grid=document.getElementById('worksGrid');
-  if(!filtered.length){grid.innerHTML='<div class="empty">Nenhuma publicação encontrada.</div>';return;}
-  grid.innerHTML=filtered.map(w=>{
-    const tags=Array.isArray(w.tags)?w.tags.filter(Boolean):[];
-    const tagsHtml=tags.length?`<div class="wc-tags">${tags.map(t=>`<span class="wc-tag">${esc(t)}</span>`).join('')}</div>`:'';
-    const actions=[];
-    if(w.link_acesso)actions.push(`<a href="${esc(w.link_acesso)}" target="_blank" class="wc-btn wc-btn-acesso">Acessar →</a>`);
-    if(w.link_compra)actions.push(`<a href="${esc(w.link_compra)}" target="_blank" class="wc-btn wc-btn-compra">🛒 Comprar</a>`);
-    return`<div class="work-card">
+  const grid = document.getElementById('worksGrid');
+  if(!filtered.length){ grid.innerHTML = '<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
+  grid.innerHTML = filtered.map(w => {
+    const tags = Array.isArray(w.tags) ? w.tags.filter(Boolean) : [];
+    const tagsHtml = tags.length ? `<div class="wc-tags">${tags.map(t => `<span class="wc-tag">${esc(t)}</span>`).join('')}</div>` : '';
+    const actions = [];
+    if(w.link_acesso) actions.push(`<a href="${esc(w.link_acesso)}" target="_blank" class="wc-btn wc-btn-acesso">Acessar →</a>`);
+    if(w.link_compra) actions.push(`<a href="${esc(w.link_compra)}" target="_blank" class="wc-btn wc-btn-compra">🛒 Comprar</a>`);
+    return `<div class="work-card">
       <div class="wc-top"><span class="wc-type">${esc(w.tipo||'Publicação')}</span>${w.ano?`<span class="wc-year">${w.ano}</span>`:''}</div>
       <div class="wc-title">${esc(w.titulo)}</div>
-      ${w._autor?`<div class="wc-author">${esc(w._autor)}</div>`:''}
-      ${w._inst?`<div class="wc-inst">${esc(w._inst)}</div>`:''}
-      ${w.resumo?`<div class="wc-resumo">${esc(w.resumo)}</div>`:''}
+      ${w._autor ? `<div class="wc-author">${esc(w._autor)}</div>` : ''}
+      ${w._inst  ? `<div class="wc-inst">${esc(w._inst)}</div>` : ''}
+      ${w.resumo ? `<div class="wc-resumo">${esc(w.resumo)}</div>` : ''}
       ${tagsHtml}
-      ${actions.length?`<div class="wc-actions">${actions.join('')}</div>`:''}
+      ${actions.length ? `<div class="wc-actions">${actions.join('')}</div>` : ''}
     </div>`;
   }).join('');
 }
 
-function updateCount(){const el=document.getElementById('resultsCount'),t=allWorks.length,s=filtered.length;el.textContent=s===t?`${t} publicação${t!==1?'ões':''} cadastrada${t!==1?'s':''}`:`Mostrando ${s} de ${t} publicação${t!==1?'ões':''}`;}
-function clearAllFilters(){['searchInput'].forEach(id=>document.getElementById(id).value='');['filterAno','filterArea','filterInst','filterTipo'].forEach(id=>document.getElementById(id).value='');applyFilters();}
-function esc(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function updateCount(){
+  const el = document.getElementById('resultsCount');
+  const t  = allWorks.length, s = filtered.length;
+  el.textContent = s === t
+    ? `${t} publicação${t !== 1 ? 'ões' : ''} cadastrada${t !== 1 ? 's' : ''}`
+    : `Mostrando ${s} de ${t} publicação${t !== 1 ? 'ões' : ''}`;
+}
 
-document.getElementById('searchInput').addEventListener('input',applyFilters);
-['filterAno','filterArea','filterInst','filterTipo'].forEach(id=>document.getElementById(id).addEventListener('change',applyFilters));
-document.getElementById('navToggle').onclick=()=>document.getElementById('navLinks').classList.toggle('open');
+function clearAllFilters(){
+  document.getElementById('searchInput').value = '';
+  ['filterAno','filterArea','filterInst','filterTipo'].forEach(id => document.getElementById(id).value = '');
+  applyFilters();
+}
+
+function esc(str){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+['filterAno','filterArea','filterInst','filterTipo'].forEach(id => document.getElementById(id).addEventListener('change', applyFilters));
+document.getElementById('navToggle').onclick = () => document.getElementById('navLinks').classList.toggle('open');
+
 loadData();
 </script>
 </body>

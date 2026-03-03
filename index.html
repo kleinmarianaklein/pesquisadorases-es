@@ -384,6 +384,9 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
   <p class="section-desc">Teses, dissertações, artigos e livros das pesquisadoras capixabas.</p>
   <div class="filters" id="tipoFilters" style="margin-top:1.5rem"></div>
   <div class="works-grid" id="worksGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
+  <div style="text-align:center;margin-top:2.5rem">
+    <a href="https://pesquisadorasdoes.com.br/publicacoes" class="btn-primary">Ver todas as publicações →</a>
+  </div>
 </section>
 
 <div class="section-ticker" aria-hidden="true">
@@ -448,85 +451,233 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allResearchers = [], allWorks = [];
 let filtroArea = '', filtroInst = '', filtroTipo = '', busca = '';
+
 function initials(name){ return name.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join(''); }
 const bookEmojis = {"Ciências Biológicas":"🐠","Ciências Humanas":"📖","Engenharias":"🏗️","Ciências da Saúde":"🩺","Ciências Exatas e da Terra":"🔬","Linguística, Letras e Artes":"🎭"};
+
+// ── Normalização: remove espaços extras e compara em uppercase para deduplicar ──
+function normalizeStr(str){ return String(str).trim().replace(/\s+/g,' '); }
+function uniqueNormalized(arr){
+  const seen = new Map();
+  arr.filter(Boolean).forEach(v => {
+    const key = normalizeStr(v).toUpperCase();
+    if (!seen.has(key)) seen.set(key, normalizeStr(v));
+  });
+  return [...seen.values()].sort();
+}
 
 async function loadAll(){
   try {
     const [resRes, worksRes, postsRes] = await Promise.all([
       db.from('researchers').select('*').eq('status','aprovada').order('destaque',{ascending:false}),
       db.from('works').select('*, researchers!inner(status)').eq('researchers.status','aprovada').order('ano',{ascending:false}),
-      // ── CORREÇÃO: filtrar apenas posts da seção "blog" (ou sem seção definida) ──
       db.from('blog_posts').select('*').eq('publicado',true).or('secao.eq.blog,secao.is.null').order('created_at',{ascending:false}).limit(3)
     ]);
-    allResearchers = resRes.data || []; allWorks = worksRes.data || [];
+    allResearchers = resRes.data || [];
+    allWorks = worksRes.data || [];
     const posts = postsRes.data || [];
     renderStats(); renderFilters(); renderResearchers(); renderWorks(); renderBooks(); renderSobreStats(); renderBlogPreview(posts);
   } catch(e) {
-    ['blogGrid','researchersGrid','worksGrid','booksGrid'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML='<div class="empty">Erro ao carregar.</div>'; });
+    ['blogGrid','researchersGrid','worksGrid','booksGrid'].forEach(id => {
+      const el=document.getElementById(id); if(el) el.innerHTML='<div class="empty">Erro ao carregar.</div>';
+    });
   }
 }
-function renderStats(){ const insts=new Set(allResearchers.map(r=>r.instituicao)).size; document.getElementById('statP').textContent=allResearchers.length; document.getElementById('statO').textContent=allWorks.length; document.getElementById('statI').textContent=insts; }
+
+function renderStats(){
+  const insts = new Set(allResearchers.map(r => normalizeStr(r.instituicao||'').toUpperCase())).size;
+  document.getElementById('statP').textContent = allResearchers.length;
+  document.getElementById('statO').textContent = allWorks.length;
+  document.getElementById('statI').textContent = insts;
+}
+
 function renderFilters(){
-  const areas=[...new Set(allResearchers.map(r=>r.area_principal).filter(Boolean))];
-  const insts=[...new Set(allResearchers.map(r=>r.instituicao).filter(Boolean))];
-  const tipos=[...new Set(allWorks.map(w=>w.tipo).filter(Boolean))];
-  document.getElementById('areaFilters').innerHTML=`<button class="filter-btn active" onclick="setArea('')">Todas</button>`+areas.map(a=>`<button class="filter-btn" onclick="setArea('${a}')">${a}</button>`).join('');
-  document.getElementById('instFilters').innerHTML=`<button class="filter-btn active" onclick="setInst('')">Todas</button>`+insts.map(i=>`<button class="filter-btn" onclick="setInst('${i}')">${i}</button>`).join('');
-  document.getElementById('tipoFilters').innerHTML=`<button class="filter-btn active" onclick="setTipo('')">Todos</button>`+tipos.map(t=>`<button class="filter-btn" onclick="setTipo('${t}')">${t}</button>`).join('');
+  const areas = uniqueNormalized(allResearchers.map(r => r.area_principal));
+  const insts  = uniqueNormalized(allResearchers.map(r => r.instituicao));
+  const tipos  = uniqueNormalized(allWorks.map(w => w.tipo));
+
+  document.getElementById('areaFilters').innerHTML =
+    `<button class="filter-btn active" onclick="setArea('')">Todas</button>` +
+    areas.map(a => `<button class="filter-btn" onclick="setArea(${JSON.stringify(a)})">${a}</button>`).join('');
+
+  document.getElementById('instFilters').innerHTML =
+    `<button class="filter-btn active" onclick="setInst('')">Todas</button>` +
+    insts.map(i => `<button class="filter-btn" onclick="setInst(${JSON.stringify(i)})">${i}</button>`).join('');
+
+  document.getElementById('tipoFilters').innerHTML =
+    `<button class="filter-btn active" onclick="setTipo('')">Todos</button>` +
+    tipos.map(t => `<button class="filter-btn" onclick="setTipo(${JSON.stringify(t)})">${t}</button>`).join('');
 }
-function setArea(v){ filtroArea=v; document.querySelectorAll('#areaFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todas'))); renderResearchers(); }
-function setInst(v){ filtroInst=v; document.querySelectorAll('#instFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todas'))); renderResearchers(); }
-function setTipo(v){ filtroTipo=v; document.querySelectorAll('#tipoFilters .filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===(v||'Todos'))); renderWorks(); }
+
+function setArea(v){
+  filtroArea = v;
+  document.querySelectorAll('#areaFilters .filter-btn').forEach(b => b.classList.toggle('active', b.textContent === (v || 'Todas')));
+  renderResearchers();
+}
+function setInst(v){
+  filtroInst = v;
+  document.querySelectorAll('#instFilters .filter-btn').forEach(b => b.classList.toggle('active', b.textContent === (v || 'Todas')));
+  renderResearchers();
+}
+function setTipo(v){
+  filtroTipo = v;
+  document.querySelectorAll('#tipoFilters .filter-btn').forEach(b => b.classList.toggle('active', b.textContent === (v || 'Todos')));
+  renderWorks();
+}
+
 function renderResearchers(){
-  const grid=document.getElementById('researchersGrid');
-  let list=allResearchers.filter(r=>{ const q=busca.toLowerCase(); return (!q||r.nome?.toLowerCase().includes(q)||r.area_principal?.toLowerCase().includes(q)||r.instituicao?.toLowerCase().includes(q))&&(!filtroArea||r.area_principal===filtroArea)&&(!filtroInst||r.instituicao===filtroInst); });
+  const grid = document.getElementById('researchersGrid');
+  let list = allResearchers.filter(r => {
+    const q = busca.toLowerCase();
+    const matchBusca = !q ||
+      r.nome?.toLowerCase().includes(q) ||
+      r.area_principal?.toLowerCase().includes(q) ||
+      r.instituicao?.toLowerCase().includes(q);
+    const matchArea = !filtroArea || normalizeStr(r.area_principal||'').toUpperCase() === normalizeStr(filtroArea).toUpperCase();
+    const matchInst = !filtroInst || normalizeStr(r.instituicao||'').toUpperCase() === normalizeStr(filtroInst).toUpperCase();
+    return matchBusca && matchArea && matchInst;
+  });
   if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma pesquisadora encontrada.</div>'; return; }
-  grid.innerHTML=list.map(r=>{ const links=[r.lattes?`<a class="rc-link" href="${r.lattes}" target="_blank">Lattes</a>`:'',r.orcid?`<a class="rc-link" href="${r.orcid}" target="_blank">ORCID</a>`:'',r.linkedin?`<a class="rc-link" href="${r.linkedin}" target="_blank">LinkedIn</a>`:'',r.google_scholar?`<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>`:''].filter(Boolean).join(''); const wc=allWorks.filter(w=>w.researcher_id===r.id).length; return `<div class="researcher-card" onclick="openModal('${r.id}')"><div class="rc-top">${r.foto_url?`<div class="rc-avatar"><img src="${r.foto_url}" alt="${r.nome}"></div>`:`<div class="rc-avatar">${initials(r.nome)}</div>`}<div><div class="rc-name">${r.nome}</div><div class="rc-inst">${r.instituicao||''}</div></div></div><span class="rc-area">${r.area_principal||''}</span><p class="rc-bio">${r.mini_bio||''}</p><div class="rc-links">${links}</div>${wc?`<div style="font-size:.72rem;color:var(--verde);font-weight:700;padding-top:.75rem;border-top:1px solid var(--cinza-claro)">↗ ${wc} publicaç${wc===1?'ão':'ões'}</div>`:''}</div>`; }).join('');
+  grid.innerHTML = list.map(r => {
+    const links = [
+      r.lattes    ? `<a class="rc-link" href="${r.lattes}" target="_blank">Lattes</a>` : '',
+      r.orcid     ? `<a class="rc-link" href="${r.orcid}" target="_blank">ORCID</a>` : '',
+      r.linkedin  ? `<a class="rc-link" href="${r.linkedin}" target="_blank">LinkedIn</a>` : '',
+      r.google_scholar ? `<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>` : ''
+    ].filter(Boolean).join('');
+    const wc = allWorks.filter(w => w.researcher_id === r.id).length;
+    return `<div class="researcher-card" onclick="openModal('${r.id}')">
+      <div class="rc-top">
+        ${r.foto_url ? `<div class="rc-avatar"><img src="${r.foto_url}" alt="${r.nome}"></div>` : `<div class="rc-avatar">${initials(r.nome)}</div>`}
+        <div><div class="rc-name">${r.nome}</div><div class="rc-inst">${r.instituicao||''}</div></div>
+      </div>
+      <span class="rc-area">${r.area_principal||''}</span>
+      <p class="rc-bio">${r.mini_bio||''}</p>
+      <div class="rc-links">${links}</div>
+      ${wc ? `<div style="font-size:.72rem;color:var(--verde);font-weight:700;padding-top:.75rem;border-top:1px solid var(--cinza-claro)">↗ ${wc} publicaç${wc===1?'ão':'ões'}</div>` : ''}
+    </div>`;
+  }).join('');
 }
+
+// ── Obras: exibe apenas as 8 mais recentes na home ──
 function renderWorks(){
-  const grid=document.getElementById('worksGrid');
-  let list=allWorks.filter(w=>!filtroTipo||w.tipo===filtroTipo);
-  if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
-  grid.innerHTML=list.map(w=>{ const author=allResearchers.find(r=>r.id===w.researcher_id)?.nome||'—'; const tags=(w.tags||[]).map(t=>`<span class="wc-tag">${t}</span>`).join(''); return `<div class="work-card"><div class="wc-top"><span class="wc-type">${w.tipo}</span><span class="wc-year">${w.ano||''}</span></div><div class="wc-title">${w.titulo}</div><div class="wc-author">${author}</div><p class="wc-resumo">${w.resumo||''}</p><div class="wc-tags">${tags}</div><div class="wc-actions">${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank">🛒 Comprar</a>`:''}${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank">Acessar →</a>`:''}</div></div>`; }).join('');
+  const grid = document.getElementById('worksGrid');
+  let list = allWorks.filter(w => !filtroTipo || normalizeStr(w.tipo||'').toUpperCase() === normalizeStr(filtroTipo).toUpperCase());
+  const preview = list.slice(0, 8);
+  if(!preview.length){ grid.innerHTML='<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
+  grid.innerHTML = preview.map(w => {
+    const author = allResearchers.find(r => r.id === w.researcher_id)?.nome || '—';
+    const tags   = (w.tags||[]).map(t => `<span class="wc-tag">${t}</span>`).join('');
+    return `<div class="work-card">
+      <div class="wc-top"><span class="wc-type">${w.tipo}</span><span class="wc-year">${w.ano||''}</span></div>
+      <div class="wc-title">${w.titulo}</div>
+      <div class="wc-author">${author}</div>
+      <p class="wc-resumo">${w.resumo||''}</p>
+      <div class="wc-tags">${tags}</div>
+      <div class="wc-actions">
+        ${w.link_compra ? `<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank">🛒 Comprar</a>` : ''}
+        ${w.link_acesso ? `<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank">Acessar →</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 }
+
 function renderBooks(){
-  const grid=document.getElementById('booksGrid');
-  const books=allWorks.filter(w=>w.link_compra||w.para_adquirir);
+  const grid = document.getElementById('booksGrid');
+  const books = allWorks.filter(w => w.link_compra || w.para_adquirir);
   if(!books.length){ grid.innerHTML='<div class="empty" style="color:rgba(255,255,255,.45)">Nenhum livro à venda no momento.</div>'; return; }
-  grid.innerHTML=books.map(b=>{
-    const author=allResearchers.find(r=>r.id===b.researcher_id)?.nome||'—';
-    const fotoUrl=b.foto_publicacao
+  grid.innerHTML = books.map(b => {
+    const author  = allResearchers.find(r => r.id === b.researcher_id)?.nome || '—';
+    const fotoUrl = b.foto_publicacao
       ? `https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/work-photos/${b.foto_publicacao}`
       : null;
-    const coverHtml=fotoUrl
+    const coverHtml = fotoUrl
       ? `<div class="book-cover"><img src="${fotoUrl}" alt="${b.titulo}" loading="lazy"></div>`
       : `<div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div>`;
     return `<div class="book-card">${coverHtml}<div class="book-title">${b.titulo}</div><div class="book-author">${author}</div><a class="book-btn" href="${b.link_compra}" target="_blank">🛒 Adquirir</a></div>`;
   }).join('');
 }
+
 function renderSobreStats(){
-  const el=document.getElementById('sobreStats'); const livros=allWorks.filter(w=>w.tipo==='Livro').length; const insts=new Set(allResearchers.map(r=>r.instituicao)).size;
-  el.innerHTML=[{num:allResearchers.length,label:'Pesquisadoras cadastradas'},{num:allWorks.length,label:'Publicações catalogadas'},{num:livros,label:'Livros disponíveis'},{num:insts,label:'Instituições representadas'}].map(s=>`<div class="sobre-stat"><div class="sobre-stat-num">${s.num}</div><div class="sobre-stat-label">${s.label}</div></div>`).join('');
+  const el     = document.getElementById('sobreStats');
+  const livros = allWorks.filter(w => w.tipo === 'Livro').length;
+  const insts  = new Set(allResearchers.map(r => normalizeStr(r.instituicao||'').toUpperCase())).size;
+  el.innerHTML = [
+    {num: allResearchers.length, label: 'Pesquisadoras cadastradas'},
+    {num: allWorks.length,       label: 'Publicações catalogadas'},
+    {num: livros,                label: 'Livros disponíveis'},
+    {num: insts,                 label: 'Instituições representadas'}
+  ].map(s => `<div class="sobre-stat"><div class="sobre-stat-num">${s.num}</div><div class="sobre-stat-label">${s.label}</div></div>`).join('');
 }
+
 function renderBlogPreview(posts){
-  const grid=document.getElementById('blogGrid');
+  const grid = document.getElementById('blogGrid');
   if(!posts.length){ grid.innerHTML='<div class="empty">Nenhum artigo publicado ainda.</div>'; return; }
-  grid.innerHTML=posts.map(p=>{ const capaHtml=p.foto_capa?`<div class="blog-card-img"><img src="${p.foto_capa}" alt="${p.titulo}" loading="lazy"></div>`:`<div class="blog-card-img">${p.emoji||'✍️'}</div>`; return `<div class="blog-card" onclick="location.href='blog.html?post=${p.id}'">${capaHtml}<div class="blog-card-body"><span class="blog-card-cat">${p.categoria||'Artigo'}</span><div class="blog-card-title">${p.titulo}</div><div class="blog-card-meta">${new Date(p.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</div><p class="blog-card-excerpt">${p.resumo||''}</p></div></div>`; }).join('');
+  grid.innerHTML = posts.map(p => {
+    const capaHtml = p.foto_capa
+      ? `<div class="blog-card-img"><img src="${p.foto_capa}" alt="${p.titulo}" loading="lazy"></div>`
+      : `<div class="blog-card-img">${p.emoji||'✍️'}</div>`;
+    return `<div class="blog-card" onclick="location.href='blog.html?post=${p.id}'">${capaHtml}
+      <div class="blog-card-body">
+        <span class="blog-card-cat">${p.categoria||'Artigo'}</span>
+        <div class="blog-card-title">${p.titulo}</div>
+        <div class="blog-card-meta">${new Date(p.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</div>
+        <p class="blog-card-excerpt">${p.resumo||''}</p>
+      </div>
+    </div>`;
+  }).join('');
 }
+
 function openModal(id){
-  const r=allResearchers.find(r=>r.id===id); if(!r) return;
-  const rWorks=allWorks.filter(w=>w.researcher_id===id);
-  const links=[r.lattes?`<a class="rc-link" href="${r.lattes}" target="_blank">🔬 Lattes</a>`:'',r.orcid?`<a class="rc-link" href="${r.orcid}" target="_blank">ORCID</a>`:'',r.linkedin?`<a class="rc-link" href="${r.linkedin}" target="_blank">LinkedIn</a>`:'',r.google_scholar?`<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>`:'',r.research_gate?`<a class="rc-link" href="${r.research_gate}" target="_blank">ResearchGate</a>`:'',r.email?`<a class="rc-link" href="mailto:${r.email}" target="_blank">✉ E-mail</a>`:'',r.site?`<a class="rc-link" href="${r.site}" target="_blank">🌐 Site</a>`:''].filter(Boolean).join('');
-  const worksHtml=rWorks.length?`<div class="modal-works-title">📄 Publicações (${rWorks.length})</div>${rWorks.map(w=>`<div class="modal-work-item"><div class="modal-work-title">${w.titulo}</div><div class="modal-work-meta"><span class="wc-type">${w.tipo}</span>${w.ano?`<span>${w.ano}</span>`:''}</div>${w.resumo?`<div style="font-size:.82rem;color:var(--cinza);line-height:1.6;margin-top:.4rem">${w.resumo}</div>`:''}<div class="modal-work-actions">${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank" style="font-size:.73rem;padding:.35rem .8rem">🛒 Comprar</a>`:''}${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank" style="font-size:.73rem;padding:.35rem .8rem">Acessar →</a>`:''}</div></div>`).join('')}`:`<div class="modal-works-title">📄 Publicações</div><p class="modal-works-empty">Nenhuma publicação cadastrada ainda.</p>`;
-  document.getElementById('modalHeader').innerHTML=`${r.foto_url?`<div class="modal-header-avatar"><img src="${r.foto_url}" alt="${r.nome}"></div>`:`<div class="modal-header-avatar">${initials(r.nome)}</div>`}<div class="modal-name">${r.nome}</div><div class="modal-inst">${r.instituicao||''}</div><span class="modal-area-badge">${r.area_principal||''}</span>`;
-  document.getElementById('modalContent').innerHTML=`<p class="modal-bio">${r.mini_bio||''}</p><div class="modal-links">${links}</div>${worksHtml}`;
-  document.getElementById('modalOverlay').classList.add('open'); document.body.style.overflow='hidden';
+  const r = allResearchers.find(r => r.id === id); if(!r) return;
+  const rWorks = allWorks.filter(w => w.researcher_id === id);
+  const links = [
+    r.lattes        ? `<a class="rc-link" href="${r.lattes}" target="_blank">🔬 Lattes</a>` : '',
+    r.orcid         ? `<a class="rc-link" href="${r.orcid}" target="_blank">ORCID</a>` : '',
+    r.linkedin      ? `<a class="rc-link" href="${r.linkedin}" target="_blank">LinkedIn</a>` : '',
+    r.google_scholar? `<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>` : '',
+    r.research_gate ? `<a class="rc-link" href="${r.research_gate}" target="_blank">ResearchGate</a>` : '',
+    r.email         ? `<a class="rc-link" href="mailto:${r.email}" target="_blank">✉ E-mail</a>` : '',
+    r.site          ? `<a class="rc-link" href="${r.site}" target="_blank">🌐 Site</a>` : ''
+  ].filter(Boolean).join('');
+  const worksHtml = rWorks.length
+    ? `<div class="modal-works-title">📄 Publicações (${rWorks.length})</div>` +
+      rWorks.map(w => `<div class="modal-work-item">
+        <div class="modal-work-title">${w.titulo}</div>
+        <div class="modal-work-meta"><span class="wc-type">${w.tipo}</span>${w.ano?`<span>${w.ano}</span>`:''}</div>
+        ${w.resumo?`<div style="font-size:.82rem;color:var(--cinza);line-height:1.6;margin-top:.4rem">${w.resumo}</div>`:''}
+        <div class="modal-work-actions">
+          ${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank" style="font-size:.73rem;padding:.35rem .8rem">🛒 Comprar</a>`:''}
+          ${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank" style="font-size:.73rem;padding:.35rem .8rem">Acessar →</a>`:''}
+        </div>
+      </div>`).join('')
+    : `<div class="modal-works-title">📄 Publicações</div><p class="modal-works-empty">Nenhuma publicação cadastrada ainda.</p>`;
+
+  document.getElementById('modalHeader').innerHTML =
+    `${r.foto_url ? `<div class="modal-header-avatar"><img src="${r.foto_url}" alt="${r.nome}"></div>` : `<div class="modal-header-avatar">${initials(r.nome)}</div>`}
+    <div class="modal-name">${r.nome}</div>
+    <div class="modal-inst">${r.instituicao||''}</div>
+    <span class="modal-area-badge">${r.area_principal||''}</span>`;
+
+  document.getElementById('modalContent').innerHTML =
+    `<p class="modal-bio">${r.mini_bio||''}</p><div class="modal-links">${links}</div>${worksHtml}`;
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
-document.getElementById('modalClose').onclick=()=>{ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; };
-document.getElementById('modalOverlay').onclick=e=>{ if(e.target===e.currentTarget){ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; } };
-document.getElementById('searchInput').addEventListener('input',function(){ busca=this.value; renderResearchers(); });
-document.getElementById('navToggle').onclick = ()=>document.getElementById('navLinks').classList.toggle('open');
+
+document.getElementById('modalClose').onclick = () => {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+};
+document.getElementById('modalOverlay').onclick = e => {
+  if(e.target === e.currentTarget){
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+};
+document.getElementById('searchInput').addEventListener('input', function(){ busca = this.value; renderResearchers(); });
+document.getElementById('navToggle').onclick = () => document.getElementById('navLinks').classList.toggle('open');
 
 loadAll();
 </script>
