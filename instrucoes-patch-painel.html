@@ -1,0 +1,239 @@
+<!-- ================================================================
+  INSTRUÇÕES DE PATCH PARA painel.html
+  Aplicar as seguintes 4 substituições no arquivo admin/painel.html
+  ================================================================ -->
+
+<!-- ──────────────────────────────────────────────────────────────
+  PATCH 1: No formulário do blog, APÓS o campo "Categoria", adicionar o campo "Seção"
+  
+  LOCALIZAR este trecho no HTML:
+    <div class="form-group"><label>Categoria</label><input type="text" id="blogCategoria" placeholder="Ex: Entrevista, Opinião, Notícia…"></div>
+  
+  SUBSTITUIR POR:
+  ────────────────────────────────────────────────────────────────  -->
+<div class="form-group"><label>Categoria</label><input type="text" id="blogCategoria" placeholder="Ex: Entrevista, Opinião, Notícia…"></div>
+<div class="form-group">
+  <label>Seção de publicação</label>
+  <select id="blogSecao" style="font-family:'DM Sans',sans-serif;font-size:.92rem;padding:.7rem .9rem;border:1.5px solid var(--cinza-claro);border-radius:9px;outline:none;width:100%;background:white;">
+    <option value="blog">🌐 Blog público (aparece na página inicial)</option>
+    <option value="sustentabilidade">🌱 Sustentabilidade e Privacidade (seção separada)</option>
+  </select>
+  <span style="font-size:.72rem;color:var(--cinza);margin-top:.25rem;display:block">Posts do Blog aparecem na home. Posts de Sustentabilidade e Privacidade ficam em página dedicada.</span>
+</div>
+
+
+<!-- ──────────────────────────────────────────────────────────────
+  PATCH 2: Na função saveBlog(), adicionar secao ao payload
+  
+  LOCALIZAR:
+    categoria: document.getElementById('blogCategoria').value.trim()||'Artigo',
+  
+  SUBSTITUIR POR:
+  ────────────────────────────────────────────────────────────────  -->
+<!-- 
+    categoria: document.getElementById('blogCategoria').value.trim()||'Artigo',
+    secao: document.getElementById('blogSecao').value || 'blog',
+-->
+
+
+<!-- ──────────────────────────────────────────────────────────────
+  PATCH 3: Na função editPost(), restaurar o valor de blogSecao ao editar
+  
+  LOCALIZAR (dentro de editPost):
+    document.getElementById('blogAutor').value = p.autor || '';
+  
+  ADICIONAR APÓS:
+  ────────────────────────────────────────────────────────────────  -->
+<!--
+    document.getElementById('blogAutor').value = p.autor || '';
+    document.getElementById('blogSecao').value = p.secao || 'blog';
+-->
+
+
+<!-- ──────────────────────────────────────────────────────────────
+  PATCH 4: Na função cancelEditPost(), resetar blogSecao
+  
+  LOCALIZAR (dentro de cancelEditPost):
+    ['blogTitulo','blogResumo','blogCategoria','blogEmoji','blogAutor'].forEach(id => document.getElementById(id).value = '');
+  
+  SUBSTITUIR POR:
+  ────────────────────────────────────────────────────────────────  -->
+<!--
+    ['blogTitulo','blogResumo','blogCategoria','blogEmoji','blogAutor'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('blogSecao').value = 'blog';
+-->
+
+
+<!-- ──────────────────────────────────────────────────────────────
+  PATCH 5: Em renderBlogPosts(), mostrar badge de seção em cada card
+  
+  LOCALIZAR (dentro do template do card de post):
+    ${new Date(p.created_at).toLocaleDateString('pt-BR')} ·
+    ${p.autor ? 'por ' + p.autor + ' · ' : ''}
+  
+  ADICIONAR APÓS (antes do span de publicado):
+  ────────────────────────────────────────────────────────────────  -->
+<!--
+    ${new Date(p.created_at).toLocaleDateString('pt-BR')} ·
+    ${p.autor ? 'por ' + p.autor + ' · ' : ''}
+    ${p.secao === 'sustentabilidade' ? '<span style="color:#1A4A3A;font-size:.68rem;font-weight:600">🌱 Sustentabilidade · </span>' : ''}
+-->
+
+
+<!-- ================================================================
+  PATCH COMPLETO PARA A FUNÇÃO saveBlog()
+  
+  LOCALIZAR a função saveBlog completa e SUBSTITUIR pelo código abaixo:
+  ================================================================ -->
+<script>
+// VERSÃO CORRIGIDA de saveBlog() - copiar para painel.html substituindo a original
+async function saveBlog(publish){
+  const titulo = document.getElementById('blogTitulo').value.trim();
+  if(!titulo){ alert('Preencha o título.'); return; }
+  const editorEl = document.getElementById('blogEditor');
+  const conteudo = editorEl.innerHTML || editorEl.value || '';
+  const editId = document.getElementById('blogEditId').value;
+  const secao = document.getElementById('blogSecao').value || 'blog';
+
+  const btnP = document.getElementById('btnPublicar');
+  const btnR = document.getElementById('btnRascunho');
+  btnP.disabled = true; btnR.disabled = true;
+
+  let foto_capa = document.getElementById('capaUrl').value || null;
+  let foto_header = document.getElementById('headerUrl').value || null;
+
+  const payload = {
+    titulo,
+    resumo: document.getElementById('blogResumo').value.trim()||null,
+    conteudo,
+    categoria: document.getElementById('blogCategoria').value.trim()||'Artigo',
+    emoji: document.getElementById('blogEmoji').value.trim()||'✍️',
+    autor: document.getElementById('blogAutor').value.trim()||null,
+    secao: secao,
+    publicado: publish,
+  };
+
+  let postId = editId;
+
+  if(editId){
+    await db.from('blog_posts').update(payload).eq('id', editId);
+  } else {
+    const { data } = await db.from('blog_posts').insert([payload]).select().single();
+    postId = data?.id;
+  }
+
+  if(postId){
+    if(capaFile){ foto_capa = await uploadBlogFoto(capaFile, postId, 'capa'); }
+    if(headerFile){ foto_header = await uploadBlogFoto(headerFile, postId, 'header'); }
+    if(capaFile || headerFile){
+      const update = {};
+      if(foto_capa) update.foto_capa = foto_capa;
+      if(foto_header) update.foto_header = foto_header;
+      await db.from('blog_posts').update(update).eq('id', postId);
+    }
+  }
+
+  const secaoLabel = secao === 'sustentabilidade' ? 'Seção Sustentabilidade' : 'Blog';
+  toast(editId
+    ? (publish ? `Artigo atualizado! [${secaoLabel}]` : 'Rascunho salvo!')
+    : (publish ? `Artigo publicado! [${secaoLabel}]` : 'Rascunho salvo!'));
+
+  btnP.disabled = false; btnR.disabled = false;
+  cancelEditPost();
+  await loadAll();
+}
+
+// VERSÃO CORRIGIDA de cancelEditPost()
+function cancelEditPost_PATCH(){
+  document.getElementById('blogEditId').value = '';
+  document.getElementById('blogFormTitle').textContent = 'Novo artigo';
+  document.getElementById('blogCancelEdit').style.display = 'none';
+  ['blogTitulo','blogResumo','blogCategoria','blogEmoji','blogAutor'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('blogSecao').value = 'blog'; // ← NOVO
+  const ed = document.getElementById('blogEditor');
+  if(ed.contentEditable === 'true') ed.innerHTML = '';
+  else ed.value = '';
+  capaFile = null; headerFile = null;
+  removeFotoBlog('capa'); removeFotoBlog('header');
+}
+
+// VERSÃO CORRIGIDA de editPost()
+function editPost_PATCH(id){
+  const p = allPosts.find(x => x.id === id);
+  if(!p) return;
+  document.getElementById('blogEditId').value = p.id;
+  document.getElementById('blogTitulo').value = p.titulo || '';
+  document.getElementById('blogResumo').value = p.resumo || '';
+  document.getElementById('blogCategoria').value = p.categoria || '';
+  document.getElementById('blogEmoji').value = p.emoji || '';
+  document.getElementById('blogAutor').value = p.autor || '';
+  document.getElementById('blogSecao').value = p.secao || 'blog'; // ← NOVO
+  const ed = document.getElementById('blogEditor');
+  if(ed.contentEditable === 'true') ed.innerHTML = p.conteudo || '';
+  else ed.value = p.conteudo || '';
+  if(p.foto_capa){
+    document.getElementById('capaUrl').value = p.foto_capa;
+    document.getElementById('capaPreview').innerHTML = `<img src="${p.foto_capa}" style="width:100%;height:100%;object-fit:cover">`;
+    document.getElementById('capaRemoveBtn').style.display = 'inline-flex';
+  }
+  if(p.foto_header){
+    document.getElementById('headerUrl').value = p.foto_header;
+    document.getElementById('headerPreview').innerHTML = `<img src="${p.foto_header}" style="width:100%;height:100%;object-fit:cover">`;
+    document.getElementById('headerRemoveBtn').style.display = 'inline-flex';
+  }
+  document.getElementById('blogFormTitle').textContent = '✏️ Editando: '+p.titulo.substring(0,30)+'…';
+  document.getElementById('blogCancelEdit').style.display = 'inline-flex';
+  document.getElementById('page-blog').scrollIntoView({behavior:'smooth'});
+}
+
+// VERSÃO CORRIGIDA de renderBlogPosts() - mostra badge de seção
+function renderBlogPosts_PATCH(){
+  const el = document.getElementById('blogPostsList');
+  if(blogTab === 'comentarios'){ renderComments(); return; }
+  const filtered = allPosts.filter(p => blogTab === 'publicados' ? p.publicado : !p.publicado);
+  if(!filtered.length){
+    el.innerHTML = `<div class="empty">${blogTab === 'publicados' ? 'Nenhum artigo publicado.' : 'Nenhum rascunho salvo.'}</div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(p => {
+    const capaThumb = p.foto_capa ? `<img src="${p.foto_capa}" style="width:100%;height:60px;object-fit:cover;border-radius:8px 8px 0 0;display:block;margin:-1rem -1rem .75rem">` : '';
+    const secaoBadge = p.secao === 'sustentabilidade'
+      ? `<span style="font-size:.62rem;background:rgba(26,74,58,.12);color:#1A4A3A;padding:.15rem .55rem;border-radius:100px;font-weight:600">🌱 Sustent.</span>`
+      : `<span style="font-size:.62rem;background:rgba(45,106,79,.1);color:var(--verde);padding:.15rem .55rem;border-radius:100px;font-weight:600">🌐 Blog</span>`;
+    return `<div style="background:white;border-radius:12px;padding:1rem;border:1.5px solid var(--cinza-claro);margin-bottom:.75rem;overflow:hidden">
+      ${capaThumb}
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.3rem">
+        <div style="font-weight:600;font-size:.88rem">${p.emoji||'✍️'} ${p.titulo}</div>
+        ${secaoBadge}
+      </div>
+      <div style="font-size:.72rem;color:var(--cinza);margin-bottom:.75rem">
+        ${new Date(p.created_at).toLocaleDateString('pt-BR')} ·
+        ${p.autor ? 'por ' + p.autor + ' · ' : ''}
+        <span style="color:${p.publicado ? 'var(--verde)' : 'var(--cinza)'}">
+          ${p.publicado ? '🌐 Publicado' : '💾 Rascunho'}
+        </span>
+      </div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+        <button class="btn btn-outline" style="font-size:.72rem;padding:.3rem .7rem" onclick="editPost('${p.id}')">✏️ Editar</button>
+        ${p.publicado
+          ? `<button class="btn btn-outline" style="font-size:.72rem;padding:.3rem .7rem" onclick="unpublishPost('${p.id}')">📥 Despublicar</button>`
+          : `<button class="btn btn-green" style="font-size:.72rem;padding:.3rem .7rem" onclick="publishPost('${p.id}')">🌐 Publicar</button>`
+        }
+        <button class="btn btn-red" style="font-size:.72rem;padding:.3rem .7rem" onclick="deletePost('${p.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+</script>
+
+<!-- ================================================================
+  TAMBÉM PRECISA: Adicionar coluna 'secao' na tabela blog_posts no Supabase.
+  
+  Execute este SQL no Supabase SQL Editor:
+  
+    ALTER TABLE blog_posts 
+    ADD COLUMN IF NOT EXISTS secao TEXT NOT NULL DEFAULT 'blog';
+  
+  E para o filtro da página inicial funcionar, a query em index.html
+  já está ajustada para filtrar .eq('secao','blog').
+  ================================================================ -->
