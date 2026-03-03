@@ -331,7 +331,7 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
 <section id="blog-preview">
   <span class="section-eyebrow">Do blog</span>
   <h2 class="section-title">Últimas <em>publicações</em></h2>
-  <p class="section-desc">Mande o seu texto ou artigo: <a href="/cdn-cgi/l/email-protection#d1bca4bdb9b4a3b4a291bab8b2bab6a3bea4a1ffb2bebcffb3a3" style="color:var(--verde)"><span class="__cf_email__" data-cfemail="2e435b42464b5c4b5d6e45474d45495c415b5e004d4143004c5c">[email&#160;protected]</span></a></p>
+  <p class="section-desc">Mande o seu texto ou artigo: <a href="mailto:mulheres@kickgroup.com.br" style="color:var(--verde)">mulheres@kickgroup.com.br</a></p>
   <div class="blog-grid" id="blogGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
   <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary">Ver todos os artigos</a></div>
 </section>
@@ -351,7 +351,7 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
     muted playsinline preload="auto" class="hidden"
   ></video>
 </div>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 (function(){
   const v1=document.getElementById('vid1'),v2=document.getElementById('vid2');
   v1.addEventListener('ended',()=>{
@@ -384,7 +384,6 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
   <p class="section-desc">Teses, dissertações, artigos e livros das pesquisadoras capixabas.</p>
   <div class="filters" id="tipoFilters" style="margin-top:1.5rem"></div>
   <div class="works-grid" id="worksGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
-  <div style="text-align:center;margin-top:2rem"><a href="https://pesquisadorasdoes.com.br/publicacoes" class="btn-primary">Ver todas as publicações</a></div>
 </section>
 
 <div class="section-ticker" aria-hidden="true">
@@ -487,9 +486,7 @@ function renderResearchers(){
 }
 function renderWorks(){
   const grid=document.getElementById('worksGrid');
-  let filtered=allWorks.filter(w=>!filtroTipo||w.tipo===filtroTipo);
-  let sorted=[...filtered].sort((a,b)=>(b.ano||0)-(a.ano||0));
-  let list=sorted.slice(0,8);
+  let list=allWorks.filter(w=>!filtroTipo||w.tipo===filtroTipo);
   if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
   grid.innerHTML=list.map(w=>{ const author=allResearchers.find(r=>r.id===w.researcher_id)?.nome||'—'; const tags=(w.tags||[]).map(t=>`<span class="wc-tag">${t}</span>`).join(''); return `<div class="work-card"><div class="wc-top"><span class="wc-type">${w.tipo}</span><span class="wc-year">${w.ano||''}</span></div><div class="wc-title">${w.titulo}</div><div class="wc-author">${author}</div><p class="wc-resumo">${w.resumo||''}</p><div class="wc-tags">${tags}</div><div class="wc-actions">${w.link_compra?`<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank">🛒 Comprar</a>`:''}${w.link_acesso?`<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank">Acessar →</a>`:''}</div></div>`; }).join('');
 }
@@ -528,4 +525,10 @@ function openModal(id){
 }
 document.getElementById('modalClose').onclick=()=>{ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; };
 document.getElementById('modalOverlay').onclick=e=>{ if(e.target===e.currentTarget){ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; } };
-document.getEle
+document.getElementById('searchInput').addEventListener('input',function(){ busca=this.value; renderResearchers(); });
+document.getElementById('navToggle').onclick = ()=>document.getElementById('navLinks').classList.toggle('open');
+
+loadAll();
+</script>
+</body>
+</html>
