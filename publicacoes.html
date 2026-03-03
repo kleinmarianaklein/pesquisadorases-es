@@ -128,15 +128,17 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allWorks = [], allResearchers = [], filtered = [];
 
-// ── Normalização: remove espaços extras, compara em uppercase para deduplicar ──
+// ── Normalização: trim + colapsa espaços; dedupeKey também remove acentos ──
+// Assim "Ciencias Sociais Aplicadas" e "Ciências Sociais Aplicadas" viram a mesma entrada
 function normalizeStr(str){ return String(str||'').trim().replace(/\s+/g,' '); }
+function dedupeKey(str){ return normalizeStr(str).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
 function uniqueNormalized(arr){
   const seen = new Map();
   arr.filter(Boolean).forEach(v => {
-    const key = normalizeStr(v).toUpperCase();
+    const key = dedupeKey(v);
     if (!seen.has(key)) seen.set(key, normalizeStr(v));
   });
-  return [...seen.values()];
+  return [...seen.values()].sort((a,b) => dedupeKey(a).localeCompare(dedupeKey(b)));
 }
 
 async function loadData(){
@@ -196,15 +198,15 @@ function populateFilters(){
 function applyFilters(){
   const q    = document.getElementById('searchInput').value.trim().toLowerCase();
   const ano  = document.getElementById('filterAno').value;
-  const area = normalizeStr(document.getElementById('filterArea').value).toUpperCase();
-  const inst = normalizeStr(document.getElementById('filterInst').value).toUpperCase();
-  const tipo = normalizeStr(document.getElementById('filterTipo').value).toUpperCase();
+  const area = document.getElementById('filterArea').value;
+  const inst = document.getElementById('filterInst').value;
+  const tipo = document.getElementById('filterTipo').value;
 
   filtered = allWorks.filter(w => {
-    if(ano  && String(w.ano) !== ano)      return false;
-    if(area && w._areaNorm !== area)       return false;
-    if(inst && w._instNorm !== inst)       return false;
-    if(tipo && w._tipoNorm !== tipo)       return false;
+    if(ano  && String(w.ano) !== ano)                      return false;
+    if(area && dedupeKey(w.area_conhecimento||'') !== dedupeKey(area)) return false;
+    if(inst && dedupeKey(w._inst||'')             !== dedupeKey(inst)) return false;
+    if(tipo && dedupeKey(w.tipo||'')              !== dedupeKey(tipo)) return false;
     if(q){
       const hay = [w.titulo, w._autor, w.resumo, w.tipo, w.area_conhecimento, w._inst,
                    ...(Array.isArray(w.tags) ? w.tags : [])].filter(Boolean).join(' ').toLowerCase();

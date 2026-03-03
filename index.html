@@ -331,7 +331,7 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
 <section id="blog-preview">
   <span class="section-eyebrow">Do blog</span>
   <h2 class="section-title">Últimas <em>publicações</em></h2>
-  <p class="section-desc">Mande o seu texto ou artigo: <a href="mailto:mulheres@kickgroup.com.br" style="color:var(--verde)">mulheres@kickgroup.com.br</a></p>
+  <p class="section-desc">Mande o seu texto ou artigo: <a href="/cdn-cgi/l/email-protection#b4d9c1d8dcd1c6d1c7f4dfddd7dfd3c6dbc1c49ad7dbd99ad6c6" style="color:var(--verde)"><span class="__cf_email__" data-cfemail="dfb2aab3b7baadbaac9fb4b6bcb4b8adb0aaaff1bcb0b2f1bdad">[email&#160;protected]</span></a></p>
   <div class="blog-grid" id="blogGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
   <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary">Ver todos os artigos</a></div>
 </section>
@@ -351,7 +351,7 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
     muted playsinline preload="auto" class="hidden"
   ></video>
 </div>
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 (function(){
   const v1=document.getElementById('vid1'),v2=document.getElementById('vid2');
   v1.addEventListener('ended',()=>{
@@ -455,15 +455,18 @@ let filtroArea = '', filtroInst = '', filtroTipo = '', busca = '';
 function initials(name){ return name.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join(''); }
 const bookEmojis = {"Ciências Biológicas":"🐠","Ciências Humanas":"📖","Engenharias":"🏗️","Ciências da Saúde":"🩺","Ciências Exatas e da Terra":"🔬","Linguística, Letras e Artes":"🎭"};
 
-// ── Normalização: remove espaços extras e compara em uppercase para deduplicar ──
-function normalizeStr(str){ return String(str).trim().replace(/\s+/g,' '); }
+// ── Normalização: trim + colapsa espaços; dedupeKey também remove acentos ──
+// Assim "Ciencias Sociais Aplicadas" e "Ciências Sociais Aplicadas" viram a mesma entrada
+function normalizeStr(str){ return String(str||'').trim().replace(/\s+/g,' '); }
+function dedupeKey(str){ return normalizeStr(str).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
 function uniqueNormalized(arr){
   const seen = new Map();
   arr.filter(Boolean).forEach(v => {
-    const key = normalizeStr(v).toUpperCase();
+    const key = dedupeKey(v);
+    // guarda a versão com acento (a primeira encontrada) para exibição
     if (!seen.has(key)) seen.set(key, normalizeStr(v));
   });
-  return [...seen.values()].sort();
+  return [...seen.values()].sort((a,b) => dedupeKey(a).localeCompare(dedupeKey(b)));
 }
 
 async function loadAll(){
@@ -533,8 +536,8 @@ function renderResearchers(){
       r.nome?.toLowerCase().includes(q) ||
       r.area_principal?.toLowerCase().includes(q) ||
       r.instituicao?.toLowerCase().includes(q);
-    const matchArea = !filtroArea || normalizeStr(r.area_principal||'').toUpperCase() === normalizeStr(filtroArea).toUpperCase();
-    const matchInst = !filtroInst || normalizeStr(r.instituicao||'').toUpperCase() === normalizeStr(filtroInst).toUpperCase();
+    const matchArea = !filtroArea || dedupeKey(r.area_principal||'') === dedupeKey(filtroArea);
+    const matchInst = !filtroInst || dedupeKey(r.instituicao||'') === dedupeKey(filtroInst);
     return matchBusca && matchArea && matchInst;
   });
   if(!list.length){ grid.innerHTML='<div class="empty">Nenhuma pesquisadora encontrada.</div>'; return; }
@@ -562,7 +565,7 @@ function renderResearchers(){
 // ── Obras: exibe apenas as 8 mais recentes na home ──
 function renderWorks(){
   const grid = document.getElementById('worksGrid');
-  let list = allWorks.filter(w => !filtroTipo || normalizeStr(w.tipo||'').toUpperCase() === normalizeStr(filtroTipo).toUpperCase());
+  let list = allWorks.filter(w => !filtroTipo || dedupeKey(w.tipo||'') === dedupeKey(filtroTipo));
   const preview = list.slice(0, 8);
   if(!preview.length){ grid.innerHTML='<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
   grid.innerHTML = preview.map(w => {
@@ -676,10 +679,4 @@ document.getElementById('modalOverlay').onclick = e => {
     document.body.style.overflow = '';
   }
 };
-document.getElementById('searchInput').addEventListener('input', function(){ busca = this.value; renderResearchers(); });
-document.getElementById('navToggle').onclick = () => document.getElementById('navLinks').classList.toggle('open');
-
-loadAll();
-</script>
-</body>
-</html>
+document.getElementB
