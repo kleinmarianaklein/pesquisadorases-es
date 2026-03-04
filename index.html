@@ -186,8 +186,8 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
 .book-btn:hover { opacity: 0.85; }
 
 /* SOBRE */
-#sobre { background: var(--areia-escura); display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; position: relative; overflow: hidden; }
-#sobre::after { content: ''; position: absolute; right: -40px; top: -40px; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(196,116,138,0.12) 0%, transparent 70%); pointer-events: none; }
+#sobre { background: var(--areia-escura); display: flex; flex-direction: column; gap: 3rem; position: relative; overflow: hidden; }
+  #sobre::after { content: ''; position: absolute; right: -40px; top: -40px; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(196,116,138,0.12) 0%, transparent 70%); pointer-events: none; }
 .sobre-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 3rem; }
 .sobre-stat { background: var(--branco); border-radius: 14px; padding: 1.25rem 1.5rem; border: 1px solid var(--cinza-claro); }
 .sobre-stat-num { font-family: 'DM Serif Display', serif; font-size: 2.5rem; color: var(--verde); line-height: 1; margin-bottom: 0.3rem; }
@@ -417,8 +417,8 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
   <div>
     <span class="section-eyebrow">O projeto</span>
     <h2 class="section-title">Por que <em>visibilidade</em> importa</h2>
-    <p class="section-desc" style="margin-bottom:1rem">O portal Pesquisadoras ES nasceu da necessidade de dar visibilidade às mulheres que produzem conhecimento científico no Espírito Santo.</p>
-    <p class="section-desc">Aqui você encontra perfis, publicações, pesquisas e formas de acessar e adquirir as obras dessas cientistas. O projeto foi desenvolvido pela área de P&D da KICk, com o propósito de tornar visíveis as mulheres que fazem ciência no Brasil.
+    <p class="section-desc" style="margin-bottom:1rem;max-width:100%">O portal Pesquisadoras ES nasceu da necessidade de dar visibilidade às mulheres que produzem conhecimento científico no Espírito Santo.</p>
+    <p class="section-desc" style="max-width:100%">Aqui você encontra perfis, publicações, pesquisas e formas de acessar e adquirir as obras dessas cientistas. O projeto foi desenvolvido pela área de P&D da KICk, com o propósito de tornar visíveis as mulheres que fazem ciência no Brasil.
 A iniciativa está alinhada à Agenda 2030 da ONU, comprometendo-se especialmente com o ODS 5 — Igualdade de Gênero, que preconiza a participação plena e efetiva das mulheres em todos os espaços de liderança e produção de conhecimento, com o ODS 4 — Educação de Qualidade, que valoriza o acesso equitativo ao saber e à produção científica, e com o ODS 10 — Redução das Desigualdades, ao combater as lacunas estruturais que ainda limitam a representatividade feminina na pesquisa acadêmica e tecnológica.
 Em sua fase piloto, o projeto mapeia e destaca as pesquisadoras do Espírito Santo, reunindo perfis, trajetórias e produções de mulheres capixabas que contribuem para o avanço do conhecimento — e que, muitas vezes, seguem invisíveis nos grandes radares da ciência nacional.
 A visão é expandir esse mapeamento para todo o Brasil, construindo uma plataforma de referência que celebre, conecte e amplifique a voz das pesquisadoras brasileiras.</p>
