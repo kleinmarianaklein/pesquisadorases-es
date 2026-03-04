@@ -216,21 +216,34 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
 .sobre-stat { background: var(--branco); border-radius: 14px; padding: 1.25rem 1.5rem; border: 1px solid var(--cinza-claro); }
 .sobre-stat-num { font-family: 'DM Serif Display', serif; font-size: 2.5rem; color: var(--verde); line-height: 1; margin-bottom: 0.3rem; }
 .sobre-stat-label { font-size: 0.68rem; color: var(--cinza); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-/* Box centralizado no final */
+.sobre-boxes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
 .sobre-manifesto {
   background: var(--branco);
   border-radius: 20px;
   padding: 2.5rem;
   border-left: 4px solid var(--rosa-vivo);
   box-shadow: 0 4px 24px rgba(74,46,74,0.08);
-  max-width: 680px;
-  width: 100%;
-  margin: 3rem auto 0;
-  align-self: center;
 }
-.manifesto-quote { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 1.4rem; line-height: 1.6; color: var(--roxo); margin-bottom: 1.5rem; }
+.sobre-kick {
+  background: var(--roxo);
+  border-radius: 20px;
+  padding: 2.5rem;
+  border-left: 4px solid var(--verde-vivo);
+  box-shadow: 0 4px 24px rgba(74,46,74,0.12);
+}
+.manifesto-quote { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 1.3rem; line-height: 1.6; color: var(--roxo); margin-bottom: 1.5rem; }
 .manifesto-text { font-size: 0.9rem; color: var(--cinza); line-height: 1.8; }
 .manifesto-text a { color: var(--verde); }
+.kick-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--verde-vivo); margin-bottom: 0.85rem; display: block; }
+.kick-title { font-family: 'DM Serif Display', serif; font-size: 1.3rem; line-height: 1.4; color: white; margin-bottom: 1.25rem; }
+.kick-title a { color: var(--rosa-vivo); text-decoration: none; border-bottom: 1px solid rgba(196,116,138,0.4); transition: border-color 0.2s; }
+.kick-title a:hover { border-color: var(--rosa-vivo); }
+.kick-text { font-size: 0.9rem; color: rgba(255,255,255,0.68); line-height: 1.8; }
 
 /* CTA */
 .inscricao-cta { background: var(--roxo-medio); color: white; text-align: center; padding: clamp(3rem,7vw,6rem) clamp(1.5rem,5vw,4rem); position: relative; overflow: hidden; }
@@ -291,9 +304,12 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
   .nav-links.open { display: flex; }
   .nav-toggle { display: flex; }
 }
+@media(max-width:760px){
+  .sobre-boxes { grid-template-columns: 1fr; }
+}
 @media(max-width:600px){
   .sobre-stats { grid-template-columns: 1fr 1fr; }
-  .sobre-manifesto { padding: 1.75rem; }
+  .sobre-manifesto, .sobre-kick { padding: 1.75rem; }
 }
 </style>
 </head>
@@ -370,7 +386,7 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
 <section id="blog-preview">
   <span class="section-eyebrow">Do blog</span>
   <h2 class="section-title">Últimas <em>publicações</em></h2>
-  <p class="section-desc">Mande o seu texto ou artigo: <a href="mailto:blog@pesquisadorasdoes.com.br" style="color:var(--verde)">blog@pesquisadorasdoes.com.br</a></p>
+  <p class="section-desc">Mande o seu texto ou artigo: <a href="/cdn-cgi/l/email-protection#b8dad4d7dff8c8ddcbc9cdd1cbd9dcd7cad9cbdcd7ddcb96dbd7d596daca" style="color:var(--verde)"><span class="__cf_email__" data-cfemail="086a64676f48786d7b797d617b696c677a697b6c676d7b266b6765266a7a">[email&#160;protected]</span></a></p>
   <div class="blog-grid" id="blogGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
   <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary">Ver todos os artigos</a></div>
 </section>
@@ -389,7 +405,7 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
     muted playsinline preload="auto" class="hidden"
   ></video>
 </div>
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 (function(){
   const v1=document.getElementById('vid1'),v2=document.getElementById('vid2');
   v1.addEventListener('ended',()=>{ v1.classList.add('hidden'); v2.classList.remove('hidden'); v2.play(); });
@@ -458,10 +474,16 @@ Em sua fase piloto, o projeto mapeia e destaca as pesquisadoras do Espírito San
 A visão é expandir esse mapeamento para todo o Brasil, construindo uma plataforma de referência que celebre, conecte e amplifique a voz das pesquisadoras brasileiras.</p>
   <div class="sobre-stats" id="sobreStats"></div>
 
-  <!-- Box da citação centralizado -->
-  <div class="sobre-manifesto">
-    <p class="manifesto-quote">"Quando uma mulher cientista é vista, cem outras encontram o caminho."</p>
-    <p class="manifesto-text">Este portal é um espaço vivo, colaborativo e em constante crescimento. Se você conhece pesquisadoras capixabas que deveriam estar aqui, <a href="inscricao.html">indique ou convide</a> para se inscrever.</p>
+  <div class="sobre-boxes">
+    <div class="sobre-manifesto">
+      <p class="manifesto-quote">"Quando uma mulher cientista é vista, cem outras encontram o caminho."</p>
+      <p class="manifesto-text">Este portal é um espaço vivo, colaborativo e em constante crescimento. Se você conhece pesquisadoras capixabas que deveriam estar aqui, <a href="inscricao.html">indique ou convide</a> para se inscrever.</p>
+    </div>
+    <div class="sobre-kick">
+      <span class="kick-label">Quem faz acontecer</span>
+      <p class="kick-title"><a href="https://www.kickgroup.com.br" target="_blank">KICk</a> — comunicação liderada por mulheres</p>
+      <p class="kick-text">A KICk é uma empresa liderada por mulheres que atua com comunicação há quase 15 anos, sendo seu grande forte a comunicação institucional e socioambiental. Também desenvolve pesquisas, relacionamento comunitário e relatórios de sustentabilidade.</p>
+    </div>
   </div>
 </section>
 
@@ -563,10 +585,4 @@ function openModal(id){
 }
 document.getElementById('modalClose').onclick=()=>{ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; };
 document.getElementById('modalOverlay').onclick=e=>{ if(e.target===e.currentTarget){ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; } };
-document.getElementById('searchInput').addEventListener('input',function(){ busca=this.value; renderResearchers(); });
-document.getElementById('navToggle').onclick = ()=>document.getElementById('navLinks').classList.toggle('open');
-
-loadAll();
-</script>
-</body>
-</html>
+documen
