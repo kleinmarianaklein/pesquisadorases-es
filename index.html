@@ -185,14 +185,49 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
 .book-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 0.73rem; font-weight: 700; margin-top: auto; padding: 0.5rem 1rem; border-radius: 100px; background: var(--rosa-vivo); color: white; text-decoration: none; transition: all 0.2s; cursor: pointer; font-family: 'Sora', sans-serif; border: none; }
 .book-btn:hover { opacity: 0.85; }
 
-/* SOBRE */
-#sobre { background: var(--areia-escura); display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; position: relative; overflow: hidden; }
-#sobre::after { content: ''; position: absolute; right: -40px; top: -40px; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(196,116,138,0.12) 0%, transparent 70%); pointer-events: none; }
-.sobre-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 3rem; }
+/* =============================================
+   SOBRE — layout full-width, texto estendido
+   ============================================= */
+#sobre {
+  background: var(--areia-escura);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  position: relative;
+  overflow: hidden;
+}
+#sobre::after {
+  content: ''; position: absolute; right: -40px; top: -40px;
+  width: 280px; height: 280px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(196,116,138,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+/* Texto ocupa 100% da largura */
+#sobre .section-desc {
+  max-width: 100%;
+}
+/* Stats em 4 colunas */
+.sobre-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-top: 3rem;
+}
 .sobre-stat { background: var(--branco); border-radius: 14px; padding: 1.25rem 1.5rem; border: 1px solid var(--cinza-claro); }
 .sobre-stat-num { font-family: 'DM Serif Display', serif; font-size: 2.5rem; color: var(--verde); line-height: 1; margin-bottom: 0.3rem; }
 .sobre-stat-label { font-size: 0.68rem; color: var(--cinza); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-.sobre-manifesto { background: var(--branco); border-radius: 20px; padding: 2.5rem; border-left: 4px solid var(--rosa-vivo); box-shadow: 0 4px 24px rgba(74,46,74,0.08); }
+/* Box centralizado no final */
+.sobre-manifesto {
+  background: var(--branco);
+  border-radius: 20px;
+  padding: 2.5rem;
+  border-left: 4px solid var(--rosa-vivo);
+  box-shadow: 0 4px 24px rgba(74,46,74,0.08);
+  max-width: 680px;
+  width: 100%;
+  margin: 3rem auto 0;
+  align-self: center;
+}
 .manifesto-quote { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 1.4rem; line-height: 1.6; color: var(--roxo); margin-bottom: 1.5rem; }
 .manifesto-text { font-size: 0.9rem; color: var(--cinza); line-height: 1.8; }
 .manifesto-text a { color: var(--verde); }
@@ -251,10 +286,14 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
   .hero h1 { font-size: clamp(2.8rem,10vw,5rem); }
   .numero-item { padding: 0.5rem 1rem; }
   .numero-num { font-size: clamp(2.2rem,7vw,3.5rem); }
-  #sobre { grid-template-columns: 1fr; gap: 3rem; }
+  .sobre-stats { grid-template-columns: 1fr 1fr; }
   .nav-links { display:none;flex-direction:column;position:fixed;top:68px;left:0;right:0;background:var(--roxo);padding:2rem;border-bottom:1px solid rgba(255,255,255,0.08);gap:1.5rem;z-index:99; }
   .nav-links.open { display: flex; }
   .nav-toggle { display: flex; }
+}
+@media(max-width:600px){
+  .sobre-stats { grid-template-columns: 1fr 1fr; }
+  .sobre-manifesto { padding: 1.75rem; }
 }
 </style>
 </head>
@@ -331,12 +370,11 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
 <section id="blog-preview">
   <span class="section-eyebrow">Do blog</span>
   <h2 class="section-title">Últimas <em>publicações</em></h2>
-  <p class="section-desc">Mande o seu texto ou artigo: <a href="/cdn-cgi/l/email-protection#d1bca4bdb9b4a3b4a291bab8b2bab6a3bea4a1ffb2bebcffb3a3" style="color:var(--verde)"><span class="__cf_email__" data-cfemail="2e435b42464b5c4b5d6e45474d45495c415b5e004d4143004c5c">[email&#160;protected]</span></a></p>
+  <p class="section-desc">Mande o seu texto ou artigo: <a href="mailto:blog@pesquisadorasdoes.com.br" style="color:var(--verde)">blog@pesquisadorasdoes.com.br</a></p>
   <div class="blog-grid" id="blogGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
   <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary">Ver todos os artigos</a></div>
 </section>
 
-<!-- VIDEO WIDE BANNER -->
 <div class="video-wide-banner">
   <video id="vid1"
     src="https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/Background/Inicial.mp4"
@@ -351,15 +389,11 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
     muted playsinline preload="auto" class="hidden"
   ></video>
 </div>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 (function(){
   const v1=document.getElementById('vid1'),v2=document.getElementById('vid2');
-  v1.addEventListener('ended',()=>{
-    v1.classList.add('hidden'); v2.classList.remove('hidden'); v2.play();
-  });
-  v2.addEventListener('ended',()=>{
-    v2.classList.add('hidden'); v1.classList.remove('hidden'); v1.currentTime=0; v1.play();
-  });
+  v1.addEventListener('ended',()=>{ v1.classList.add('hidden'); v2.classList.remove('hidden'); v2.play(); });
+  v2.addEventListener('ended',()=>{ v2.classList.add('hidden'); v1.classList.remove('hidden'); v1.currentTime=0; v1.play(); });
 })();
 </script>
 
@@ -413,17 +447,18 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
   <a href="inscricao.html" class="btn-primary btn-light">Fazer minha inscrição</a>
 </div>
 
+<!-- SEÇÃO SOBRE: texto full-width + box centralizado abaixo -->
 <section id="sobre">
-  <div>
-    <span class="section-eyebrow">O projeto</span>
-    <h2 class="section-title">Por que <em>visibilidade</em> importa</h2>
-    <p class="section-desc" style="margin-bottom:1rem">O portal Pesquisadoras ES nasceu da necessidade de dar visibilidade às mulheres que produzem conhecimento científico no Espírito Santo.</p>
-    <p class="section-desc">Aqui você encontra perfis, publicações, pesquisas e formas de acessar e adquirir as obras dessas cientistas. O projeto foi desenvolvido pela área de P&D da KICk, com o propósito de tornar visíveis as mulheres que fazem ciência no Brasil.
+  <span class="section-eyebrow">O projeto</span>
+  <h2 class="section-title">Por que <em>visibilidade</em> importa</h2>
+  <p class="section-desc" style="margin-bottom:1rem">O portal Pesquisadoras ES nasceu da necessidade de dar visibilidade às mulheres que produzem conhecimento científico no Espírito Santo.</p>
+  <p class="section-desc">Aqui você encontra perfis, publicações, pesquisas e formas de acessar e adquirir as obras dessas cientistas. O projeto foi desenvolvido pela área de P&amp;D da KICk, com o propósito de tornar visíveis as mulheres que fazem ciência no Brasil.
 A iniciativa está alinhada à Agenda 2030 da ONU, comprometendo-se especialmente com o ODS 5 — Igualdade de Gênero, que preconiza a participação plena e efetiva das mulheres em todos os espaços de liderança e produção de conhecimento, com o ODS 4 — Educação de Qualidade, que valoriza o acesso equitativo ao saber e à produção científica, e com o ODS 10 — Redução das Desigualdades, ao combater as lacunas estruturais que ainda limitam a representatividade feminina na pesquisa acadêmica e tecnológica.
 Em sua fase piloto, o projeto mapeia e destaca as pesquisadoras do Espírito Santo, reunindo perfis, trajetórias e produções de mulheres capixabas que contribuem para o avanço do conhecimento — e que, muitas vezes, seguem invisíveis nos grandes radares da ciência nacional.
 A visão é expandir esse mapeamento para todo o Brasil, construindo uma plataforma de referência que celebre, conecte e amplifique a voz das pesquisadoras brasileiras.</p>
-    <div class="sobre-stats" id="sobreStats"></div>
-  </div>
+  <div class="sobre-stats" id="sobreStats"></div>
+
+  <!-- Box da citação centralizado -->
   <div class="sobre-manifesto">
     <p class="manifesto-quote">"Quando uma mulher cientista é vista, cem outras encontram o caminho."</p>
     <p class="manifesto-text">Este portal é um espaço vivo, colaborativo e em constante crescimento. Se você conhece pesquisadoras capixabas que deveriam estar aqui, <a href="inscricao.html">indique ou convide</a> para se inscrever.</p>
@@ -434,7 +469,7 @@ A visão é expandir esse mapeamento para todo o Brasil, construindo uma platafo
   <a href="index.html" class="footer-brand">Pesquisadoras<span>ES</span></a>
   <p>Dando visibilidade à ciência feita por mulheres no Espírito Santo.</p>
   <p>
-    <a href="sustentabilidade-privacidade.html">Sustentabilidade & Privacidade</a> ·
+    <a href="sustentabilidade-privacidade.html">Sustentabilidade &amp; Privacidade</a> ·
     <a href="admin/login.html">Área administrativa</a>
   </p>
 </footer>
@@ -447,7 +482,7 @@ A visão é expandir esse mapeamento para todo o Brasil, construindo uma platafo
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allResearchers = [], allWorks = [];
@@ -460,7 +495,6 @@ async function loadAll(){
     const [resRes, worksRes, postsRes] = await Promise.all([
       db.from('researchers').select('*').eq('status','aprovada').order('destaque',{ascending:false}),
       db.from('works').select('*, researchers!inner(status)').eq('researchers.status','aprovada').order('ano',{ascending:false}),
-      // ── CORREÇÃO: filtrar apenas posts da seção "blog" (ou sem seção definida) ──
       db.from('blog_posts').select('*').eq('publicado',true).or('secao.eq.blog,secao.is.null').order('created_at',{ascending:false}).limit(3)
     ]);
     allResearchers = resRes.data || []; allWorks = worksRes.data || [];
@@ -504,12 +538,8 @@ function renderBooks(){
   if(!books.length){ grid.innerHTML='<div class="empty" style="color:rgba(255,255,255,.45)">Nenhum livro à venda no momento.</div>'; return; }
   grid.innerHTML=books.map(b=>{
     const author=allResearchers.find(r=>r.id===b.researcher_id)?.nome||'—';
-    const fotoUrl=b.foto_publicacao
-      ? `https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/work-photos/${b.foto_publicacao}`
-      : null;
-    const coverHtml=fotoUrl
-      ? `<div class="book-cover"><img src="${fotoUrl}" alt="${b.titulo}" loading="lazy"></div>`
-      : `<div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div>`;
+    const fotoUrl=b.foto_publicacao ? `https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/work-photos/${b.foto_publicacao}` : null;
+    const coverHtml=fotoUrl ? `<div class="book-cover"><img src="${fotoUrl}" alt="${b.titulo}" loading="lazy"></div>` : `<div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div>`;
     return `<div class="book-card">${coverHtml}<div class="book-title">${b.titulo}</div><div class="book-author">${author}</div><a class="book-btn" href="${b.link_compra}" target="_blank">🛒 Adquirir</a></div>`;
   }).join('');
 }
