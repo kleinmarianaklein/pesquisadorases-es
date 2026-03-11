@@ -1,355 +1,666 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inscrição — Pesquisadoras ES</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inscrição — Pesquisadoras do ES</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <style>
 :root {
-  --verde:#3A6B4A;--verde-vivo:#52A86B;--verde-escuro:#2A4D35;
-  --areia:#F5EFE6;--areia-escura:#EDE3D5;
-  --rosa:#E8C4C4;--rosa-vivo:#C4748A;
-  --roxo:#4A2E4A;--roxo-medio:#6B4068;
-  --branco:#FFFAF6;--cinza:#7A6B6B;--cinza-claro:#DDD0C8;--preto:#1E1218;
+  --verde:        #3A6B4A;
+  --verde-vivo:   #52A86B;
+  --verde-escuro: #2A4D35;
+  --areia:        #F5EFE6;
+  --areia-escura: #EDE3D5;
+  --rosa:         #E8C4C4;
+  --rosa-vivo:    #C4748A;
+  --roxo:         #4A2E4A;
+  --roxo-medio:   #6B4068;
+  --branco:       #FFFAF6;
+  --cinza:        #7A6B6B;
+  --cinza-claro:  #DDD0C8;
+  --preto:        #1E1218;
+  --erro:         #C0392B;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Sora',sans-serif;background:var(--areia);color:var(--preto);line-height:1.6;}
-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1.5rem,5vw,4rem);height:68px;background:rgba(74,46,74,0.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.08);}
-.nav-logo{font-family:'Sora',sans-serif;font-weight:800;font-size:1rem;color:var(--branco);text-decoration:none;letter-spacing:-0.02em;}
-.nav-logo span{color:var(--rosa-vivo);}
-.nav-links{display:flex;gap:2rem;list-style:none;align-items:center;}
-.nav-links a{font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.5);text-decoration:none;transition:color 0.2s;}
-.nav-links a:hover{color:var(--branco);}
-.nav-btn{background:var(--rosa-vivo)!important;color:white!important;font-weight:700!important;padding:0.45rem 1.2rem;border-radius:100px;transition:all 0.2s!important;}
-.nav-toggle{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:5px;}
-.nav-toggle span{display:block;width:22px;height:2px;background:white;}
-.hero-form{background:var(--roxo);color:white;padding:clamp(5rem,8vw,7rem) clamp(1.5rem,5vw,4rem) clamp(3rem,5vw,4rem);text-align:center;position:relative;overflow:hidden;}
-.hero-form::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='20' cy='20' r='7' stroke='%23C4748A' stroke-width='1.5' fill='none' opacity='0.2'/%3E%3Cline x1='20' y1='27' x2='20' y2='33' stroke='%23C4748A' stroke-width='1.5' opacity='0.2'/%3E%3Cline x1='16' y1='30' x2='24' y2='30' stroke='%23C4748A' stroke-width='1.5' opacity='0.2'/%3E%3C/svg%3E");background-size:80px 80px;opacity:0.5;pointer-events:none;}
-.hero-form-tag{font-size:0.7rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--rosa-vivo);margin-bottom:1rem;display:block;position:relative;}
-.hero-form h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:400;margin-bottom:1rem;position:relative;}
-.hero-form p{font-size:0.95rem;color:rgba(255,255,255,0.65);max-width:500px;margin:0 auto;position:relative;}
-.form-wrapper{max-width:760px;margin:0 auto;padding:clamp(2rem,5vw,4rem) clamp(1.5rem,5vw,2rem);}
-.step-indicator{display:flex;margin-bottom:2.5rem;border-radius:12px;overflow:hidden;border:1.5px solid var(--cinza-claro);}
-.step{flex:1;padding:0.75rem;text-align:center;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.2s;color:var(--cinza);background:white;letter-spacing:0.04em;text-transform:uppercase;}
-.step.active{background:var(--roxo);color:white;}
-.step.done{background:rgba(74,46,74,0.08);color:var(--roxo);}
-.form-section{display:none;}
-.form-section.active{display:block;}
-.section-header{margin-bottom:2rem;}
-.section-header h2{font-family:'DM Serif Display',serif;font-size:1.6rem;font-weight:400;margin-bottom:0.4rem;}
-.section-header p{font-size:0.85rem;color:var(--cinza);}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
-.form-grid.single{grid-template-columns:1fr;}
-.form-group{display:flex;flex-direction:column;gap:0.4rem;}
-.form-group.full{grid-column:1/-1;}
-label{font-size:0.8rem;font-weight:600;color:var(--preto);}
-label .req{color:var(--rosa-vivo);}
-input,select,textarea{font-family:'Sora',sans-serif;font-size:0.9rem;color:var(--preto);padding:0.75rem 1rem;border:1.5px solid var(--cinza-claro);border-radius:10px;background:var(--branco);outline:none;transition:border 0.2s;width:100%;}
-input:focus,select:focus,textarea:focus{border-color:var(--rosa-vivo);}
-textarea{resize:vertical;min-height:120px;}
-.hint{font-size:0.72rem;color:var(--cinza);}
-.obra-item{background:var(--branco);border-radius:14px;padding:1.25rem;border:1.5px solid var(--cinza-claro);margin-bottom:1rem;position:relative;}
-.obra-remove{position:absolute;top:0.75rem;right:0.75rem;background:none;border:none;color:var(--cinza);cursor:pointer;font-size:1.1rem;}
-.obra-remove:hover{color:#e53e3e;}
-.btn-add-obra{width:100%;padding:0.75rem;border:1.5px dashed var(--cinza-claro);border-radius:10px;background:transparent;color:var(--cinza);font-family:'Sora',sans-serif;font-size:0.85rem;cursor:pointer;transition:all 0.2s;margin-top:0.5rem;}
-.btn-add-obra:hover{border-color:var(--rosa-vivo);color:var(--rosa-vivo);}
-.form-nav{display:flex;justify-content:space-between;align-items:center;margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--cinza-claro);gap:1rem;flex-wrap:wrap;}
-.btn-primary{display:inline-flex;align-items:center;gap:0.5rem;background:var(--rosa-vivo);color:white;font-family:'Sora',sans-serif;font-size:0.85rem;font-weight:700;padding:0.85rem 2rem;border-radius:100px;text-decoration:none;border:none;cursor:pointer;transition:all 0.25s;}
-.btn-primary:hover{opacity:0.88;}
-.btn-ghost{background:transparent;color:var(--cinza);border:1.5px solid var(--cinza-claro);font-size:0.85rem;font-weight:600;padding:0.85rem 2rem;border-radius:100px;cursor:pointer;font-family:'Sora',sans-serif;transition:all 0.2s;}
-.btn-ghost:hover{border-color:var(--roxo);color:var(--roxo);}
-.success-state{text-align:center;padding:4rem 2rem;display:none;}
-.success-icon{font-size:4rem;margin-bottom:1.5rem;}
-.success-state h2{font-family:'DM Serif Display',serif;font-size:2rem;font-weight:400;margin-bottom:1rem;}
-.success-state p{color:var(--cinza);font-size:1rem;max-width:420px;margin:0 auto 2rem;}
-.error-msg{background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:0.75rem 1rem;font-size:0.82rem;color:#b91c1c;margin-top:0.5rem;display:none;}
-.foto-upload-area{display:flex;gap:2rem;align-items:flex-start;flex-wrap:wrap;}
-.foto-preview{width:120px;height:120px;border-radius:12px;background:var(--areia-escura);border:2px dashed var(--cinza-claro);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;transition:border 0.2s;position:relative;flex-shrink:0;}
-.foto-preview:hover{border-color:var(--rosa-vivo);}
-.foto-preview img{width:100%;height:100%;object-fit:cover;display:none;}
-.foto-placeholder{display:flex;flex-direction:column;align-items:center;gap:0.4rem;color:var(--cinza);font-size:0.72rem;text-align:center;padding:0.5rem;}
-.foto-placeholder span{font-size:2rem;}
-.foto-remove{display:none;position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.5);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:0.7rem;align-items:center;justify-content:center;}
-.foto-upload-info{flex:1;min-width:200px;}
-.foto-upload-info h4{font-size:0.88rem;font-weight:700;margin-bottom:0.4rem;}
-.foto-upload-info p{font-size:0.78rem;color:var(--cinza);line-height:1.6;margin-bottom:0.75rem;}
-.btn-escolher-foto{display:inline-flex;align-items:center;gap:0.5rem;font-size:0.8rem;font-weight:600;padding:0.55rem 1.1rem;border-radius:100px;border:1.5px solid var(--rosa-vivo);color:var(--rosa-vivo);background:transparent;cursor:pointer;font-family:'Sora',sans-serif;transition:all 0.2s;}
-.btn-escolher-foto:hover{background:rgba(196,116,138,0.06);}
-.crop-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;padding:1.5rem;}
-.crop-modal.open{display:flex;}
-.crop-box{background:white;border-radius:20px;padding:2rem;max-width:480px;width:100%;}
-.crop-box h3{font-family:'DM Serif Display',serif;font-size:1.2rem;font-weight:400;margin-bottom:1rem;}
-.crop-canvas-wrap{width:100%;aspect-ratio:1;background:#111;border-radius:12px;overflow:hidden;position:relative;cursor:crosshair;touch-action:none;}
-canvas#cropCanvas{width:100%;height:100%;display:block;}
-.crop-actions{display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;gap:1rem;flex-wrap:wrap;}
-.crop-hint{font-size:0.75rem;color:var(--cinza);}
-footer{background:var(--roxo);color:rgba(255,255,255,0.4);padding:3rem clamp(1.5rem,5vw,4rem);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;border-top:1px solid rgba(255,255,255,0.06);}
-.footer-brand{font-family:'Sora',sans-serif;font-weight:800;font-size:1rem;color:white;text-decoration:none;}
-.footer-brand span{color:var(--rosa-vivo);}
-footer p{font-size:0.78rem;}
-footer a{color:var(--rosa-vivo);text-decoration:none;}
-@media(max-width:768px){
-  .nav-links{display:none;flex-direction:column;position:fixed;top:68px;left:0;right:0;background:var(--roxo);padding:2rem;border-bottom:1px solid rgba(255,255,255,0.08);gap:1.5rem;z-index:99;}
-  .nav-links.open{display:flex;}
-  .nav-toggle{display:flex;}
-  .form-grid{grid-template-columns:1fr;}
-  .foto-upload-area{flex-direction:column;}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Sora', sans-serif; background: var(--areia); color: var(--preto); min-height: 100vh; }
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 clamp(1.5rem,5vw,4rem); height: 68px;
+  background: rgba(74,46,74,0.96); backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.nav-logo { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1rem; color: var(--branco); text-decoration: none; letter-spacing: -0.02em; }
+.nav-logo span { color: var(--rosa-vivo); }
+.nav-back { font-size: 0.78rem; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+.nav-back:hover { color: white; }
+
+.page-wrap { max-width: 720px; margin: 0 auto; padding: 100px 1.5rem 4rem; }
+
+/* PROGRESS */
+.progress-bar { display: flex; gap: 0; margin-bottom: 2.5rem; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--cinza-claro); }
+.progress-step { flex: 1; padding: 0.7rem 0.5rem; text-align: center; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cinza); background: white; border-right: 1px solid var(--cinza-claro); transition: all 0.3s; }
+.progress-step:last-child { border-right: none; }
+.progress-step.active { background: var(--roxo); color: white; }
+.progress-step.done { background: rgba(58,107,74,0.08); color: var(--verde); }
+.step-num { display: block; font-family: 'DM Serif Display', serif; font-size: 0.95rem; margin-bottom: 0.1rem; }
+
+/* CARD */
+.card { background: white; border-radius: 20px; padding: 2rem 2rem; border: 1.5px solid var(--cinza-claro); margin-bottom: 1.5rem; }
+.card h2 { font-family: 'DM Serif Display', serif; font-size: 1.35rem; font-weight: 400; margin-bottom: 0.5rem; }
+.card .sub { font-size: 0.83rem; color: var(--cinza); line-height: 1.7; margin-bottom: 1.75rem; }
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+.field { display: flex; flex-direction: column; gap: 0.4rem; }
+.field.full { grid-column: 1 / -1; }
+label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cinza); }
+label .req { color: var(--rosa-vivo); margin-left: 2px; }
+input[type=text], input[type=email], input[type=url], input[type=number], textarea, select {
+  font-family: 'Sora', sans-serif; font-size: 0.88rem;
+  padding: 0.75rem 1rem; border: 1.5px solid var(--cinza-claro);
+  border-radius: 10px; background: var(--areia); color: var(--preto);
+  outline: none; transition: border 0.2s; width: 100%;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--roxo); background: white; }
+input.erro, textarea.erro, select.erro { border-color: var(--erro); }
+textarea { resize: vertical; min-height: 110px; }
+.char-count { font-size: 0.68rem; color: var(--cinza); text-align: right; margin-top: -0.2rem; }
+.err-msg { font-size: 0.73rem; color: var(--erro); margin-top: 0.25rem; display: none; }
+.err-msg.show { display: block; }
+
+/* OBRAS */
+.obras-wrap { margin-top: 1rem; }
+.obra-item { background: var(--areia); border-radius: 12px; padding: 1.25rem; border: 1.5px solid var(--cinza-claro); margin-bottom: 0.75rem; position: relative; }
+.obra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.obra-grid .full { grid-column: 1/-1; }
+.obra-remove { position: absolute; top: 0.75rem; right: 0.75rem; background: none; border: none; cursor: pointer; color: var(--cinza); font-size: 1rem; line-height: 1; padding: 0.2rem; }
+.obra-remove:hover { color: var(--erro); }
+.btn-add-obra { width: 100%; padding: 0.7rem; background: transparent; border: 1.5px dashed var(--cinza-claro); border-radius: 10px; font-family: 'Sora', sans-serif; font-size: 0.82rem; color: var(--cinza); cursor: pointer; transition: all 0.2s; margin-top: 0.25rem; }
+.btn-add-obra:hover { border-color: var(--verde); color: var(--verde); }
+
+/* CHECKBOX CONSENT */
+.consent-box { background: var(--areia); border-radius: 14px; padding: 1.5rem; border: 1.5px solid var(--cinza-claro); margin-top: 1.5rem; }
+.consent-text { font-size: 0.83rem; color: var(--cinza); line-height: 1.75; max-height: 300px; overflow-y: auto; margin-bottom: 1.25rem; padding-right: 0.5rem; }
+.consent-text h3 { font-size: 0.88rem; font-weight: 700; color: var(--preto); margin: 1rem 0 0.4rem; }
+.consent-text h3:first-child { margin-top: 0; }
+.consent-text ul { padding-left: 1.25rem; margin-top: 0.3rem; }
+.consent-text li { margin-bottom: 0.3rem; }
+.consent-check { display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; }
+.consent-check input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; accent-color: var(--verde); cursor: pointer; }
+.consent-check span { font-size: 0.83rem; color: var(--preto); line-height: 1.5; font-weight: 600; }
+
+/* REVIEW */
+.review-section { margin-bottom: 1.5rem; }
+.review-section h3 { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--cinza); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--cinza-claro); }
+.review-row { display: flex; gap: 0.5rem; margin-bottom: 0.4rem; font-size: 0.85rem; }
+.review-label { color: var(--cinza); min-width: 110px; font-size: 0.78rem; flex-shrink: 0; }
+.review-val { color: var(--preto); word-break: break-word; }
+.review-obra { background: var(--areia); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-left: 3px solid var(--rosa-vivo); }
+.review-obra-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.2rem; }
+.review-obra-meta { font-size: 0.75rem; color: var(--cinza); }
+
+/* BOTÕES */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: 'Sora', sans-serif; font-size: 0.88rem; font-weight: 700; padding: 0.85rem 2rem; border-radius: 100px; border: none; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+.btn-primary { background: var(--roxo); color: white; }
+.btn-primary:hover:not(:disabled) { background: #3a2038; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-success { background: var(--verde); color: white; }
+.btn-success:hover:not(:disabled) { background: var(--verde-escuro); }
+.btn-success:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-outline { background: transparent; color: var(--cinza); border: 1.5px solid var(--cinza-claro); }
+.btn-outline:hover { border-color: var(--roxo); color: var(--roxo); }
+.btn-full { width: 100%; }
+.nav-btns { display: flex; gap: 0.75rem; justify-content: space-between; flex-wrap: wrap; }
+.nav-btns .btn { flex: 1; min-width: 120px; }
+
+/* SEÇÕES */
+.form-section { display: none; }
+.form-section.active { display: block; animation: fadeIn 0.35s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+/* SUCESSO */
+.success-card { background: white; border-radius: 20px; padding: 3rem 2rem; text-align: center; border: 1.5px solid var(--cinza-claro); }
+.success-icon { font-size: 4rem; margin-bottom: 1rem; }
+.success-card h2 { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--verde); margin-bottom: 0.75rem; }
+.success-card p { font-size: 0.93rem; color: var(--cinza); line-height: 1.8; max-width: 440px; margin: 0 auto 2rem; }
+
+/* SPINNER */
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* LGPD TEXT */
+.lgpd-text { font-size: 0.83rem; color: var(--cinza); line-height: 1.75; max-height: 380px; overflow-y: auto; margin-bottom: 1.25rem; padding-right: 0.5rem; }
+.lgpd-text h3 { font-size: 0.88rem; font-weight: 700; color: var(--preto); margin: 1.1rem 0 0.35rem; }
+.lgpd-text h3:first-child { margin-top: 0; }
+.lgpd-text ul { padding-left: 1.25rem; margin-top: 0.25rem; }
+.lgpd-text li { margin-bottom: 0.25rem; }
+.lgpd-text p { margin-bottom: 0.5rem; }
+
+@media(max-width:600px){
+  .form-grid, .obra-grid { grid-template-columns: 1fr; }
+  .field.full, .obra-grid .full { grid-column: 1; }
+  .progress-step { font-size: 0.52rem; padding: 0.55rem 0.2rem; }
 }
 </style>
 </head>
 <body>
+
 <nav>
   <a href="index.html" class="nav-logo">Pesquisadoras<span>ES</span></a>
-  <ul class="nav-links" id="navLinks">
-    <li><a href="index.html#pesquisadoras">Pesquisadoras</a></li>
-    <li><a href="publicacoes.html">Publicações</a></li>
-    <li><a href="index.html#livros">Livros</a></li>
-    <li><a href="blog.html">Blog</a></li>
-    <li><a href="index.html#sobre">Sobre</a></li>
-    <li><a href="sustentabilidade-privacidade.html">Sustentabilidade</a></li>
-    <li><a href="inscricao.html" class="nav-btn">Inscreva-se</a></li>
-  </ul>
-  <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+  <a href="index.html" class="nav-back">← Voltar ao site</a>
 </nav>
 
-<div class="hero-form">
-  <span class="hero-form-tag">Faça parte do portal</span>
-  <h1>Inscrição de Pesquisadora</h1>
-  <p>Preencha seus dados e suas publicações. Sua inscrição passará por aprovação e em breve seu perfil estará visível.</p>
-</div>
+<div class="page-wrap">
 
-<div class="form-wrapper">
-  <div class="step-indicator">
-    <div class="step active" id="step1">1 · Dados</div>
-    <div class="step" id="step2">2 · Links</div>
-    <div class="step" id="step3">3 · Publicações</div>
-    <div class="step" id="step4">4 · Revisão</div>
+  <!-- BARRA DE PROGRESSO (6 etapas) -->
+  <div class="progress-bar">
+    <div class="progress-step active" id="step0"><span class="step-num">1</span>Consentimento</div>
+    <div class="progress-step"        id="step1"><span class="step-num">2</span>Seus dados</div>
+    <div class="progress-step"        id="step2"><span class="step-num">3</span>Área & links</div>
+    <div class="progress-step"        id="step3"><span class="step-num">4</span>Obras</div>
+    <div class="progress-step"        id="step4"><span class="step-num">5</span>Revisão</div>
+    <div class="progress-step"        id="step5"><span class="step-num">6</span>Privacidade</div>
   </div>
 
-  <!-- ETAPA 1 -->
-  <div class="form-section active" id="section1">
-    <div class="section-header"><h2>Dados pessoais</h2><p>Informações que aparecerão no seu perfil público.</p></div>
-    <div class="form-grid">
-      <div class="form-group full"><label>Nome completo <span class="req">*</span></label><input type="text" id="nome" placeholder="Ex: Dra. Maria da Silva Santos"></div>
-      <div class="form-group full"><label>Mini bio <span class="req">*</span></label><textarea id="mini_bio" placeholder="Apresentação breve da sua trajetória acadêmica (até 300 caracteres)…" maxlength="300"></textarea><span class="hint" id="bioCount">0/300 caracteres</span></div>
-      <div class="form-group"><label>E-mail <span class="req">*</span></label><input type="email" id="email" placeholder="seu.email@..."></div>
-      <div class="form-group">
-        <label>Área principal <span class="req">*</span></label>
-        <select id="area_principal"><option value="">Selecione…</option><option>Ciências Exatas e da Terra</option><option>Ciências Biológicas</option><option>Engenharias</option><option>Ciências da Saúde</option><option>Ciências Agrárias</option><option>Ciências Sociais Aplicadas</option><option>Ciências Humanas</option><option>Linguística, Letras e Artes</option><option>Multidisciplinar</option></select>
-      </div>
-      <div class="form-group">
-        <label>Instituição <span class="req">*</span></label>
-        <select id="instituicao"><option value="">Selecione…</option><option>UFES - Universidade Federal do Espírito Santo</option><option>IFES - Instituto Federal do Espírito Santo</option><option>UVV - Universidade Vila Velha</option><option>FUCAPE</option><option>EMESCAM</option><option>FDV - Faculdade de Direito de Vitória</option><option>MULTIVIX</option><option>FAESA</option><option>Outra</option></select>
-      </div>
-      <div class="form-group">
-        <label>Cidade (ES) <span class="req">*</span></label>
-        <select id="estado"><option value="">Selecione…</option><option>Afonso Cláudio</option><option>Água Doce do Norte</option><option>Águia Branca</option><option>Alegre</option><option>Alfredo Chaves</option><option>Alto Rio Novo</option><option>Anchieta</option><option>Apiacá</option><option>Aracruz</option><option>Atílio Vivácqua</option><option>Baixo Guandu</option><option>Barra de São Francisco</option><option>Boa Esperança</option><option>Bom Jesus do Norte</option><option>Brejetuba</option><option>Cachoeiro de Itapemirim</option><option>Cariacica</option><option>Castelo</option><option>Colatina</option><option>Conceição da Barra</option><option>Conceição do Castelo</option><option>Divino de São Lourenço</option><option>Domingos Martins</option><option>Dores do Rio Preto</option><option>Ecoporanga</option><option>Fundão</option><option>Governador Lindenberg</option><option>Guaçuí</option><option>Guarapari</option><option>Ibatiba</option><option>Ibiraçu</option><option>Ibitirama</option><option>Iconha</option><option>Irupi</option><option>Itaguaçu</option><option>Itapemirim</option><option>Itarana</option><option>Iúna</option><option>Jaguaré</option><option>Jerônimo Monteiro</option><option>João Neiva</option><option>Laranja da Terra</option><option>Linhares</option><option>Mantenópolis</option><option>Marataízes</option><option>Marechal Floriano</option><option>Marilândia</option><option>Mimoso do Sul</option><option>Montanha</option><option>Mucurici</option><option>Muniz Freire</option><option>Muqui</option><option>Nova Venécia</option><option>Pancas</option><option>Pedro Canário</option><option>Pinheiros</option><option>Piúma</option><option>Ponto Belo</option><option>Presidente Kennedy</option><option>Rio Bananal</option><option>Rio Novo do Sul</option><option>Santa Leopoldina</option><option>Santa Maria de Jetibá</option><option>Santa Teresa</option><option>São Domingos do Norte</option><option>São Gabriel da Palha</option><option>São José do Calçado</option><option>São Mateus</option><option>São Roque do Canaã</option><option>Serra</option><option>Sooretama</option><option>Vargem Alta</option><option>Venda Nova do Imigrante</option><option>Viana</option><option>Vila Pavão</option><option>Vila Valério</option><option>Vila Velha</option><option>Vitória</option></select>
+  <!-- ══════ ETAPA 0 — TERMO DE CONSENTIMENTO ══════ -->
+  <div class="form-section active" id="section0">
+    <div class="card">
+      <h2>🔒 Termo de Consentimento para Tratamento de Dados Pessoais</h2>
+      <p class="sub">Antes de preencher o formulário de inscrição, leia e aceite os termos abaixo.</p>
+
+      <div class="consent-box">
+        <div class="consent-text">
+          <h3>1. Quem somos</h3>
+          <p>O portal <strong>Pesquisadoras do ES</strong> é uma iniciativa de Pesquisa & Desenvolvimento da <strong>KICk</strong> (kickgroup.com.br), com sede em Vitória/ES. Este portal tem como finalidade dar visibilidade à produção científica de mulheres pesquisadoras do Espírito Santo.</p>
+
+          <h3>2. Dados coletados</h3>
+          <p>Ao se inscrever, coletamos os seguintes dados pessoais:</p>
+          <ul>
+            <li>Nome completo e título acadêmico</li>
+            <li>Endereço de e-mail</li>
+            <li>Informações profissionais: área de atuação, instituição e cidade</li>
+            <li>Mini biografia (até 280 caracteres)</li>
+            <li>Links públicos: Lattes, ORCID, LinkedIn, Google Scholar, ResearchGate, site pessoal</li>
+            <li>Dados de publicações: título, tipo, ano, resumo, tags e links de acesso/compra</li>
+            <li>Foto de perfil (opcional)</li>
+          </ul>
+
+          <h3>3. Finalidade do tratamento</h3>
+          <p>Seus dados são coletados para:</p>
+          <ul>
+            <li>Criar e exibir publicamente seu perfil no portal Pesquisadoras do ES</li>
+            <li>Catalogar e dar visibilidade às suas publicações científicas</li>
+            <li>Gerar estatísticas agregadas sobre a pesquisa feminina no ES</li>
+            <li>Facilitar o contato de estudantes, jornalistas e interessados com pesquisadoras</li>
+          </ul>
+
+          <h3>4. Base legal (LGPD)</h3>
+          <p>O tratamento dos seus dados é baseado no <strong>consentimento livre e informado</strong> (Art. 7º, I da Lei 13.709/2018 — LGPD). Você pode revogar este consentimento a qualquer momento.</p>
+
+          <h3>5. Compartilhamento</h3>
+          <p>Seus dados de perfil são <strong>exibidos publicamente</strong> no portal. Não vendemos nem compartilhamos seus dados com terceiros para fins comerciais. Utilizamos o Supabase (supabase.com) como plataforma de armazenamento, com servidores na região de São Paulo.</p>
+
+          <h3>6. Seus direitos</h3>
+          <p>Nos termos da LGPD, você tem direito a:</p>
+          <ul>
+            <li>Confirmar a existência de tratamento dos seus dados</li>
+            <li>Acessar, corrigir ou solicitar a exclusão dos seus dados</li>
+            <li>Revogar o consentimento a qualquer momento</li>
+            <li>Portabilidade dos dados</li>
+          </ul>
+          <p>Para exercer seus direitos, envie e-mail para: <strong>contato@pesquisadorasdoes.com.br</strong></p>
+
+          <h3>7. Retenção dos dados</h3>
+          <p>Seus dados serão mantidos enquanto seu perfil estiver ativo no portal. Após solicitação de exclusão, os dados são removidos em até 30 dias úteis.</p>
+        </div>
+
+        <label class="consent-check">
+          <input type="checkbox" id="consentimento">
+          <span>Li e compreendi o Termo de Consentimento. Autorizo o tratamento dos meus dados pessoais para as finalidades descritas acima, conforme a LGPD.</span>
+        </label>
+        <div class="err-msg" id="err0">⚠️ Você precisa aceitar o termo para continuar.</div>
       </div>
     </div>
-    <div class="form-group" style="margin-top:1rem">
-      <label>Foto de perfil <span style="font-weight:400;color:var(--cinza)">(opcional)</span></label>
-      <div class="foto-upload-area" style="margin-top:0.5rem">
-        <div class="foto-preview" id="fotoPreview" onclick="document.getElementById('fotoInput').click()">
-          <img id="fotoImg" alt="Preview">
-          <div class="foto-placeholder"><span>👤</span>clique para<br>adicionar</div>
-          <button class="foto-remove" id="fotoRemove" onclick="removeFoto(event)">✕</button>
-        </div>
-        <div class="foto-upload-info">
-          <h4>Foto de rosto</h4>
-          <p>Escolha uma foto quadrada ou use a ferramenta de corte. Formatos: JPG ou PNG. Máximo 5MB.</p>
-          <button class="btn-escolher-foto" onclick="document.getElementById('fotoInput').click()">📷 Escolher foto</button>
-        </div>
-      </div>
-      <input type="file" id="fotoInput" accept="image/jpeg,image/png" style="display:none" onchange="onFotoSelected(event)">
-    </div>
-    <div id="err1" class="error-msg"></div>
-    <div class="form-nav">
-      <div style="display:flex;align-items:center;gap:0.5rem;flex:1">
-        <input type="checkbox" id="responsabilidade" style="width:auto;flex-shrink:0">
-        <label for="responsabilidade" style="font-weight:400;font-size:0.8rem;cursor:pointer">Me responsabilizo pelas informações prestadas neste cadastro.</label>
-      </div>
-      <button class="btn-primary" onclick="goStep(2)">Próximo →</button>
+
+    <div class="nav-btns" style="justify-content:flex-end">
+      <button class="btn btn-primary" style="max-width:280px" onclick="goStep(1)">Li e aceito os termos →</button>
     </div>
   </div>
 
-  <!-- ETAPA 2 -->
+  <!-- ══════ ETAPA 1 — DADOS PESSOAIS ══════ -->
+  <div class="form-section" id="section1">
+    <div class="card">
+      <h2>👩‍🔬 Seus dados</h2>
+      <p class="sub">Preencha as informações do seu perfil. Os campos com <span style="color:var(--rosa-vivo)">*</span> são obrigatórios.</p>
+      <div class="form-grid">
+        <div class="field full">
+          <label>Nome completo <span class="req">*</span></label>
+          <input type="text" id="nome" placeholder="Ex: Dra. Ana Lima">
+          <div class="err-msg" id="err-nome">Campo obrigatório.</div>
+        </div>
+        <div class="field full">
+          <label>Mini bio <span class="req">*</span></label>
+          <textarea id="bio" maxlength="280" placeholder="Pesquisadora em… (até 280 caracteres)" oninput="document.getElementById('bioCount').textContent=this.value.length+'/280'"></textarea>
+          <div class="char-count" id="bioCount">0/280</div>
+          <div class="err-msg" id="err-bio">Campo obrigatório.</div>
+        </div>
+        <div class="field">
+          <label>E-mail <span class="req">*</span></label>
+          <input type="email" id="email" placeholder="seu@email.com">
+          <div class="err-msg" id="err-email">E-mail inválido.</div>
+        </div>
+        <div class="field">
+          <label>Cidade (ES)</label>
+          <input type="text" id="cidade" placeholder="Ex: Vitória, Serra, Cachoeiro…">
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goStep(0)">← Voltar</button>
+      <button class="btn btn-primary" onclick="goStep(2)">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- ══════ ETAPA 2 — ÁREA & LINKS ══════ -->
   <div class="form-section" id="section2">
-    <div class="section-header"><h2>Links & contato</h2><p>Pelo menos um link acadêmico é recomendado.</p></div>
-    <div class="form-grid single">
-      <div class="form-group"><label>Currículo Lattes</label><input type="url" id="lattes" placeholder="http://lattes.cnpq.br/SEUNUMERO"></div>
-      <div class="form-group"><label>ORCID</label><input type="url" id="orcid" placeholder="https://orcid.org/0000-0000-0000-0000"></div>
-      <div class="form-group"><label>LinkedIn</label><input type="url" id="linkedin" placeholder="https://linkedin.com/in/seuprofile"></div>
-      <div class="form-group"><label>Google Scholar</label><input type="url" id="google_scholar" placeholder="https://scholar.google.com/citations?user=…"></div>
-      <div class="form-group"><label>ResearchGate</label><input type="url" id="research_gate" placeholder="https://researchgate.net/profile/…"></div>
-      <div class="form-group"><label>E-mail público (opcional)</label><input type="email" id="email2" placeholder="contato@universidade.br"></div>
-      <div class="form-group"><label>Site ou blog (opcional)</label><input type="url" id="site" placeholder="https://meusite.com.br"></div>
-    </div>
-    <div class="form-nav">
-      <button class="btn-ghost" onclick="goStep(1)">← Voltar</button>
-      <button class="btn-primary" onclick="goStep(3)">Próximo →</button>
-    </div>
-  </div>
-
-  <!-- ETAPA 3 -->
-  <div class="form-section" id="section3">
-    <div class="section-header"><h2>Suas publicações</h2><p>Adicione teses, livros, artigos e outros trabalhos.</p></div>
-    <div id="obrasContainer"></div>
-    <button class="btn-add-obra" onclick="addObra()">+ Adicionar publicação</button>
-    <div class="form-nav">
-      <button class="btn-ghost" onclick="goStep(2)">← Voltar</button>
-      <button class="btn-primary" onclick="goStep(4)">Revisar →</button>
-    </div>
-  </div>
-
-  <!-- ETAPA 4 -->
-  <div class="form-section" id="section4">
-    <div class="section-header"><h2>Revisão da inscrição</h2><p>Confira seus dados antes de enviar.</p></div>
-    <div id="reviewContent" style="background:var(--branco);border-radius:16px;padding:2rem;border:1.5px solid var(--cinza-claro);margin-bottom:1.5rem;"></div>
-    <div id="errSubmit" class="error-msg"></div>
-    <div class="form-nav">
-      <button class="btn-ghost" onclick="goStep(3)">← Voltar</button>
-      <button class="btn-primary" id="btnSubmit" onclick="submitForm()">✓ Enviar inscrição</button>
-    </div>
-  </div>
-
-  <!-- SUCESSO -->
-  <div class="success-state" id="successState">
-    <div class="success-icon">🎉</div>
-    <h2>Inscrição enviada!</h2>
-    <p>Recebemos sua inscrição. Em breve nossa equipe vai analisar e você será notificada.</p>
-    <a href="index.html" class="btn-primary">Voltar ao início</a>
-  </div>
-</div>
-
-<!-- MODAL CROP -->
-<div class="crop-modal" id="cropModal">
-  <div class="crop-box">
-    <h3>✂️ Ajustar foto</h3>
-    <div class="crop-canvas-wrap" id="cropWrap"><canvas id="cropCanvas"></canvas></div>
-    <div class="crop-actions">
-      <span class="crop-hint">Arraste para mover · Scroll para zoom</span>
-      <div style="display:flex;gap:0.75rem">
-        <button class="btn-ghost" style="padding:0.6rem 1.2rem;font-size:0.82rem" onclick="cancelCrop()">Cancelar</button>
-        <button class="btn-primary" style="padding:0.6rem 1.4rem;font-size:0.82rem" onclick="applyCrop()">✓ Usar foto</button>
+    <div class="card">
+      <h2>🏛️ Área & Instituição</h2>
+      <p class="sub">Sua área de pesquisa e instituição principal.</p>
+      <div class="form-grid">
+        <div class="field">
+          <label>Área principal <span class="req">*</span></label>
+          <select id="area">
+            <option value="">Selecione…</option>
+            <option>Ciências Exatas e da Terra</option>
+            <option>Ciências Biológicas</option>
+            <option>Engenharias</option>
+            <option>Ciências da Saúde</option>
+            <option>Ciências Agrárias</option>
+            <option>Ciências Sociais Aplicadas</option>
+            <option>Ciências Humanas</option>
+            <option>Linguística, Letras e Artes</option>
+            <option>Multidisciplinar</option>
+          </select>
+          <div class="err-msg" id="err-area">Selecione uma área.</div>
+        </div>
+        <div class="field">
+          <label>Instituição principal <span class="req">*</span></label>
+          <select id="instituicao">
+            <option value="">Selecione…</option>
+            <option>UFES - Universidade Federal do Espírito Santo</option>
+            <option>IFES - Instituto Federal do Espírito Santo</option>
+            <option>UVV - Universidade Vila Velha</option>
+            <option>FUCAPE</option>
+            <option>EMESCAM</option>
+            <option>FDV - Faculdade de Direito de Vitória</option>
+            <option>MULTIVIX</option>
+            <option>FAESA</option>
+            <option>Outra</option>
+          </select>
+          <div class="err-msg" id="err-inst">Selecione uma instituição.</div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<footer>
-  <a href="index.html" class="footer-brand">Pesquisadoras<span>ES</span></a>
-  <p>Dando visibilidade à ciência feita por mulheres no Espírito Santo.</p>
-  <p><a href="sustentabilidade-privacidade.html">Sustentabilidade & Privacidade</a> · <a href="admin/login.html">Área administrativa</a></p>
-</footer>
+    <div class="card">
+      <h2>🔗 Links & perfis</h2>
+      <p class="sub">Cole os links dos seus perfis acadêmicos. Todos opcionais.</p>
+      <div class="form-grid">
+        <div class="field">
+          <label>Lattes (CNPq)</label>
+          <input type="url" id="lattes" placeholder="http://lattes.cnpq.br/…">
+        </div>
+        <div class="field">
+          <label>ORCID</label>
+          <input type="url" id="orcid" placeholder="https://orcid.org/…">
+        </div>
+        <div class="field">
+          <label>LinkedIn</label>
+          <input type="url" id="linkedin" placeholder="https://linkedin.com/in/…">
+        </div>
+        <div class="field">
+          <label>Google Scholar</label>
+          <input type="url" id="scholar" placeholder="https://scholar.google.com/…">
+        </div>
+        <div class="field">
+          <label>ResearchGate</label>
+          <input type="url" id="researchgate" placeholder="https://researchgate.net/…">
+        </div>
+        <div class="field">
+          <label>Site pessoal</label>
+          <input type="url" id="site" placeholder="https://…">
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goStep(1)">← Voltar</button>
+      <button class="btn btn-primary" onclick="goStep(3)">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- ══════ ETAPA 3 — OBRAS ══════ -->
+  <div class="form-section" id="section3">
+    <div class="card">
+      <h2>📚 Publicações</h2>
+      <p class="sub">Adicione suas publicações: livros, teses, artigos, etc. Você pode adicionar quantas quiser ou pular esta etapa.</p>
+      <div class="obras-wrap" id="obrasWrap"></div>
+      <button class="btn-add-obra" onclick="addObra()">+ Adicionar publicação</button>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goStep(2)">← Voltar</button>
+      <button class="btn btn-primary" onclick="goStep(4)">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- ══════ ETAPA 4 — REVISÃO ══════ -->
+  <div class="form-section" id="section4">
+    <div class="card">
+      <h2>✅ Revise seus dados</h2>
+      <p class="sub">Confira as informações antes de enviar. Se precisar corrigir algo, volte à etapa correspondente.</p>
+      <div id="reviewContent"></div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goStep(3)">← Voltar</button>
+      <button class="btn btn-primary" onclick="goStep(5)">Confirmar e avançar →</button>
+    </div>
+  </div>
+
+  <!-- ══════ ETAPA 5 — POLÍTICA DE PRIVACIDADE ══════ -->
+  <div class="form-section" id="section5">
+    <div class="card">
+      <h2>🛡️ Política de Privacidade</h2>
+      <p class="sub">Antes de concluir sua inscrição, leia nossa Política de Privacidade.</p>
+
+      <div class="lgpd-text">
+        <h3>1. Controlador dos dados</h3>
+        <p>O tratamento dos seus dados pessoais é realizado pela <strong>KICk</strong> (kickgroup.com.br), responsável pelo portal Pesquisadoras do ES, com sede em Vitória, ES, Brasil. Para questões sobre privacidade, entre em contato: <strong>contato@pesquisadorasdoes.com.br</strong></p>
+
+        <h3>2. Dados que coletamos e como os utilizamos</h3>
+        <p>Coletamos apenas os dados necessários para o funcionamento do portal e exibição do seu perfil público:</p>
+        <ul>
+          <li><strong>Dados de identificação:</strong> nome, e-mail, foto (opcional) — usados para criar e identificar seu perfil.</li>
+          <li><strong>Dados profissionais:</strong> área, instituição, cidade, links acadêmicos — exibidos publicamente no portal para conectar você com a comunidade científica.</li>
+          <li><strong>Dados de publicações:</strong> títulos, tipos, anos, resumos, tags — catalogados e exibidos publicamente para dar visibilidade à sua produção científica.</li>
+        </ul>
+
+        <h3>3. Cookies e tecnologias de rastreamento</h3>
+        <p>Este portal utiliza apenas cookies estritamente necessários para o funcionamento técnico da plataforma. Não utilizamos cookies de rastreamento para fins publicitários. Não integramos redes de anúncios nem ferramentas de marketing terceirizadas.</p>
+
+        <h3>4. Segurança dos dados</h3>
+        <p>Adotamos medidas técnicas e organizacionais adequadas para proteger seus dados pessoais, incluindo criptografia em trânsito (HTTPS), controles de acesso ao banco de dados e uso de infraestrutura de nuvem certificada (Supabase/AWS São Paulo). Apesar disso, nenhum sistema é 100% seguro — em caso de incidente, notificaremos os titulares conforme exigido pela LGPD.</p>
+
+        <h3>5. Links externos</h3>
+        <p>O portal pode exibir links para plataformas externas (Lattes, ORCID, LinkedIn, etc.). Não nos responsabilizamos pelas práticas de privacidade dessas plataformas. Recomendamos consultar as políticas de privacidade de cada uma.</p>
+
+        <h3>6. Alterações nesta política</h3>
+        <p>Esta política pode ser atualizada periodicamente. Em caso de alterações significativas, notificaremos as pesquisadoras cadastradas por e-mail. A versão mais recente estará sempre disponível em <strong>pesquisadorasdoes.com.br/sustentabilidade-privacidade.html</strong>.</p>
+
+        <h3>7. Contato e exercício de direitos</h3>
+        <p>Para acessar, corrigir, excluir seus dados ou revogar seu consentimento, envie um e-mail para <strong>contato@pesquisadorasdoes.com.br</strong> com o assunto "Dados pessoais — [seu nome]". Responderemos em até 15 dias úteis.</p>
+      </div>
+
+      <div class="consent-box" style="margin-top:0">
+        <label class="consent-check">
+          <input type="checkbox" id="aceitaPrivacidade">
+          <span>Li e aceito a Política de Privacidade do portal Pesquisadoras do ES e confirmo que as informações fornecidas são verdadeiras.</span>
+        </label>
+        <div class="err-msg" id="errPrivacidade">⚠️ Você precisa aceitar a Política de Privacidade para concluir.</div>
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goStep(4)">← Voltar</button>
+      <button class="btn btn-success btn-full" id="btnSubmit" onclick="submitForm()">
+        🎉 Concluir inscrição
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════ SUCESSO ══════ -->
+  <div class="form-section" id="sectionSuccess">
+    <div class="success-card">
+      <div class="success-icon">🎉</div>
+      <h2>Inscrição enviada!</h2>
+      <p>Obrigada, <strong id="successNome"></strong>! Seu perfil foi enviado para análise. Em breve, nossa equipe irá revisar e publicar no portal.</p>
+      <a href="index.html" class="btn btn-primary">← Voltar ao portal</a>
+    </div>
+  </div>
+
+</div><!-- /page-wrap -->
 
 <script>
-const{createClient}=supabase;
-const db=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-let cropImage=null,cropScale=1,cropOffsetX=0,cropOffsetY=0,cropDragging=false,cropLastX=0,cropLastY=0,croppedBlob=null,obras=[],obraCount=0,obrasArquivos={};
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function onFotoSelected(e){const file=e.target.files[0];if(!file)return;if(file.size>5*1024*1024){alert('Máximo 5MB.');return;}const r=new FileReader();r.onload=ev=>openCrop(ev.target.result);r.readAsDataURL(file);e.target.value='';}
-function openCrop(src){cropImage=new Image();cropImage.onload=()=>{document.getElementById('cropModal').classList.add('open');document.body.style.overflow='hidden';requestAnimationFrame(()=>{const c=document.getElementById('cropCanvas'),w=document.getElementById('cropWrap'),s=w.offsetWidth||400;c.width=s;c.height=s;cropScale=Math.max(s/cropImage.width,s/cropImage.height);cropOffsetX=(s-cropImage.width*cropScale)/2;cropOffsetY=(s-cropImage.height*cropScale)/2;drawCrop();});};cropImage.src=src;}
-function drawCrop(){const c=document.getElementById('cropCanvas'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.drawImage(cropImage,cropOffsetX,cropOffsetY,cropImage.width*cropScale,cropImage.height*cropScale);ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;[1/3,2/3].forEach(f=>{ctx.beginPath();ctx.moveTo(c.width*f,0);ctx.lineTo(c.width*f,c.height);ctx.stroke();ctx.beginPath();ctx.moveTo(0,c.height*f);ctx.lineTo(c.width,c.height*f);ctx.stroke();});}
-function applyCrop(){document.getElementById('cropCanvas').toBlob(blob=>{croppedBlob=blob;const url=URL.createObjectURL(blob),img=document.getElementById('fotoImg');img.src=url;img.style.display='block';document.querySelector('.foto-placeholder').style.display='none';document.getElementById('fotoRemove').style.display='flex';cancelCrop();},'image/jpeg',0.92);}
-function cancelCrop(){document.getElementById('cropModal').classList.remove('open');document.body.style.overflow='';}
-function removeFoto(e){e.stopPropagation();croppedBlob=null;document.getElementById('fotoImg').style.display='none';document.getElementById('fotoImg').src='';document.querySelector('.foto-placeholder').style.display='flex';document.getElementById('fotoRemove').style.display='none';}
+let obraCount = 0;
 
-document.addEventListener('DOMContentLoaded',()=>{
-  const c=document.getElementById('cropCanvas');
-  c.addEventListener('mousedown',e=>{cropDragging=true;cropLastX=e.offsetX;cropLastY=e.offsetY;});
-  c.addEventListener('mousemove',e=>{if(!cropDragging)return;cropOffsetX+=e.offsetX-cropLastX;cropOffsetY+=e.offsetY-cropLastY;cropLastX=e.offsetX;cropLastY=e.offsetY;drawCrop();});
-  c.addEventListener('mouseup',()=>cropDragging=false);
-  c.addEventListener('mouseleave',()=>cropDragging=false);
-  c.addEventListener('wheel',e=>{e.preventDefault();const d=e.deltaY>0?.9:1.1,cx=c.width/2,cy=c.height/2;cropOffsetX=cx+(cropOffsetX-cx)*d;cropOffsetY=cy+(cropOffsetY-cy)*d;cropScale*=d;drawCrop();},{passive:false});
-  let lt=null;
-  c.addEventListener('touchstart',e=>{e.preventDefault();lt=e.touches[0];});
-  c.addEventListener('touchmove',e=>{e.preventDefault();if(!lt)return;const t=e.touches[0];cropOffsetX+=t.clientX-lt.clientX;cropOffsetY+=t.clientY-lt.clientY;lt=t;drawCrop();},{passive:false});
-  c.addEventListener('touchend',()=>lt=null);
-  document.getElementById('navToggle').onclick=()=>document.getElementById('navLinks').classList.toggle('open');
-  document.getElementById('mini_bio').addEventListener('input',function(){document.getElementById('bioCount').textContent=this.value.length+'/300 caracteres';});
-});
+// ── NAVEGAÇÃO ──────────────────────────────────────────
+function goStep(n) {
+  // Validações por etapa
+  if (n === 1) {
+    const ok = document.getElementById('consentimento').checked;
+    const err = document.getElementById('err0');
+    if (!ok) { err.classList.add('show'); return; }
+    err.classList.remove('show');
+  }
+  if (n === 3) {
+    if (!validateStep1()) return;
+  }
+  if (n === 5) {
+    buildReview();
+  }
 
-async function uploadFoto(id){if(!croppedBlob)return null;const{error}=await db.storage.from('avatars').upload(`${id}.jpg`,croppedBlob,{contentType:'image/jpeg',upsert:true});if(error){console.warn(error.message);return null;}return db.storage.from('avatars').getPublicUrl(`${id}.jpg`).data.publicUrl;}
-async function uploadObraFoto(rid,file){try{const fn=`${rid}/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;const{error}=await db.storage.from('work-photos').upload(fn,file);if(error)throw error;return fn;}catch(e){console.error(e);return null;}}
+  // Ocultar todas as seções
+  document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section' + n).classList.add('active');
 
-function goStep(n){if(n===2&&!validateStep1())return;if(n===4)buildReview();for(let i=1;i<=4;i++){document.getElementById('section'+i).classList.toggle('active',i===n);const st=document.getElementById('step'+i);st.classList.remove('active','done');if(i===n)st.classList.add('active');else if(i<n)st.classList.add('done');}window.scrollTo({top:0,behavior:'smooth'});}
+  // Atualizar barra de progresso
+  for (let i = 0; i <= 5; i++) {
+    const el = document.getElementById('step' + i);
+    if (!el) continue;
+    el.classList.remove('active', 'done');
+    if (i === n) el.classList.add('active');
+    else if (i < n) el.classList.add('done');
+  }
 
-function validateStep1(){
-  const v=(id)=>document.getElementById(id)?.value.trim();
-  const err=document.getElementById('err1');
-  const checks=[[!v('nome'),'Digite seu nome completo'],[!v('email'),'Digite seu e-mail'],[v('email')&&!v('email').includes('@'),'E-mail inválido'],[!v('mini_bio'),'Escreva uma mini bio'],[v('mini_bio')&&v('mini_bio').length<20,'Mini bio muito curta (mín. 20 caracteres)'],[!v('area_principal'),'Selecione sua área principal'],[!v('instituicao'),'Selecione sua instituição'],[!v('estado'),'Selecione sua cidade'],[!document.getElementById('responsabilidade').checked,'Marque a caixa de responsabilidade']];
-  for(const[c,m]of checks){if(c){err.textContent='❌ '+m;err.style.display='block';return false;}}
-  err.style.display='none';return true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function addObra(){
-  const id=++obraCount;
-  const div=document.createElement('div');div.className='obra-item';div.id='obra_'+id;
-  div.innerHTML=`<button class="obra-remove" onclick="removeObra(${id})">✕</button>
-    <div class="form-grid" style="margin-top:.5rem">
-      <div class="form-group full"><label>Título <span class="req">*</span></label><input type="text" id="o${id}_titulo" placeholder="Título completo"></div>
-      <div class="form-group full">
-        <label>Foto da publicação <span style="font-weight:400;color:var(--cinza)">(máx 1MB)</span></label>
-        <div style="display:flex;gap:1rem;align-items:center;margin-top:.25rem">
-          <img id="o${id}_fotoPreview" style="width:60px;height:80px;border-radius:8px;border:1.5px solid var(--cinza-claro);object-fit:cover;display:none;">
-          <input type="file" id="o${id}_foto" accept="image/*" onchange="validarFotoObra(${id},this)" style="display:none;">
-          <button type="button" class="btn-escolher-foto" onclick="document.getElementById('o${id}_foto').click()">Escolher imagem</button>
-        </div>
-        <span class="hint">JPG, PNG ou WebP.</span>
+// ── VALIDAÇÃO ETAPA 1 (dados pessoais) ─────────────────
+function validateStep1() {
+  let ok = true;
+  const nome = document.getElementById('nome').value.trim();
+  const bio  = document.getElementById('bio').value.trim();
+  const email = document.getElementById('email').value.trim();
+
+  if (!nome) { show('err-nome'); mark('nome'); ok = false; } else { hide('err-nome'); unmark('nome'); }
+  if (!bio)  { show('err-bio');  mark('bio');  ok = false; } else { hide('err-bio');  unmark('bio'); }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { show('err-email'); mark('email'); ok = false; } else { hide('err-email'); unmark('email'); }
+  return ok;
+}
+
+// ── VALIDAÇÃO ETAPA 2 (área e instituição) ──────────────
+function validateStep2() {
+  let ok = true;
+  if (!document.getElementById('area').value)        { show('err-area'); ok = false; } else { hide('err-area'); }
+  if (!document.getElementById('instituicao').value) { show('err-inst'); ok = false; } else { hide('err-inst'); }
+  return ok;
+}
+
+// ── OBRAS ───────────────────────────────────────────────
+function addObra() {
+  const wrap = document.getElementById('obrasWrap');
+  const id = ++obraCount;
+  const div = document.createElement('div');
+  div.className = 'obra-item';
+  div.id = 'obra-' + id;
+  div.innerHTML = `
+    <button class="obra-remove" onclick="document.getElementById('obra-${id}').remove()" title="Remover">✕</button>
+    <div class="obra-grid">
+      <div class="full">
+        <label>Título <span class="req">*</span></label>
+        <input type="text" class="obra-titulo" placeholder="Título da publicação">
       </div>
-      <div class="form-group"><label>Tipo <span class="req">*</span></label><select id="o${id}_tipo"><option value="">Selecione…</option><option>Livro</option><option>Tese de Doutorado</option><option>Dissertação de Mestrado</option><option>TCC</option><option>Artigo Científico</option><option>Capítulo de Livro</option><option>Monografia</option><option>Relatório Técnico</option></select></div>
-      <div class="form-group"><label>Ano <span class="req">*</span></label><input type="number" id="o${id}_ano" placeholder="2023" min="1950" max="2030"></div>
-      <div class="form-group full"><label>Resumo</label><textarea id="o${id}_resumo" placeholder="Breve descrição (opcional)…" style="min-height:80px"></textarea></div>
-      <div class="form-group"><label>Link de acesso (DOI, repositório)</label><input type="url" id="o${id}_acesso" placeholder="https://..."></div>
-      <div class="form-group"><label>Link de compra</label><input type="url" id="o${id}_compra" placeholder="https://..."></div>
-      <div class="form-group full"><label>Tags</label><input type="text" id="o${id}_tags" placeholder="saúde pública, epidemiologia (separe por vírgula)"></div>
-      <div class="form-group" style="flex-direction:row;align-items:center;gap:.5rem;grid-column:1/-1">
-        <input type="checkbox" id="o${id}_adquirir" style="width:auto">
-        <label for="o${id}_adquirir" style="font-weight:400;font-size:0.82rem;cursor:pointer">Esta publicação pode ser adquirida online?</label>
+      <div>
+        <label>Tipo</label>
+        <select class="obra-tipo">
+          <option>Livro</option>
+          <option>Tese de Doutorado</option>
+          <option>Dissertação de Mestrado</option>
+          <option>TCC</option>
+          <option>Artigo Científico</option>
+          <option>Capítulo de Livro</option>
+          <option>Monografia</option>
+          <option>Relatório Técnico</option>
+        </select>
+      </div>
+      <div>
+        <label>Ano</label>
+        <input type="number" class="obra-ano" placeholder="2024" min="1900" max="2099">
+      </div>
+      <div class="full">
+        <label>Tags (separadas por vírgula)</label>
+        <input type="text" class="obra-tags" placeholder="gênero, educação, ciência…">
+      </div>
+      <div>
+        <label>Link de acesso (PDF/DOI)</label>
+        <input type="url" class="obra-acesso" placeholder="https://…">
+      </div>
+      <div>
+        <label>Link de compra</label>
+        <input type="url" class="obra-compra" placeholder="https://…">
       </div>
     </div>`;
-  document.getElementById('obrasContainer').appendChild(div);obras.push(id);
-}
-function removeObra(id){document.getElementById('obra_'+id)?.remove();obras=obras.filter(o=>o!==id);}
-function validarFotoObra(id,input){const file=input.files[0];if(!file)return;if(file.size>1048576){alert('❌ Máximo 1MB.');input.value='';return;}if(!['image/jpeg','image/png','image/webp'].includes(file.type)){alert('❌ Use JPG, PNG ou WebP.');input.value='';return;}const r=new FileReader();r.onload=e=>{const img=document.getElementById(`o${id}_fotoPreview`);img.src=e.target.result;img.style.display='block';};r.readAsDataURL(file);obrasArquivos[id]=file;}
-function getObraData(id){return{titulo:document.getElementById('o'+id+'_titulo')?.value.trim()||'',tipo:document.getElementById('o'+id+'_tipo')?.value||'',ano:parseInt(document.getElementById('o'+id+'_ano')?.value)||null,resumo:document.getElementById('o'+id+'_resumo')?.value.trim()||'',link_acesso:document.getElementById('o'+id+'_acesso')?.value.trim()||null,link_compra:document.getElementById('o'+id+'_compra')?.value.trim()||null,tags:(document.getElementById('o'+id+'_tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),para_adquirir:document.getElementById('o'+id+'_adquirir')?.checked||false,arquivo:obrasArquivos[id]||null};}
-
-function buildReview(){
-  const v=(id)=>document.getElementById(id)?.value.trim()||'';
-  const links=['lattes','orcid','linkedin','google_scholar','research_gate','site'].map(k=>{const val=v(k);return val?`<li><strong>${k}:</strong> ${val}</li>`:''}).join('');
-  const obrasHtml=obras.map(id=>{const o=getObraData(id);return o.titulo?`<li><strong>${o.titulo}</strong> (${o.tipo}, ${o.ano||'?'})</li>`:''}).filter(Boolean).join('');
-  document.getElementById('reviewContent').innerHTML=`<h3 style="font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:400;margin-bottom:1rem">${v('nome')}</h3><p style="font-size:.85rem;color:var(--cinza);margin-bottom:.4rem"><strong>E-mail:</strong> ${v('email')}</p><p style="font-size:.85rem;color:var(--cinza);margin-bottom:.4rem"><strong>Área:</strong> ${v('area_principal')}</p><p style="font-size:.85rem;color:var(--cinza);margin-bottom:.4rem"><strong>Instituição:</strong> ${v('instituicao')}</p><p style="font-size:.85rem;color:var(--cinza);margin-bottom:1rem">${v('mini_bio')}</p>${links?`<ul style="font-size:.82rem;color:var(--cinza);padding-left:1.25rem;margin-bottom:1rem">${links}</ul>`:''}${obrasHtml?`<p style="font-size:.82rem;font-weight:600;margin-bottom:.4rem">Publicações:</p><ul style="font-size:.82rem;color:var(--cinza);padding-left:1.25rem">${obrasHtml}</ul>`:'<p style="font-size:.82rem;color:var(--cinza)">Nenhuma publicação adicionada.</p>'}`;
+  wrap.appendChild(div);
 }
 
-async function submitForm(){
-  const btn=document.getElementById('btnSubmit'),err=document.getElementById('errSubmit');
-  if(!validateStep1()){window.scrollTo(0,0);return;}
-  btn.textContent='Enviando…';btn.disabled=true;err.style.display='none';
-  try{
-    const v=(id)=>document.getElementById(id)?.value.trim()||null;
-    const{data:researcher,error}=await db.from('researchers').insert([{nome:v('nome'),mini_bio:v('mini_bio'),area_principal:v('area_principal'),instituicao:v('instituicao'),estado:v('estado'),email:v('email')||'',lattes:v('lattes'),orcid:v('orcid'),linkedin:v('linkedin'),google_scholar:v('google_scholar'),research_gate:v('research_gate'),site:v('site'),status:'pendente',destaque:false}]).select().single();
-    if(error)throw new Error(error.message);
-    if(croppedBlob){btn.textContent='Enviando foto…';const url=await uploadFoto(researcher.id);if(url)await db.from('researchers').update({foto_url:url}).eq('id',researcher.id);}
-    const obrasDataRaw=obras.map(id=>getObraData(id)).filter(o=>o.titulo&&o.tipo);
-    if(obrasDataRaw.length){
-      for(let i=0;i<obrasDataRaw.length;i++){
-        const o=obrasDataRaw[i];
-        if(o.arquivo){btn.textContent=`Enviando foto ${i+1}/${obrasDataRaw.length}…`;const fn=await uploadObraFoto(researcher.id,o.arquivo);o.foto_publicacao=fn||null;}
-        delete o.arquivo;
-      }
-      const{error:wErr}=await db.from('works').insert(obrasDataRaw.map(o=>({...o,researcher_id:researcher.id,area_conhecimento:v('area_principal'),status:'pendente'})));
-      if(wErr)console.warn(wErr.message);
+// ── REVISÃO ─────────────────────────────────────────────
+function buildReview() {
+  const v = id => document.getElementById(id)?.value.trim() || '—';
+  const obras = [];
+  document.querySelectorAll('.obra-item').forEach(item => {
+    const titulo = item.querySelector('.obra-titulo')?.value.trim();
+    if (!titulo) return;
+    obras.push({
+      titulo,
+      tipo: item.querySelector('.obra-tipo')?.value || '',
+      ano:  item.querySelector('.obra-ano')?.value || '',
+    });
+  });
+
+  const rows = (label, val) => val && val !== '—' ? `<div class="review-row"><span class="review-label">${label}</span><span class="review-val">${val}</span></div>` : '';
+
+  document.getElementById('reviewContent').innerHTML = `
+    <div class="review-section">
+      <h3>Dados pessoais</h3>
+      ${rows('Nome', v('nome'))}
+      ${rows('E-mail', v('email'))}
+      ${rows('Cidade', v('cidade') !== '—' ? v('cidade') : '')}
+      ${rows('Mini bio', v('bio'))}
+    </div>
+    <div class="review-section">
+      <h3>Área & Instituição</h3>
+      ${rows('Área', document.getElementById('area')?.value)}
+      ${rows('Instituição', document.getElementById('instituicao')?.value)}
+    </div>
+    <div class="review-section">
+      <h3>Links acadêmicos</h3>
+      ${rows('Lattes', v('lattes') !== '—' ? v('lattes') : '')}
+      ${rows('ORCID', v('orcid') !== '—' ? v('orcid') : '')}
+      ${rows('LinkedIn', v('linkedin') !== '—' ? v('linkedin') : '')}
+      ${rows('Scholar', v('scholar') !== '—' ? v('scholar') : '')}
+    </div>
+    ${obras.length ? `<div class="review-section"><h3>Publicações (${obras.length})</h3>${obras.map(o=>`<div class="review-obra"><div class="review-obra-title">${o.titulo}</div><div class="review-obra-meta">${o.tipo}${o.ano?' · '+o.ano:''}</div></div>`).join('')}</div>` : ''}`;
+}
+
+// ── ENVIO FINAL ─────────────────────────────────────────
+async function submitForm() {
+  // Validar aceite da política de privacidade
+  const aceita = document.getElementById('aceitaPrivacidade').checked;
+  const errPriv = document.getElementById('errPrivacidade');
+  if (!aceita) { errPriv.classList.add('show'); return; }
+  errPriv.classList.remove('show');
+
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Enviando…';
+
+  try {
+    const g = id => document.getElementById(id)?.value.trim() || null;
+
+    const payload = {
+      nome:           g('nome'),
+      mini_bio:       g('bio'),
+      email:          g('email'),
+      estado:         g('cidade'),
+      area_principal: document.getElementById('area')?.value || null,
+      instituicao:    document.getElementById('instituicao')?.value || null,
+      lattes:         g('lattes'),
+      orcid:          g('orcid'),
+      linkedin:       g('linkedin'),
+      google_scholar: g('scholar'),
+      research_gate:  g('researchgate'),
+      site:           g('site'),
+      status:         'pendente',
+      destaque:       false,
+      consentimento_lgpd: true,
+    };
+
+    const { data: researcher, error } = await db
+      .from('researchers').insert([payload]).select().single();
+    if (error) throw new Error(error.message);
+
+    const obras = [];
+    document.querySelectorAll('.obra-item').forEach(item => {
+      const titulo = item.querySelector('.obra-titulo')?.value.trim();
+      const tipo   = item.querySelector('.obra-tipo')?.value;
+      if (!titulo || !tipo) return;
+      obras.push({
+        researcher_id: researcher.id,
+        titulo, tipo,
+        ano:         parseInt(item.querySelector('.obra-ano')?.value) || null,
+        tags:        (item.querySelector('.obra-tags')?.value || '').split(',').map(t => t.trim()).filter(Boolean),
+        link_acesso: item.querySelector('.obra-acesso')?.value.trim() || null,
+        link_compra: item.querySelector('.obra-compra')?.value.trim() || null,
+        area_conhecimento: document.getElementById('area')?.value || null,
+        status: 'pendente',
+      });
+    });
+
+    if (obras.length) {
+      const { error: wErr } = await db.from('works').insert(obras);
+      if (wErr) throw new Error('Perfil salvo, mas erro nas obras: ' + wErr.message);
     }
-    document.querySelector('.form-wrapper').querySelectorAll('.form-section,.step-indicator').forEach(el=>el.style.display='none');
-    document.getElementById('successState').style.display='block';
-    window.scrollTo(0,0);
-  }catch(e){
-    err.innerHTML=`<strong>❌ Erro ao enviar:</strong> ${e.message}`;err.style.display='block';btn.textContent='✓ Enviar inscrição';btn.disabled=false;
+
+    document.getElementById('successNome').textContent = payload.nome;
+    document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sectionSuccess').classList.add('active');
+    // Ocultar barra de progresso no sucesso
+    document.querySelector('.progress-bar').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '🎉 Concluir inscrição';
+    alert('Erro ao enviar: ' + e.message);
   }
 }
+
+function show(id) { const el = document.getElementById(id); if (el) el.classList.add('show'); }
+function hide(id) { const el = document.getElementById(id); if (el) el.classList.remove('show'); }
+function mark(id)   { const el = document.getElementById(id); if (el) el.classList.add('erro'); }
+function unmark(id) { const el = document.getElementById(id); if (el) el.classList.remove('erro'); }
 </script>
 </body>
 </html>
