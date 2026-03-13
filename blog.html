@@ -35,11 +35,27 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 /* CONTENT */
 .blog-content{max-width:1100px;margin:0 auto;padding:clamp(2rem,5vw,4rem) clamp(1.5rem,5vw,2rem);}
 
-/* FILTRO DE CATEGORIAS */
+/* ── FILTRO DE CATEGORIAS — estilo área de conhecimento ── */
 .cat-filter-bar{margin-bottom:2rem;}
-.cat-filter-label{font-size:0.68rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--cinza);margin-bottom:0.75rem;display:block;}
+.cat-filter-label{
+  font-size:0.68rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--cinza);margin-bottom:0.75rem;display:block;
+}
 .cat-filters{display:flex;flex-wrap:wrap;gap:0.5rem;}
-.cat-btn{font-size:0.75rem;font-weight:600;padding:0.5rem 1.1rem;border-radius:100px;border:1.5px solid var(--cinza-claro);background:transparent;cursor:pointer;transition:all 0.2s;color:var(--cinza);font-family:'Sora',sans-serif;}
+
+/* Botão-pílula idêntico ao .filter-btn do index */
+.cat-btn{
+  font-size:0.73rem;font-weight:600;
+  padding:0.45rem 1rem;
+  border-radius:100px;
+  border:1.5px solid var(--cinza-claro);
+  background:transparent;
+  cursor:pointer;
+  transition:all 0.2s;
+  color:var(--cinza);
+  font-family:'Sora',sans-serif;
+  white-space:nowrap;
+}
 .cat-btn:hover{border-color:var(--rosa-vivo);color:var(--rosa-vivo);}
 .cat-btn.active{background:var(--rosa-vivo);border-color:var(--rosa-vivo);color:white;}
 
@@ -51,7 +67,16 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .blog-card-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
 .blog-card-img .emoji-fallback{font-size:3rem;z-index:1;}
 .blog-card-body{padding:1.5rem;}
-.blog-card-cat{font-size:0.62rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--rosa-vivo);margin-bottom:0.5rem;display:block;}
+
+/* Tags de categoria no card — estilo rc-area / wc-tag */
+.blog-card-cats{display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.65rem;}
+.blog-card-cat-tag{
+  font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
+  color:var(--rosa-vivo);background:rgba(196,116,138,0.1);
+  padding:0.2rem 0.6rem;border-radius:100px;
+  white-space:nowrap;
+}
+
 .blog-card-title{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;line-height:1.4;margin-bottom:0.5rem;}
 .blog-card-meta{font-size:0.75rem;color:var(--cinza);}
 .blog-card-excerpt{font-size:0.83rem;color:var(--cinza);margin-top:0.75rem;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
@@ -61,7 +86,16 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .post-back{display:inline-flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--rosa-vivo);text-decoration:none;margin-bottom:2rem;cursor:pointer;background:none;border:none;font-family:'Sora',sans-serif;font-weight:600;transition:gap 0.2s;}
 .post-back:hover{gap:0.8rem;}
 .post-header-img{width:100%;max-height:480px;object-fit:cover;border-radius:20px;margin-bottom:2rem;display:block;}
-.post-cat{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:var(--rosa-vivo);margin-bottom:0.75rem;display:block;}
+
+/* Tags individuais no topo do post */
+.post-cats{display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.75rem;}
+.post-cat-tag{
+  font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;
+  color:var(--rosa-vivo);background:rgba(196,116,138,0.1);
+  padding:0.25rem 0.7rem;border-radius:100px;
+  white-space:nowrap;
+}
+
 .post-title{font-family:'DM Serif Display',serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:400;line-height:1.15;margin-bottom:1rem;}
 .post-meta{font-size:0.83rem;color:var(--cinza);margin-bottom:2rem;padding-bottom:2rem;border-bottom:1px solid var(--cinza-claro);}
 .post-body{font-size:1rem;line-height:1.85;color:#333;max-width:720px;}
@@ -96,10 +130,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .comment-success{background:rgba(196,116,138,0.08);border:1px solid rgba(196,116,138,0.25);border-radius:10px;padding:1rem 1.25rem;font-size:0.85rem;color:var(--rosa-vivo);margin-top:1rem;display:none;}
 .comment-error{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:0.75rem 1rem;font-size:0.82rem;color:#b91c1c;margin-top:0.5rem;display:none;}
 
-/* EMPTY STATE */
+/* EMPTY STATES */
 .empty-cat{text-align:center;padding:3rem;color:var(--cinza);grid-column:1/-1;}
 .empty-cat span{font-size:2.5rem;display:block;margin-bottom:0.75rem;}
-
 .loading{text-align:center;padding:3rem;color:var(--cinza);}
 .spinner{width:32px;height:32px;border:3px solid var(--cinza-claro);border-top-color:var(--rosa-vivo);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1rem;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -145,12 +178,10 @@ footer a{color:var(--rosa-vivo);text-decoration:none;}
 <div class="blog-content">
   <!-- LISTA -->
   <div id="postList">
-    <!-- FILTRO DE CATEGORIAS -->
     <div class="cat-filter-bar" id="catFilterBar" style="display:none">
       <span class="cat-filter-label">Filtrar por categoria</span>
       <div class="cat-filters" id="catFilters"></div>
     </div>
-
     <div class="blog-grid" id="blogGrid">
       <div class="loading"><div class="spinner"></div>Carregando artigos…</div>
     </div>
@@ -197,9 +228,23 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentPostId = null;
 let allPosts = [];
-let filtroCategoria = '';
+let filtroCategoria = ''; // categoria única selecionada
 
-// ── LISTA: apenas posts da seção "blog" (ou sem secao — retrocompatibilidade) ──
+// ── HELPERS ────────────────────────────────────────────────
+function esc(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/**
+ * Recebe a string de categoria de um post (ex: "Editais, Economia, Clima")
+ * e retorna um array de categorias individuais limpas.
+ */
+function parseCats(categoriaStr){
+  if(!categoriaStr) return ['Artigo'];
+  return categoriaStr.split(',').map(c => c.trim()).filter(Boolean);
+}
+
+// ── CARREGAR POSTS ─────────────────────────────────────────
 async function loadPosts(){
   const grid = document.getElementById('blogGrid');
   const { data, error } = await db.from('blog_posts')
@@ -216,34 +261,44 @@ async function loadPosts(){
   renderGrid(data);
 }
 
-// ── FILTRO DE CATEGORIAS ──────────────────────────────────
+// ── FILTROS — separar por vírgula e deduplica ──────────────
 function buildCategoryFilters(posts){
-  const cats = [...new Set(posts.map(p => p.categoria || 'Artigo').filter(Boolean))].sort();
-  if(cats.length <= 1){ return; } // não exibe filtro se só há 1 categoria
+  // Extrai todas as categorias individuais (split por vírgula)
+  const catSet = new Set();
+  posts.forEach(p => parseCats(p.categoria).forEach(c => catSet.add(c)));
+  const cats = [...catSet].sort();
+
+  if(cats.length === 0) return;
 
   const bar = document.getElementById('catFilterBar');
   const container = document.getElementById('catFilters');
   bar.style.display = 'block';
 
+  // Botão "Todas" com contagem total de posts
   container.innerHTML =
     `<button class="cat-btn active" onclick="setCategoria('')">Todas (${posts.length})</button>` +
     cats.map(c => {
-      const count = posts.filter(p => (p.categoria || 'Artigo') === c).length;
+      // conta posts que contêm esta categoria
+      const count = posts.filter(p => parseCats(p.categoria).includes(c)).length;
       return `<button class="cat-btn" onclick="setCategoria('${esc(c)}')">${esc(c)} (${count})</button>`;
     }).join('');
 }
 
 function setCategoria(cat){
   filtroCategoria = cat;
-  // atualizar botões ativos
   document.querySelectorAll('.cat-btn').forEach(b => {
+    // remove contagem do texto para comparar
     const label = b.textContent.replace(/\s*\(\d+\)$/, '').trim();
     b.classList.toggle('active', cat === '' ? label === 'Todas' : label === cat);
   });
-  const filtered = cat ? allPosts.filter(p => (p.categoria || 'Artigo') === cat) : allPosts;
+  // Filtra posts que contenham a categoria selecionada
+  const filtered = cat
+    ? allPosts.filter(p => parseCats(p.categoria).includes(cat))
+    : allPosts;
   renderGrid(filtered);
 }
 
+// ── RENDERIZAR GRID ────────────────────────────────────────
 function renderGrid(posts){
   const grid = document.getElementById('blogGrid');
   if(!posts.length){
@@ -254,10 +309,16 @@ function renderGrid(posts){
     const capaHtml = p.foto_capa
       ? `<div class="blog-card-img"><img src="${p.foto_capa}" alt="${esc(p.titulo)}" loading="lazy"></div>`
       : `<div class="blog-card-img"><span class="emoji-fallback">${p.emoji || '✍️'}</span></div>`;
+
+    // Tags individuais no card
+    const tagsHtml = parseCats(p.categoria)
+      .map(c => `<span class="blog-card-cat-tag">${esc(c)}</span>`)
+      .join('');
+
     return `<div class="blog-card" onclick="showPost('${p.id}')">
       ${capaHtml}
       <div class="blog-card-body">
-        <span class="blog-card-cat">${esc(p.categoria || 'Artigo')}</span>
+        <div class="blog-card-cats">${tagsHtml}</div>
         <div class="blog-card-title">${esc(p.titulo)}</div>
         <div class="blog-card-meta">${new Date(p.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</div>
         <p class="blog-card-excerpt">${esc(p.resumo || '')}</p>
@@ -276,9 +337,14 @@ async function showPost(id){
     ? `<img class="post-header-img" src="${data.foto_header}" alt="${esc(data.titulo)}">`
     : '';
 
+  // Tags individuais no cabeçalho do post
+  const catsHtml = parseCats(data.categoria)
+    .map(c => `<span class="post-cat-tag">${esc(c)}</span>`)
+    .join('');
+
   document.getElementById('postContent').innerHTML = `
     ${headerImg}
-    <span class="post-cat">${esc(data.categoria || 'Artigo')}</span>
+    <div class="post-cats">${catsHtml}</div>
     <h1 class="post-title">${esc(data.titulo)}</h1>
     <div class="post-meta">
       Publicado em ${new Date(data.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}
@@ -298,8 +364,9 @@ function showList(){
   document.getElementById('postList').style.display = 'block';
   document.getElementById('postView').style.display = 'none';
   history.pushState({}, '', 'blog.html');
-  // Reaplica o filtro de categoria ao voltar
-  const filtered = filtroCategoria ? allPosts.filter(p => (p.categoria || 'Artigo') === filtroCategoria) : allPosts;
+  const filtered = filtroCategoria
+    ? allPosts.filter(p => parseCats(p.categoria).includes(filtroCategoria))
+    : allPosts;
   renderGrid(filtered);
 }
 
@@ -352,10 +419,6 @@ async function submitComment(){
   document.getElementById('cfEmail').value = '';
   document.getElementById('cfTexto').value = '';
   sucEl.style.display = 'block';
-}
-
-function esc(str){
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 document.getElementById('navToggle').onclick = () => document.getElementById('navLinks').classList.toggle('open');
