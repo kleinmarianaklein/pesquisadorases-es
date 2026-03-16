@@ -1,8 +1,26 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Meta tags básicas -->
 <title>Blog — Pesquisadoras ES</title>
+<meta name="description" content="Artigos, entrevistas e reflexões sobre ciência, gênero e conhecimento no Espírito Santo.">
+
+<!-- Open Graph / Facebook / LinkedIn -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pesquisadorasdoes.com.br/blog.html">
+<meta property="og:title" content="Blog — Pesquisadoras ES">
+<meta property="og:description" content="Artigos, entrevistas e reflexões sobre ciência, gênero e conhecimento no Espírito Santo.">
+<meta property="og:site_name" content="Pesquisadoras ES">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:url" content="https://pesquisadorasdoes.com.br/blog.html">
+<meta name="twitter:title" content="Blog — Pesquisadoras ES">
+<meta name="twitter:description" content="Artigos, entrevistas e reflexões sobre ciência, gênero e conhecimento no Espírito Santo."
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -203,32 +221,21 @@ function esc(str){
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/**
- * Gera slug a partir de um título.
- * Ex: "Mulheres na Ciência: desafios!" → "mulheres-na-ciencia-desafios"
- */
 function toSlug(titulo){
   return titulo
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')   // remove acentos
-    .replace(/[^a-z0-9\s-]/g, '')      // remove caracteres especiais
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
     .trim()
-    .replace(/\s+/g, '-')              // espaços → hífens
-    .replace(/-+/g, '-');              // hífens múltiplos → um só
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
 }
 
-/**
- * Detecta se uma string é UUID v4.
- */
 function isUuid(str){
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 }
 
-/**
- * Retorna a referência de URL preferencial para um post:
- * usa o slug se existir, senão o UUID — para retrocompatibilidade.
- */
 function postRef(post){
   return post.slug || post.id;
 }
@@ -236,6 +243,50 @@ function postRef(post){
 function parseCats(categoriaStr){
   if(!categoriaStr) return ['Artigo'];
   return categoriaStr.split(',').map(c => c.trim()).filter(Boolean);
+}
+
+// Atualiza meta tags dinamicamente para posts individuais
+function updateMetaTags(post) {
+  const baseUrl = 'https://pesquisadorasdoes.com.br';
+  const postUrl = `${baseUrl}/blog.html?post=${postRef(post)}`;
+  const description = post.resumo || 'Artigo do blog Pesquisadoras ES';
+
+  // Update title
+  document.title = `${post.titulo} — Pesquisadoras ES`;
+  
+  // Update or create meta tags
+  const updateMeta = (property, content) => {
+    let meta = document.querySelector(`meta[property="${property}"]`) || 
+               document.querySelector(`meta[name="${property}"]`);
+    if (!meta) {
+      meta = document.createElement('meta');
+      if (property.startsWith('og:') || property.startsWith('twitter:')) {
+        meta.setAttribute('property', property);
+      } else {
+        meta.setAttribute('name', property);
+      }
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', content);
+  };
+
+  updateMeta('description', description);
+  updateMeta('og:url', postUrl);
+  updateMeta('og:title', post.titulo);
+  updateMeta('og:description', description);
+  updateMeta('og:type', 'article');
+  updateMeta('twitter:url', postUrl);
+  updateMeta('twitter:title', post.titulo);
+  updateMeta('twitter:description', description);
+  
+  // Se o post tiver foto_capa, adiciona a imagem
+  if (post.foto_capa) {
+    updateMeta('og:image', post.foto_capa);
+    updateMeta('twitter:image', post.foto_capa);
+    updateMeta('twitter:card', 'summary_large_image');
+  } else {
+    updateMeta('twitter:card', 'summary');
+  }
 }
 
 // ── CARREGAR POSTS ─────────────────────────────────────────
@@ -316,7 +367,6 @@ function renderGrid(posts){
 
 // ── POST INDIVIDUAL ────────────────────────────────────────
 async function showPost(ref){
-  // Busca por slug OU por UUID — retrocompatível
   let query;
   if(isUuid(ref)){
     query = db.from('blog_posts').select('*').eq('id', ref).single();
@@ -328,6 +378,9 @@ async function showPost(ref){
   if(!data || error) return;
 
   currentPostId = data.id;
+  
+  // Atualiza meta tags para compartilhamento
+  updateMetaTags(data);
 
   const headerImg = data.foto_header
     ? `<img class="post-header-img" src="${data.foto_header}" alt="${esc(data.titulo)}">`
@@ -351,7 +404,6 @@ async function showPost(ref){
   document.getElementById('postView').style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  // URL usa slug se disponível, senão UUID
   const urlRef = data.slug || data.id;
   history.pushState({}, '', '?post=' + urlRef);
 
@@ -362,7 +414,11 @@ function showList(){
   currentPostId = null;
   document.getElementById('postList').style.display = 'block';
   document.getElementById('postView').style.display = 'none';
+  
+  // Restaura meta tags padrão
+  document.title = 'Blog — Pesquisadoras ES';
   history.pushState({}, '', 'blog.html');
+  
   const filtered = filtroCategoria
     ? allPosts.filter(p => parseCats(p.categoria).includes(filtroCategoria))
     : allPosts;
@@ -423,7 +479,6 @@ async function submitComment(){
 document.getElementById('navToggle').onclick = () => document.getElementById('navLinks').classList.toggle('open');
 
 // ── INICIAR ────────────────────────────────────────────────
-// Aceita tanto ?post=slug-do-artigo quanto ?post=uuid-legado
 const postParam = new URLSearchParams(window.location.search).get('post');
 if(postParam) showPost(postParam); else loadPosts();
 </script>
