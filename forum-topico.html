@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZKJ88LSLJY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-ZKJ88LSLJY');
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tópico — Fórum Pesquisadoras ES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+:root{--verde:#3A6B4A;--verde-vivo:#52A86B;--verde-escuro:#2A4D35;--areia:#F5EFE6;--areia-escura:#EDE3D5;--rosa:#E8C4C4;--rosa-vivo:#C4748A;--roxo:#4A2E4A;--roxo-medio:#6B4068;--branco:#FFFAF6;--cinza:#7A6B6B;--cinza-claro:#DDD0C8;--preto:#1E1218;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--areia);color:var(--preto);line-height:1.6;}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1.5rem,5vw,4rem);height:68px;background:rgba(74,46,74,0.96);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.08);}
+.nav-logo{font-weight:800;font-size:1rem;color:white;text-decoration:none;letter-spacing:-0.02em;}
+.nav-logo span{color:var(--rosa-vivo);}
+.nav-user{display:flex;align-items:center;gap:0.75rem;}
+.nav-user-name{font-size:0.78rem;color:rgba(255,255,255,0.6);}
+.nav-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--rosa-vivo),var(--roxo-medio));display:flex;align-items:center;justify-content:center;font-size:0.82rem;font-weight:700;color:white;overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,0.2);}
+.nav-avatar img{width:100%;height:100%;object-fit:cover;}
+.btn-logout-nav{font-size:0.72rem;color:rgba(255,255,255,0.45);background:none;border:none;cursor:pointer;font-family:'Sora',sans-serif;transition:color 0.2s;}
+.btn-logout-nav:hover{color:white;}
+.main-wrap{max-width:820px;margin:0 auto;padding:88px 1.5rem 4rem;}
+/* BREADCRUMB */
+.breadcrumb{display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--cinza);margin-bottom:1.5rem;flex-wrap:wrap;}
+.breadcrumb a{color:var(--rosa-vivo);text-decoration:none;font-weight:600;}
+.breadcrumb a:hover{opacity:0.75;}
+.breadcrumb-sep{color:var(--cinza-claro);}
+/* TÓPICO PRINCIPAL */
+.post-card{background:var(--branco);border-radius:20px;border:1.5px solid var(--cinza-claro);overflow:hidden;margin-bottom:1.5rem;}
+.post-header{background:linear-gradient(135deg,var(--roxo),var(--roxo-medio));padding:1.75rem 2rem;color:white;}
+.post-cat-tag{display:inline-flex;align-items:center;gap:0.35rem;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.12);padding:0.25rem 0.7rem;border-radius:100px;margin-bottom:0.85rem;}
+.post-title{font-family:'DM Serif Display',serif;font-size:clamp(1.4rem,3vw,2rem);font-weight:400;line-height:1.2;margin-bottom:0.75rem;}
+.post-header-meta{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;}
+.post-author-avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;overflow:hidden;flex-shrink:0;}
+.post-author-avatar img{width:100%;height:100%;object-fit:cover;}
+.post-author-name{font-weight:700;font-size:0.85rem;}
+.post-author-inst{font-size:0.72rem;opacity:0.65;}
+.post-date{font-size:0.72rem;opacity:0.55;margin-left:auto;}
+.post-badges{display:flex;gap:0.4rem;flex-wrap:wrap;margin-left:auto;}
+.badge{display:inline-block;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:0.2rem 0.6rem;border-radius:100px;}
+.badge-pinned{background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.85);}
+.badge-closed{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);}
+.post-body-wrap{padding:1.75rem 2rem;}
+.post-body{font-size:0.93rem;line-height:1.85;color:#333;white-space:pre-wrap;word-break:break-word;}
+.post-footer{padding:0.75rem 2rem;border-top:1px solid var(--cinza-claro);display:flex;align-items:center;gap:1rem;font-size:0.75rem;color:var(--cinza);}
+/* RESPOSTAS */
+.replies-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;}
+.replies-title{font-family:'DM Serif Display',serif;font-size:1.2rem;font-weight:400;}
+.reply-count-badge{display:inline-block;font-size:0.65rem;font-weight:700;background:rgba(196,116,138,0.12);color:var(--rosa-vivo);padding:0.2rem 0.6rem;border-radius:100px;}
+.reply-card{background:var(--branco);border-radius:16px;border:1.5px solid var(--cinza-claro);padding:1.5rem;margin-bottom:0.75rem;position:relative;}
+.reply-card.first-reply{border-left:3px solid var(--rosa-vivo);}
+.reply-author{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;}
+.reply-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--verde),var(--verde-escuro));display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;color:white;overflow:hidden;flex-shrink:0;}
+.reply-avatar img{width:100%;height:100%;object-fit:cover;}
+.reply-name{font-weight:700;font-size:0.85rem;margin-bottom:0.1rem;}
+.reply-inst{font-size:0.7rem;color:var(--cinza);}
+.reply-date{font-size:0.7rem;color:var(--cinza);margin-left:auto;}
+.reply-body{font-size:0.88rem;line-height:1.75;color:#333;white-space:pre-wrap;word-break:break-word;}
+/* FORM RESPOSTA */
+.reply-form-card{background:var(--branco);border-radius:20px;border:1.5px solid var(--cinza-claro);padding:1.75rem;margin-top:1.5rem;}
+.reply-form-title{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;margin-bottom:1.25rem;}
+.reply-author-tag{display:flex;align-items:center;gap:0.75rem;background:var(--areia);border-radius:10px;padding:0.75rem 1rem;margin-bottom:1rem;}
+.reply-author-tag-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--rosa-vivo),var(--roxo-medio));display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;color:white;overflow:hidden;flex-shrink:0;}
+.reply-author-tag-avatar img{width:100%;height:100%;object-fit:cover;}
+.reply-author-tag-name{font-size:0.82rem;font-weight:600;}
+.reply-author-tag-sub{font-size:0.7rem;color:var(--cinza);}
+.form-textarea{font-family:'Sora',sans-serif;font-size:0.88rem;padding:0.85rem 1rem;border:1.5px solid var(--cinza-claro);border-radius:10px;background:var(--areia);color:var(--preto);outline:none;transition:border 0.2s;width:100%;resize:vertical;min-height:140px;}
+.form-textarea:focus{border-color:var(--roxo);background:white;}
+.char-count{font-size:0.68rem;color:var(--cinza);text-align:right;margin-top:0.25rem;}
+.form-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1rem;flex-wrap:wrap;}
+.form-hint{font-size:0.72rem;color:var(--cinza);}
+.btn-reply{display:inline-flex;align-items:center;gap:0.4rem;background:var(--roxo);color:white;font-family:'Sora',sans-serif;font-size:0.85rem;font-weight:700;padding:0.75rem 1.75rem;border-radius:100px;border:none;cursor:pointer;transition:all 0.2s;}
+.btn-reply:hover:not(:disabled){background:#3a2038;transform:translateY(-1px);}
+.btn-reply:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.alert{border-radius:10px;padding:0.85rem 1rem;font-size:0.82rem;line-height:1.5;margin-top:0.75rem;display:none;}
+.alert.show{display:block;}
+.alert-ok{background:rgba(58,107,74,0.08);border:1px solid rgba(58,107,74,0.25);color:var(--verde-escuro);}
+.alert-erro{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;}
+.closed-notice{background:var(--areia-escura);border-radius:12px;padding:1rem 1.25rem;font-size:0.85rem;color:var(--cinza);text-align:center;border:1.5px solid var(--cinza-claro);margin-top:1.5rem;}
+/* LOADING / EMPTY */
+.loading{text-align:center;padding:2.5rem;color:var(--cinza);}
+.spinner{width:28px;height:28px;border:3px solid var(--cinza-claro);border-top-color:var(--rosa-vivo);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 0.75rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:1.5rem;color:var(--cinza);font-size:0.85rem;}
+/* GATE */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--areia);}
+.gate-card{background:var(--branco);border-radius:24px;padding:3rem 2.5rem;max-width:440px;text-align:center;border:1.5px solid var(--cinza-claro);}
+.gate-icon{font-size:3.5rem;margin-bottom:1rem;}
+.gate-title{font-family:'DM Serif Display',serif;font-size:1.6rem;margin-bottom:0.75rem;}
+.gate-desc{font-size:0.88rem;color:var(--cinza);line-height:1.75;margin-bottom:2rem;}
+.gate-btn{display:inline-flex;align-items:center;gap:0.5rem;background:var(--roxo);color:white;font-family:'Sora',sans-serif;font-size:0.88rem;font-weight:700;padding:0.85rem 2rem;border-radius:100px;text-decoration:none;transition:all 0.2s;}
+.gate-btn:hover{background:#3a2038;}
+</style>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-WLJZDV4H');</script>
+<!-- End Google Tag Manager -->
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WLJZDV4H"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div class="gate" id="gate" style="display:none">
+  <div class="gate-card">
+    <div class="gate-icon">🔒</div>
+    <div class="gate-title">Área restrita</div>
+    <p class="gate-desc">O fórum é exclusivo para pesquisadoras cadastradas. Faça login para acessar.</p>
+    <a href="../pesquisadora/login.html" class="gate-btn">Fazer login →</a>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+<nav>
+  <a href="index.html" class="nav-logo">Pesquisadoras<span> do ES</span></a>
+  <div class="nav-user">
+    <span class="nav-user-name" id="navNome">—</span>
+    <div class="nav-avatar" id="navAvatar">?</div>
+    <button class="btn-logout-nav" onclick="logout()">Sair</button>
+  </div>
+</nav>
+
+<div class="main-wrap">
+  <div class="breadcrumb">
+    <a href="forum.html">Fórum</a>
+    <span class="breadcrumb-sep">/</span>
+    <span id="breadCat">—</span>
+    <span class="breadcrumb-sep">/</span>
+    <span id="breadTitle" style="color:var(--preto);font-weight:600">—</span>
+  </div>
+
+  <!-- TÓPICO -->
+  <div id="postWrap"><div class="loading"><div class="spinner"></div></div></div>
+
+  <!-- RESPOSTAS -->
+  <div id="repliesSection" style="display:none">
+    <div class="replies-header">
+      <span class="replies-title">Respostas</span>
+      <span class="reply-count-badge" id="replyCountBadge">0</span>
+    </div>
+    <div id="repliesWrap"></div>
+  </div>
+
+  <!-- FORM RESPOSTA -->
+  <div id="replyFormWrap"></div>
+</div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let researcherData = null;
+let postData = null;
+
+const postId = new URLSearchParams(window.location.search).get('id');
+
+async function init() {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { document.getElementById('gate').style.display='flex'; return; }
+  currentUser = session.user;
+
+  const { data: r } = await db.from('researchers').select('*')
+    .eq('auth_user_id', currentUser.id).single();
+  if (!r || r.status !== 'aprovada') { document.getElementById('gate').style.display='flex'; return; }
+  researcherData = r;
+
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('navNome').textContent = r.nome.split(' ')[0];
+  if (r.foto_url) document.getElementById('navAvatar').innerHTML = `<img src="${r.foto_url}" alt="">`;
+  else document.getElementById('navAvatar').textContent = iniciais(r.nome);
+
+  if (!postId) { location.href = 'forum.html'; return; }
+  await loadPost();
+}
+
+async function loadPost() {
+  const { data: post } = await db.from('forum_posts')
+    .select('*, researchers(nome, foto_url, instituicao, area_principal), forum_categories(nome, emoji)')
+    .eq('id', postId).eq('aprovado', true).single();
+
+  if (!post) {
+    document.getElementById('postWrap').innerHTML = '<div class="empty">Tópico não encontrado ou ainda aguardando aprovação.</div>';
+    return;
+  }
+  postData = post;
+
+  // Incrementa views
+  db.rpc('increment_forum_views', { post_uuid: postId });
+
+  // Breadcrumb
+  document.title = post.titulo + ' — Fórum Pesquisadoras ES';
+  document.getElementById('breadCat').textContent = (post.forum_categories?.emoji||'') + ' ' + (post.forum_categories?.nome||'—');
+  document.getElementById('breadTitle').textContent = post.titulo.length > 50 ? post.titulo.substring(0, 50) + '…' : post.titulo;
+
+  const r = post.researchers || {};
+  const authorAvatar = r.foto_url
+    ? `<img src="${r.foto_url}" alt="">`
+    : iniciais(r.nome||'?');
+
+  document.getElementById('postWrap').innerHTML = `
+    <div class="post-card">
+      <div class="post-header">
+        <div class="post-cat-tag">${post.forum_categories?.emoji||'💬'} ${esc(post.forum_categories?.nome||'—')}</div>
+        <div class="post-title">${esc(post.titulo)}</div>
+        <div class="post-header-meta">
+          <div class="post-author-avatar">${authorAvatar}</div>
+          <div>
+            <div class="post-author-name">${esc(r.nome||'—')}</div>
+            <div class="post-author-inst">${esc(r.instituicao||'')}${r.area_principal?' · '+esc(r.area_principal):''}</div>
+          </div>
+          <div class="post-badges">
+            ${post.pinned ? '<span class="badge badge-pinned">📌 Fixado</span>' : ''}
+            ${post.closed ? '<span class="badge badge-closed">🔒 Fechado</span>' : ''}
+          </div>
+          <div class="post-date">${formatDate(post.created_at)}</div>
+        </div>
+      </div>
+      <div class="post-body-wrap">
+        <div class="post-body">${esc(post.corpo)}</div>
+      </div>
+      <div class="post-footer">
+        <span>👁 ${post.views} visualizações</span>
+        <span>🕐 ${new Date(post.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })}</span>
+      </div>
+    </div>`;
+
+  await loadReplies();
+  renderReplyForm();
+}
+
+async function loadReplies() {
+  const { data: replies } = await db.from('forum_replies')
+    .select('*, researchers(nome, foto_url, instituicao)')
+    .eq('post_id', postId).eq('aprovado', true)
+    .order('created_at', { ascending: true });
+
+  const section = document.getElementById('repliesSection');
+  const wrap = document.getElementById('repliesWrap');
+  const badge = document.getElementById('replyCountBadge');
+
+  if (!replies?.length) {
+    section.style.display = 'block';
+    badge.textContent = '0';
+    wrap.innerHTML = '<div class="empty">Ainda sem respostas. Seja a primeira a responder!</div>';
+    return;
+  }
+
+  section.style.display = 'block';
+  badge.textContent = replies.length;
+  wrap.innerHTML = replies.map((rep, i) => {
+    const r = rep.researchers || {};
+    const av = r.foto_url ? `<img src="${r.foto_url}" alt="">` : iniciais(r.nome||'?');
+    return `
+      <div class="reply-card ${i === 0 ? 'first-reply' : ''}">
+        <div class="reply-author">
+          <div class="reply-avatar">${av}</div>
+          <div>
+            <div class="reply-name">${esc(r.nome||'—')}</div>
+            <div class="reply-inst">${esc(r.instituicao||'')}</div>
+          </div>
+          <div class="reply-date">${formatDate(rep.created_at)}</div>
+        </div>
+        <div class="reply-body">${esc(rep.corpo)}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderReplyForm() {
+  const wrap = document.getElementById('replyFormWrap');
+  if (postData?.closed) {
+    wrap.innerHTML = '<div class="closed-notice">🔒 Este tópico está fechado para novas respostas.</div>';
+    return;
+  }
+  const av = researcherData.foto_url
+    ? `<img src="${researcherData.foto_url}" alt="">`
+    : iniciais(researcherData.nome);
+  wrap.innerHTML = `
+    <div class="reply-form-card">
+      <div class="reply-form-title">Sua resposta</div>
+      <div class="reply-author-tag">
+        <div class="reply-author-tag-avatar">${av}</div>
+        <div>
+          <div class="reply-author-tag-name">${esc(researcherData.nome)}</div>
+          <div class="reply-author-tag-sub">Postando como você</div>
+        </div>
+      </div>
+      <textarea class="form-textarea" id="replyBody" placeholder="Escreva sua resposta…" maxlength="4000"
+        oninput="document.getElementById('replyCount').textContent=this.value.length+'/4000'"></textarea>
+      <div class="char-count" id="replyCount">0/4000</div>
+      <div class="form-footer">
+        <span class="form-hint">Sua resposta aparecerá após aprovação da equipe.</span>
+        <button class="btn-reply" id="btnReply" onclick="submitReply()">Enviar resposta</button>
+      </div>
+      <div class="alert alert-ok"  id="replyOk">✓ Resposta enviada! Aparecerá em breve após aprovação.</div>
+      <div class="alert alert-erro" id="replyErro"></div>
+    </div>`;
+}
+
+async function submitReply() {
+  const corpo = document.getElementById('replyBody').value.trim();
+  const okEl = document.getElementById('replyOk');
+  const errEl = document.getElementById('replyErro');
+  okEl.classList.remove('show'); errEl.classList.remove('show');
+
+  if (!corpo) {
+    errEl.textContent = 'Escreva sua resposta antes de enviar.';
+    errEl.classList.add('show'); return;
+  }
+
+  const btn = document.getElementById('btnReply');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+
+  const { error } = await db.from('forum_replies').insert([{
+    post_id: postId,
+    researcher_id: researcherData.id,
+    corpo, aprovado: false
+  }]);
+
+  btn.disabled = false; btn.textContent = 'Enviar resposta';
+
+  if (error) {
+    errEl.textContent = 'Erro ao enviar: ' + error.message;
+    errEl.classList.add('show'); return;
+  }
+
+  document.getElementById('replyBody').value = '';
+  document.getElementById('replyCount').textContent = '0/4000';
+  okEl.classList.add('show');
+}
+
+async function logout() { await db.auth.signOut(); location.href = 'pesquisadora/login.html'; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function iniciais(n) { return (n||'?').split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join('')||'?'; }
+function formatDate(d) {
+  const diff = (Date.now() - new Date(d)) / 1000;
+  if (diff < 60) return 'agora mesmo';
+  if (diff < 3600) return Math.floor(diff/60) + ' min atrás';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h atrás';
+  if (diff < 604800) return Math.floor(diff/86400) + ' dias atrás';
+  return new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+}
+
+init();
+</script>
+</body>
+</html>

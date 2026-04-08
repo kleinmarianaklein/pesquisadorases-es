@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZKJ88LSLJY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-ZKJ88LSLJY');
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fórum — Pesquisadoras do ES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+:root{--verde:#3A6B4A;--verde-vivo:#52A86B;--verde-escuro:#2A4D35;--areia:#F5EFE6;--areia-escura:#EDE3D5;--rosa:#E8C4C4;--rosa-vivo:#C4748A;--roxo:#4A2E4A;--roxo-medio:#6B4068;--branco:#FFFAF6;--cinza:#7A6B6B;--cinza-claro:#DDD0C8;--preto:#1E1218;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--areia);color:var(--preto);line-height:1.6;}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1.5rem,5vw,4rem);height:68px;background:rgba(74,46,74,0.96);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.08);}
+.nav-logo{font-weight:800;font-size:1rem;color:white;text-decoration:none;letter-spacing:-0.02em;}
+.nav-logo span{color:var(--rosa-vivo);}
+.nav-user{display:flex;align-items:center;gap:0.75rem;}
+.nav-user-name{font-size:0.78rem;color:rgba(255,255,255,0.6);}
+.nav-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--rosa-vivo),var(--roxo-medio));display:flex;align-items:center;justify-content:center;font-size:0.82rem;font-weight:700;color:white;overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,0.2);}
+.nav-avatar img{width:100%;height:100%;object-fit:cover;}
+.btn-logout-nav{font-size:0.72rem;color:rgba(255,255,255,0.45);background:none;border:none;cursor:pointer;font-family:'Sora',sans-serif;transition:color 0.2s;}
+.btn-logout-nav:hover{color:white;}
+.hero{background:var(--roxo);color:white;padding:clamp(5rem,8vw,6.5rem) clamp(1.5rem,5vw,4rem) clamp(2.5rem,4vw,3.5rem);position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='20' cy='20' r='7' stroke='%23C4748A' stroke-width='1.5' fill='none' opacity='0.2'/%3E%3Cline x1='20' y1='27' x2='20' y2='33' stroke='%23C4748A' stroke-width='1.5' opacity='0.2'/%3E%3Cline x1='16' y1='30' x2='24' y2='30' stroke='%23C4748A' stroke-width='1.5' opacity='0.2'/%3E%3C/svg%3E");background-size:80px 80px;pointer-events:none;}
+.hero-inner{max-width:1100px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;flex-wrap:wrap;position:relative;}
+.hero-tag{font-size:0.68rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--rosa-vivo);margin-bottom:0.75rem;display:block;}
+.hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:400;line-height:1.1;margin-bottom:0.5rem;}
+.hero h1 em{color:var(--rosa-vivo);font-style:italic;}
+.hero p{font-size:0.9rem;color:rgba(255,255,255,0.6);max-width:440px;}
+.btn-new-topic{display:inline-flex;align-items:center;gap:0.5rem;background:var(--rosa-vivo);color:white;font-family:'Sora',sans-serif;font-size:0.85rem;font-weight:700;padding:0.85rem 1.75rem;border-radius:100px;border:none;cursor:pointer;transition:all 0.2s;white-space:nowrap;text-decoration:none;}
+.btn-new-topic:hover{opacity:0.85;transform:translateY(-1px);}
+.content{max-width:1100px;margin:0 auto;padding:clamp(2rem,4vw,3rem) clamp(1.5rem,5vw,2rem);}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:2rem;align-items:start;}
+/* CATEGORIAS */
+.section-label{font-size:0.65rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--cinza);margin-bottom:1rem;display:block;}
+.category-card{background:var(--branco);border-radius:16px;border:1.5px solid var(--cinza-claro);overflow:hidden;margin-bottom:0.75rem;transition:border-color 0.2s;}
+.category-card:hover{border-color:var(--rosa-vivo);}
+.category-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;cursor:pointer;}
+.cat-left{display:flex;align-items:center;gap:0.85rem;}
+.cat-emoji{width:40px;height:40px;border-radius:10px;background:rgba(196,116,138,0.1);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.cat-nome{font-weight:700;font-size:0.9rem;margin-bottom:0.15rem;}
+.cat-desc{font-size:0.75rem;color:var(--cinza);}
+.cat-stats{text-align:right;flex-shrink:0;}
+.cat-count{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--roxo);line-height:1;}
+.cat-count-label{font-size:0.62rem;color:var(--cinza);text-transform:uppercase;letter-spacing:0.08em;}
+.category-topics{border-top:1px solid var(--cinza-claro);display:none;}
+.category-topics.open{display:block;}
+.topic-row{display:flex;align-items:center;gap:1rem;padding:0.9rem 1.25rem;border-bottom:1px solid rgba(0,0,0,0.04);cursor:pointer;transition:background 0.15s;}
+.topic-row:last-child{border-bottom:none;}
+.topic-row:hover{background:var(--areia);}
+.topic-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--verde),var(--verde-escuro));display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:white;flex-shrink:0;overflow:hidden;}
+.topic-avatar img{width:100%;height:100%;object-fit:cover;}
+.topic-main{flex:1;min-width:0;}
+.topic-title{font-weight:600;font-size:0.85rem;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:0.15rem;}
+.topic-meta{font-size:0.72rem;color:var(--cinza);}
+.topic-right{text-align:right;flex-shrink:0;}
+.topic-replies{font-size:0.72rem;color:var(--cinza);white-space:nowrap;}
+.topic-badge{display:inline-block;font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:0.15rem 0.5rem;border-radius:100px;margin-bottom:0.25rem;}
+.badge-pinned{background:rgba(58,107,74,0.12);color:var(--verde-escuro);}
+.badge-closed{background:var(--areia-escura);color:var(--cinza);}
+.cat-ver-mais{display:block;text-align:center;padding:0.6rem;font-size:0.75rem;color:var(--rosa-vivo);font-weight:600;cursor:pointer;border-top:1px solid var(--cinza-claro);background:none;border-left:none;border-right:none;border-bottom:none;width:100%;font-family:'Sora',sans-serif;transition:background 0.15s;}
+.cat-ver-mais:hover{background:var(--areia);}
+/* SIDEBAR */
+.sidebar-card{background:var(--branco);border-radius:16px;border:1.5px solid var(--cinza-claro);padding:1.25rem;margin-bottom:1.25rem;}
+.sidebar-title{font-family:'DM Serif Display',serif;font-size:1rem;font-weight:400;margin-bottom:1rem;}
+.recent-topic{display:flex;gap:0.75rem;padding:0.6rem 0;border-bottom:1px solid var(--cinza-claro);cursor:pointer;}
+.recent-topic:last-child{border-bottom:none;}
+.recent-topic:hover .recent-title{color:var(--rosa-vivo);}
+.recent-emoji{font-size:1rem;flex-shrink:0;margin-top:0.1rem;}
+.recent-title{font-size:0.8rem;font-weight:600;line-height:1.35;transition:color 0.2s;}
+.recent-meta{font-size:0.68rem;color:var(--cinza);margin-top:0.15rem;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--cinza-claro);font-size:0.82rem;}
+.stat-row:last-child{border-bottom:none;}
+.stat-num{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--roxo);}
+/* MODAL NOVO TÓPICO */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(30,18,24,0.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1.5rem;}
+.modal-overlay.open{display:flex;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--branco);border-radius:24px;max-width:620px;width:100%;max-height:92vh;overflow-y:auto;position:relative;box-shadow:0 24px 80px rgba(30,18,24,0.3);}
+.modal-header{padding:1.75rem 2rem 0;}
+.modal-close{position:absolute;top:1.25rem;right:1.25rem;background:rgba(0,0,0,0.06);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
+.modal-close:hover{background:rgba(0,0,0,0.12);}
+.modal-title{font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:400;margin-bottom:0.3rem;}
+.modal-sub{font-size:0.82rem;color:var(--cinza);margin-bottom:1.5rem;}
+.modal-body{padding:0 2rem 2rem;}
+.form-group{display:flex;flex-direction:column;gap:0.35rem;margin-bottom:1rem;}
+.form-label{font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--cinza);}
+.form-input,.form-select,.form-textarea{font-family:'Sora',sans-serif;font-size:0.88rem;padding:0.75rem 1rem;border:1.5px solid var(--cinza-claro);border-radius:10px;background:var(--areia);color:var(--preto);outline:none;transition:border 0.2s;width:100%;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--roxo);background:white;}
+.form-textarea{resize:vertical;min-height:160px;}
+.char-count{font-size:0.68rem;color:var(--cinza);text-align:right;}
+.btn-submit{width:100%;padding:0.9rem;background:var(--roxo);color:white;font-family:'Sora',sans-serif;font-size:0.92rem;font-weight:700;border:none;border-radius:100px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-top:0.5rem;}
+.btn-submit:hover:not(:disabled){background:#3a2038;transform:translateY(-1px);}
+.btn-submit:disabled{opacity:0.55;cursor:not-allowed;transform:none;}
+.alert{border-radius:10px;padding:0.85rem 1rem;font-size:0.82rem;line-height:1.5;margin-top:0.75rem;display:none;}
+.alert.show{display:block;}
+.alert-ok{background:rgba(58,107,74,0.08);border:1px solid rgba(58,107,74,0.25);color:var(--verde-escuro);}
+.alert-erro{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;}
+/* LOADING */
+.loading{text-align:center;padding:2.5rem;color:var(--cinza);}
+.spinner{width:28px;height:28px;border:3px solid var(--cinza-claro);border-top-color:var(--rosa-vivo);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 0.75rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:2rem;color:var(--cinza);font-size:0.85rem;}
+/* TELA DE ACESSO NEGADO */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--areia);}
+.gate-card{background:var(--branco);border-radius:24px;padding:3rem 2.5rem;max-width:440px;text-align:center;border:1.5px solid var(--cinza-claro);}
+.gate-icon{font-size:3.5rem;margin-bottom:1rem;}
+.gate-title{font-family:'DM Serif Display',serif;font-size:1.6rem;margin-bottom:0.75rem;}
+.gate-desc{font-size:0.88rem;color:var(--cinza);line-height:1.75;margin-bottom:2rem;}
+.gate-btn{display:inline-flex;align-items:center;gap:0.5rem;background:var(--roxo);color:white;font-family:'Sora',sans-serif;font-size:0.88rem;font-weight:700;padding:0.85rem 2rem;border-radius:100px;text-decoration:none;transition:all 0.2s;}
+.gate-btn:hover{background:#3a2038;}
+@media(max-width:768px){.layout{grid-template-columns:1fr;}.sidebar-content{display:none;}}
+</style>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-WLJZDV4H');</script>
+<!-- End Google Tag Manager -->
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WLJZDV4H"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- TELA DE ACESSO NEGADO (mostrada antes da autenticação) -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-icon">🔒</div>
+    <div class="gate-title">Área restrita</div>
+    <p class="gate-desc">O fórum é exclusivo para pesquisadoras cadastradas no portal. Faça login para acessar.</p>
+    <a href="pesquisadora/login.html" class="gate-btn">Fazer login →</a>
+  </div>
+</div>
+
+<!-- CONTEÚDO PRINCIPAL (oculto até autenticar) -->
+<div id="app" style="display:none">
+
+<nav>
+  <a href="index.html" class="nav-logo">Pesquisadoras<span> do ES</span></a>
+  <div class="nav-user">
+    <span class="nav-user-name" id="navNome">—</span>
+    <div class="nav-avatar" id="navAvatar">?</div>
+    <a href="index.html" style="font-size:0.72rem;color:rgba(255,255,255,0.45);text-decoration:none;margin-left:0.25rem">Portal</a>
+    <button class="btn-logout-nav" onclick="logout()">Sair</button>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div>
+      <span class="hero-tag">Comunidade fechada</span>
+      <h1>Fórum das <em>Pesquisadoras</em></h1>
+      <p>Espaço para troca, colaboração e apoio entre as cientistas capixabas cadastradas no portal.</p>
+    </div>
+    <button class="btn-new-topic" onclick="openModal()">+ Novo tópico</button>
+  </div>
+</div>
+
+<div class="content">
+  <div class="layout">
+    <div>
+      <span class="section-label">Categorias</span>
+      <div id="categoriesWrap">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+    <div class="sidebar-content">
+      <div class="sidebar-card">
+        <div class="sidebar-title">📊 Estatísticas</div>
+        <div id="statsWrap"><div class="loading" style="padding:1rem"><div class="spinner"></div></div></div>
+      </div>
+      <div class="sidebar-card">
+        <div class="sidebar-title">🕐 Tópicos recentes</div>
+        <div id="recentWrap"><div class="loading" style="padding:1rem"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- MODAL NOVO TÓPICO -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-header">
+      <div class="modal-title">Novo tópico</div>
+      <p class="modal-sub">Seu tópico ficará visível após aprovação da equipe.</p>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Categoria *</label>
+        <select class="form-select" id="newCategory"><option value="">Selecione…</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Título *</label>
+        <input type="text" class="form-input" id="newTitulo" placeholder="Descreva seu tópico em uma frase clara" maxlength="120" oninput="document.getElementById('tituloCount').textContent=this.value.length+'/120'">
+        <div class="char-count" id="tituloCount">0/120</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mensagem *</label>
+        <textarea class="form-textarea" id="newCorpo" placeholder="Escreva sua mensagem aqui…" maxlength="4000" oninput="document.getElementById('corpoCount').textContent=this.value.length+'/4000'"></textarea>
+        <div class="char-count" id="corpoCount">0/4000</div>
+      </div>
+      <button class="btn-submit" id="btnSubmit" onclick="submitTopic()">Enviar tópico</button>
+      <div class="alert alert-ok"  id="alertOk">✓ Tópico enviado! Aparecerá após aprovação da equipe.</div>
+      <div class="alert alert-erro" id="alertErro"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let researcherData = null;
+let categoriesData = [];
+
+// ── INIT ──────────────────────────────────────────────────
+async function init() {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { document.getElementById('gate').style.display='flex'; return; }
+  currentUser = session.user;
+
+  const { data: r } = await db.from('researchers').select('*')
+    .eq('auth_user_id', currentUser.id).single();
+
+  if (!r || r.status !== 'aprovada') {
+    document.getElementById('gate').style.display='flex'; return;
+  }
+  researcherData = r;
+
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  document.getElementById('navNome').textContent = r.nome.split(' ')[0];
+  if (r.foto_url) document.getElementById('navAvatar').innerHTML = `<img src="${r.foto_url}" alt="">`;
+  else document.getElementById('navAvatar').textContent = iniciais(r.nome);
+
+  await Promise.all([loadCategories(), loadStats(), loadRecent()]);
+}
+
+// ── CATEGORIAS COM TÓPICOS ────────────────────────────────
+async function loadCategories() {
+  const wrap = document.getElementById('categoriesWrap');
+  const { data: cats } = await db.from('forum_categories').select('*').order('ordem');
+  if (!cats?.length) { wrap.innerHTML = '<div class="empty">Nenhuma categoria encontrada.</div>'; return; }
+  categoriesData = cats;
+
+  // Preenche select do modal
+  const sel = document.getElementById('newCategory');
+  cats.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.emoji + ' ' + c.nome; sel.appendChild(o); });
+
+  // Para cada categoria, carrega contagem e últimos tópicos
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const html = await Promise.all(cats.map(c => buildCategoryCard(c)));
+  wrap.innerHTML = html.join('');
+}
+
+async function buildCategoryCard(cat) {
+  const { data: posts, count } = await db.from('forum_posts')
+    .select('id, titulo, pinned, closed, views, created_at, researcher_id, researchers(nome, foto_url)', { count: 'exact' })
+    .eq('category_id', cat.id).eq('aprovado', true)
+    .order('pinned', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const total = count || 0;
+  const postsHtml = posts?.length
+    ? posts.map(p => `
+      <div class="topic-row" onclick="location.href='forum-topico.html?id=${p.id}'">
+        <div class="topic-avatar">${p.researchers?.foto_url ? `<img src="${p.researchers.foto_url}" alt="">` : iniciais(p.researchers?.nome||'Admin')}</div>
+        <div class="topic-main">
+          <div class="topic-title">${esc(p.titulo)}</div>
+          <div class="topic-meta">${p.researchers?.nome||'Equipe Pesquisadoras ES'} · ${formatDate(p.created_at)}</div>
+        </div>
+        <div class="topic-right">
+          ${p.pinned ? '<div class="topic-badge badge-pinned">fixado</div>' : ''}
+          ${p.closed ? '<div class="topic-badge badge-closed">fechado</div>' : ''}
+          <div class="topic-replies">👁 ${p.views}</div>
+        </div>
+      </div>`).join('')
+    : '<div class="empty">Nenhum tópico ainda. Seja a primeira!</div>';
+
+  const verMais = total > 5
+    ? `<button class="cat-ver-mais" onclick="location.href='forum-topico.html?cat=${cat.id}'">Ver todos os ${total} tópicos →</button>`
+    : '';
+
+  return `
+    <div class="category-card">
+      <div class="category-header" onclick="toggleCat(this)">
+        <div class="cat-left">
+          <div class="cat-emoji">${cat.emoji}</div>
+          <div>
+            <div class="cat-nome">${esc(cat.nome)}</div>
+            <div class="cat-desc">${esc(cat.descricao||'')}</div>
+          </div>
+        </div>
+        <div class="cat-stats">
+          <div class="cat-count">${total}</div>
+          <div class="cat-count-label">tópico${total !== 1 ? 's' : ''}</div>
+        </div>
+      </div>
+      <div class="category-topics open">
+        ${postsHtml}
+        ${verMais}
+      </div>
+    </div>`;
+}
+
+function toggleCat(header) {
+  header.nextElementSibling.classList.toggle('open');
+}
+
+// ── ESTATÍSTICAS ──────────────────────────────────────────
+async function loadStats() {
+  const [{ count: postsCount }, { count: repliesCount }, { count: membersCount }] = await Promise.all([
+    db.from('forum_posts').select('*', { count: 'exact', head: true }).eq('aprovado', true),
+    db.from('forum_replies').select('*', { count: 'exact', head: true }).eq('aprovado', true),
+    db.from('researchers').select('*', { count: 'exact', head: true }).eq('status', 'aprovada'),
+  ]);
+  document.getElementById('statsWrap').innerHTML = `
+    <div class="stat-row"><span>Tópicos</span><span class="stat-num">${postsCount||0}</span></div>
+    <div class="stat-row"><span>Respostas</span><span class="stat-num">${repliesCount||0}</span></div>
+    <div class="stat-row"><span>Pesquisadoras</span><span class="stat-num">${membersCount||0}</span></div>`;
+}
+
+// ── RECENTES ──────────────────────────────────────────────
+async function loadRecent() {
+  const { data } = await db.from('forum_posts')
+    .select('id, titulo, created_at, category_id')
+    .eq('aprovado', true)
+    .order('created_at', { ascending: false })
+    .limit(6);
+
+  const wrap = document.getElementById('recentWrap');
+  if (!data?.length) { wrap.innerHTML = '<div class="empty">Nenhum tópico ainda.</div>'; return; }
+  const catMap = {};
+  categoriesData.forEach(c => { catMap[c.id] = c; });
+  wrap.innerHTML = data.map(p => {
+    const cat = catMap[p.category_id] || {};
+    return `<div class="recent-topic" onclick="location.href='forum-topico.html?id=${p.id}'">
+      <div class="recent-emoji">${cat.emoji||'💬'}</div>
+      <div>
+        <div class="recent-title">${esc(p.titulo)}</div>
+        <div class="recent-meta">${formatDate(p.created_at)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function submitTopic() {
+  const cat    = document.getElementById('newCategory').value;
+  const titulo = document.getElementById('newTitulo').value.trim();
+  const corpo  = document.getElementById('newCorpo').value.trim();
+  const okEl   = document.getElementById('alertOk');
+  const errEl  = document.getElementById('alertErro');
+  okEl.classList.remove('show'); errEl.classList.remove('show');
+
+  if (!cat || !titulo || !corpo) {
+    errEl.textContent = 'Preencha categoria, título e mensagem.';
+    errEl.classList.add('show'); return;
+  }
+
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+
+  const categoryId = isNaN(parseInt(cat)) ? cat : parseInt(cat);
+  const { error } = await db.from('forum_posts').insert([{
+    category_id: categoryId,
+    researcher_id: researcherData.id,
+    titulo, corpo, aprovado: false
+  }]);
+
+  btn.disabled = false; btn.textContent = 'Enviar tópico';
+
+  if (error) {
+    errEl.textContent = 'Erro ao enviar: ' + error.message;
+    errEl.classList.add('show'); return;
+  }
+
+  okEl.classList.add('show');
+  document.getElementById('newTitulo').value = '';
+  document.getElementById('newCorpo').value = '';
+  document.getElementById('newCategory').value = '';
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+async function logout() { await db.auth.signOut(); location.href = 'pesquisadora/login.html'; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function iniciais(n) { return (n||'?').split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join('')||'?'; }
+function formatDate(d) {
+  const diff = (Date.now() - new Date(d)) / 1000;
+  if (diff < 60) return 'agora mesmo';
+  if (diff < 3600) return Math.floor(diff/60) + ' min atrás';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h atrás';
+  if (diff < 604800) return Math.floor(diff/86400) + ' dias atrás';
+  return new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'short' });
+}
+document.getElementById('modalOverlay').onclick = e => { if (e.target === e.currentTarget) closeModal(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+init();
+</script>
+</body>
+</html>

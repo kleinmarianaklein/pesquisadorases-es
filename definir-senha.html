@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZKJ88LSLJY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-ZKJ88LSLJY');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Criar senha — Pesquisadoras do ES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../config.js"></script>
+<style>
+  :root {
+    --verde: #3A6B4A;
+    --verde-escuro: #2A4D35;
+    --areia: #F5EFE6;
+    --rosa-vivo: #C4748A;
+    --roxo: #4A2E4A;
+    --branco: #FFFAF6;
+    --cinza: #7A6B6B;
+    --cinza-claro: #DDD0C8;
+    --preto: #1E1218;
+    --erro: #C0392B;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--roxo);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* padrão de fundo igual ao site */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Ccircle cx='30' cy='30' r='14' stroke='%23E8C4C4' stroke-width='2.5' fill='none' opacity='0.12'/%3E%3Cline x1='30' y1='44' x2='30' y2='58' stroke='%23E8C4C4' stroke-width='2.5' opacity='0.12'/%3E%3Cline x1='23' y1='52' x2='37' y2='52' stroke='%23E8C4C4' stroke-width='2.5' opacity='0.12'/%3E%3Cpath d='M108 20 L108 38 L120 56 L96 56 Z' stroke='%2352A86B' stroke-width='2' fill='none' opacity='0.1'/%3E%3Cpath d='M60 70 Q68 80 60 90 Q52 100 60 110' stroke='%23E8C4C4' stroke-width='2' fill='none' opacity='0.1'/%3E%3Cpath d='M72 70 Q64 80 72 90 Q80 100 72 110' stroke='%2352A86B' stroke-width='2' fill='none' opacity='0.1'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+    pointer-events: none;
+  }
+
+  .card {
+    background: var(--branco);
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    max-width: 440px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+    animation: fadeUp 0.5s ease forwards;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .logo {
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--roxo);
+    text-align: center;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
+  }
+  .logo span { color: var(--rosa-vivo); }
+
+  .tagline {
+    text-align: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cinza);
+    margin-bottom: 2rem;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--preto);
+    text-align: center;
+    margin-bottom: 0.4rem;
+    line-height: 1.2;
+  }
+  h1 em { color: var(--rosa-vivo); font-style: italic; }
+
+  .desc {
+    text-align: center;
+    font-size: 0.83rem;
+    color: var(--cinza);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+  }
+
+  /* ESTADOS */
+  .state { display: none; }
+  .state.active { display: block; }
+
+  /* FORM */
+  .field { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.1rem; }
+  label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cinza); }
+
+  .input-wrap { position: relative; }
+  input[type=password], input[type=text] {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.92rem;
+    width: 100%;
+    padding: 0.8rem 2.75rem 0.8rem 1rem;
+    border: 1.5px solid var(--cinza-claro);
+    border-radius: 10px;
+    background: var(--areia);
+    color: var(--preto);
+    outline: none;
+    transition: border 0.2s, background 0.2s;
+  }
+  input:focus { border-color: var(--roxo); background: white; }
+  input.erro { border-color: var(--erro); }
+
+  .toggle-pw {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--cinza);
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0.2rem;
+    transition: color 0.2s;
+  }
+  .toggle-pw:hover { color: var(--roxo); }
+
+  /* FORÇA DA SENHA */
+  .strength-bar {
+    height: 4px;
+    border-radius: 100px;
+    background: var(--cinza-claro);
+    margin-top: 0.5rem;
+    overflow: hidden;
+  }
+  .strength-fill {
+    height: 100%;
+    border-radius: 100px;
+    width: 0%;
+    transition: width 0.3s, background 0.3s;
+  }
+  .strength-label {
+    font-size: 0.68rem;
+    color: var(--cinza);
+    margin-top: 0.3rem;
+    text-align: right;
+    min-height: 1em;
+  }
+
+  /* ERRO */
+  .err-msg {
+    font-size: 0.75rem;
+    color: var(--erro);
+    margin-top: 0.25rem;
+    display: none;
+  }
+  .err-msg.show { display: block; }
+
+  /* ALERTA GERAL */
+  .alert {
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+    display: none;
+  }
+  .alert.show { display: block; }
+  .alert-erro { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; }
+  .alert-ok { background: rgba(58,107,74,0.08); border: 1px solid rgba(58,107,74,0.25); color: var(--verde-escuro); }
+
+  /* BOTÃO */
+  .btn {
+    width: 100%;
+    background: var(--roxo);
+    color: white;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 0.9rem;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .btn:hover:not(:disabled) { background: #3a2038; transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SUCESSO */
+  .success-icon {
+    font-size: 3.5rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  .success-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--preto);
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  .success-desc {
+    text-align: center;
+    font-size: 0.83rem;
+    color: var(--cinza);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+  }
+  .btn-verde {
+    background: var(--verde);
+  }
+  .btn-verde:hover:not(:disabled) { background: var(--verde-escuro); }
+
+  /* LINK VOLTAR */
+  .back {
+    display: block;
+    text-align: center;
+    margin-top: 1.25rem;
+    font-size: 0.78rem;
+    color: var(--cinza);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .back:hover { color: var(--roxo); }
+
+  /* ERRO DE TOKEN */
+  .token-erro-icon { font-size: 3rem; text-align: center; margin-bottom: 1rem; }
+</style>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-WLJZDV4H');</script>
+<!-- End Google Tag Manager -->
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WLJZDV4H"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div class="card">
+
+  <!-- ESTADO: Carregando -->
+  <div class="state active" id="stateLoading">
+    <div class="logo">Pesquisadoras<span> do ES</span></div>
+    <div class="tagline">Área da pesquisadora</div>
+    <div style="text-align:center;padding:2rem 0">
+      <div class="spinner" style="margin:0 auto;width:28px;height:28px;border-width:3px;border-color:var(--cinza-claro);border-top-color:var(--roxo)"></div>
+      <p style="margin-top:1rem;font-size:0.83rem;color:var(--cinza)">Verificando seu link…</p>
+    </div>
+  </div>
+
+  <!-- ESTADO: Formulário de criação de senha -->
+  <div class="state" id="stateForm">
+    <div class="logo">Pesquisadoras<span> do ES</span></div>
+    <div class="tagline">Área da pesquisadora</div>
+    <h1>Crie sua <em>senha</em></h1>
+    <p class="desc">Escolha uma senha segura para acessar seu painel no portal.</p>
+
+    <div class="alert alert-erro" id="alertErro"></div>
+
+    <div class="field">
+      <label>Nova senha</label>
+      <div class="input-wrap">
+        <input type="password" id="senha" placeholder="Mínimo 8 caracteres" oninput="avaliarSenha(this.value)">
+        <button type="button" class="toggle-pw" onclick="toggleVisibility('senha', this)" title="Mostrar senha">👁</button>
+      </div>
+      <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+      <div class="strength-label" id="strengthLabel"></div>
+      <div class="err-msg" id="errSenha">Senha deve ter pelo menos 8 caracteres.</div>
+    </div>
+
+    <div class="field">
+      <label>Confirmar senha</label>
+      <div class="input-wrap">
+        <input type="password" id="senhaConfirm" placeholder="Repita a senha">
+        <button type="button" class="toggle-pw" onclick="toggleVisibility('senhaConfirm', this)" title="Mostrar senha">👁</button>
+      </div>
+      <div class="err-msg" id="errConfirm">As senhas não coincidem.</div>
+    </div>
+
+    <button class="btn" id="btnSalvar" onclick="salvarSenha()">
+      Salvar senha e entrar →
+    </button>
+
+    <a href="../index.html" class="back">← Voltar ao portal</a>
+  </div>
+
+  <!-- ESTADO: Sucesso -->
+  <div class="state" id="stateSuccess">
+    <div class="success-icon">🎉</div>
+    <div class="success-name" id="successNome">Bem-vinda!</div>
+    <p class="success-desc">Sua senha foi criada. Você já pode acessar seu painel e gerenciar seu perfil e publicações.</p>
+    <button class="btn btn-verde" onclick="irParaPainel()">
+      Acessar meu painel →
+    </button>
+  </div>
+
+  <!-- ESTADO: Link inválido ou expirado -->
+  <div class="state" id="stateErroToken">
+    <div class="token-erro-icon">🔗</div>
+    <h1 style="margin-bottom:0.75rem">Link inválido</h1>
+    <p class="desc">Este link de acesso já foi usado ou expirou. Links são válidos por 24 horas.</p>
+    <p style="text-align:center;font-size:0.83rem;color:var(--cinza);line-height:1.7;margin-bottom:2rem">
+      Se precisar de um novo link, entre em contato:<br>
+      <a href="mailto:mulheres@kickgroup.com.br" style="color:var(--rosa-vivo);font-weight:600">mulheres@kickgroup.com.br</a>
+    </p>
+    <a href="../index.html" class="back">← Voltar ao portal</a>
+  </div>
+
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let nomeResearchadora = '';
+
+// ── INICIALIZAÇÃO ─────────────────────────────────────────
+// O Supabase redireciona com tokens na URL (fragment #access_token=...&type=invite)
+window.addEventListener('load', async () => {
+  // Extrai parâmetros do fragmento da URL
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const type = params.get('type');
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+
+  // Também verifica query string (alguns flows usam ?token_hash=...)
+  const query = new URLSearchParams(window.location.search);
+  const tokenHash = query.get('token_hash');
+  const queryType = query.get('type');
+
+  if (tokenHash && queryType === 'invite') {
+    // Flow PKCE — verifica o token
+    const { data, error } = await db.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: 'invite'
+    });
+    if (error) { showState('stateErroToken'); return; }
+    await carregarPerfil();
+    showState('stateForm');
+    return;
+  }
+
+  if (accessToken && (type === 'invite' || type === 'recovery')) {
+    // Flow legado com fragment
+    const { data, error } = await db.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken || ''
+    });
+    if (error) { showState('stateErroToken'); return; }
+    await carregarPerfil();
+    showState('stateForm');
+    return;
+  }
+
+  // Sem token — link inválido
+  showState('stateErroToken');
+});
+
+async function carregarPerfil() {
+  try {
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) return;
+    // Busca o nome da pesquisadora pelo email
+    const { data } = await db
+      .from('researchers')
+      .select('nome')
+      .eq('email', user.email)
+      .single();
+    if (data?.nome) {
+      nomeResearchadora = data.nome.split(' ')[0]; // primeiro nome
+    }
+  } catch(e) {
+    // Silencia — nome é opcional
+  }
+}
+
+// ── SALVAR SENHA ──────────────────────────────────────────
+async function salvarSenha() {
+  const senha = document.getElementById('senha').value;
+  const confirm = document.getElementById('senhaConfirm').value;
+  const alertEl = document.getElementById('alertErro');
+  alertEl.classList.remove('show');
+
+  // Validações
+  let ok = true;
+  if (senha.length < 8) {
+    document.getElementById('errSenha').classList.add('show');
+    document.getElementById('senha').classList.add('erro');
+    ok = false;
+  } else {
+    document.getElementById('errSenha').classList.remove('show');
+    document.getElementById('senha').classList.remove('erro');
+  }
+  if (senha !== confirm) {
+    document.getElementById('errConfirm').classList.add('show');
+    document.getElementById('senhaConfirm').classList.add('erro');
+    ok = false;
+  } else {
+    document.getElementById('errConfirm').classList.remove('show');
+    document.getElementById('senhaConfirm').classList.remove('erro');
+  }
+  if (!ok) return;
+
+  const btn = document.getElementById('btnSalvar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Salvando…';
+
+  const { error } = await db.auth.updateUser({ password: senha });
+
+  if (error) {
+    alertEl.textContent = 'Erro ao salvar senha: ' + error.message;
+    alertEl.classList.add('show');
+    btn.disabled = false;
+    btn.innerHTML = 'Salvar senha e entrar →';
+    return;
+  }
+
+  // Vincula auth_user_id na tabela researchers
+  const { data: { user } } = await db.auth.getUser();
+  if (user) {
+    await db
+      .from('researchers')
+      .update({ auth_user_id: user.id })
+      .eq('email', user.email);
+  }
+
+  // Mostra sucesso
+  const nomeEl = document.getElementById('successNome');
+  nomeEl.textContent = nomeResearchadora
+    ? `Bem-vinda, ${nomeResearchadora}!`
+    : 'Senha criada com sucesso!';
+
+  showState('stateSuccess');
+}
+
+function irParaPainel() {
+  window.location.href = 'painel.html';
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+function showState(id) {
+  document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function toggleVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+function avaliarSenha(val) {
+  const fill = document.getElementById('strengthFill');
+  const label = document.getElementById('strengthLabel');
+  if (!val) { fill.style.width = '0%'; label.textContent = ''; return; }
+
+  let score = 0;
+  if (val.length >= 8)  score++;
+  if (val.length >= 12) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+
+  const levels = [
+    { w: '20%', bg: '#E24B4A', txt: 'Muito fraca' },
+    { w: '40%', bg: '#EF9F27', txt: 'Fraca' },
+    { w: '60%', bg: '#EF9F27', txt: 'Razoável' },
+    { w: '80%', bg: '#52A86B', txt: 'Boa' },
+    { w: '100%', bg: '#3A6B4A', txt: 'Forte' },
+  ];
+  const lv = levels[Math.min(score, 4)];
+  fill.style.width = lv.w;
+  fill.style.background = lv.bg;
+  label.textContent = lv.txt;
+  label.style.color = lv.bg;
+}
+</script>
+</body>
+</html>

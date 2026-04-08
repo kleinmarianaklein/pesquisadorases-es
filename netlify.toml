@@ -1,0 +1,29 @@
+[build]
+  publish = "."
+
+[build.processing]
+  skip_processing = false
+
+[build.processing.html]
+  pretty_urls = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[edge_functions]]
+  path     = "/blog.html"
+  function = "og-inject"
+
+[[redirects]]
+  from = "/admin"
+  to   = "/admin/login.html"
+  status = 301
+
+[[redirects]]
+  from = "/pesquisadora"
+  to   = "/pesquisadora/login.html"
+  status = 301

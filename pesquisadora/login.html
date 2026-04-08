@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZKJ88LSLJY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-ZKJ88LSLJY');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acesso — Pesquisadoras do ES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../config.js"></script>
+<style>
+  :root {
+    --verde:        #3A6B4A;
+    --verde-escuro: #2A4D35;
+    --areia:        #F5EFE6;
+    --rosa-vivo:    #C4748A;
+    --roxo:         #4A2E4A;
+    --roxo-medio:   #6B4068;
+    --branco:       #FFFAF6;
+    --cinza:        #7A6B6B;
+    --cinza-claro:  #DDD0C8;
+    --preto:        #1E1218;
+    --erro:         #C0392B;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--areia);
+    color: var(--preto);
+  }
+
+  /* ── LADO ESQUERDO — decorativo ── */
+  .left-panel {
+    background: var(--roxo);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: clamp(2rem, 5vw, 4rem);
+  }
+
+  .left-panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Ccircle cx='30' cy='30' r='14' stroke='%23E8C4C4' stroke-width='2.5' fill='none' opacity='0.15'/%3E%3Cline x1='30' y1='44' x2='30' y2='58' stroke='%23E8C4C4' stroke-width='2.5' opacity='0.15'/%3E%3Cline x1='23' y1='52' x2='37' y2='52' stroke='%23E8C4C4' stroke-width='2.5' opacity='0.15'/%3E%3Cpath d='M108 20 L108 38 L120 56 L96 56 Z' stroke='%2352A86B' stroke-width='2' fill='none' opacity='0.12'/%3E%3Cpath d='M60 70 Q68 80 60 90 Q52 100 60 110' stroke='%23E8C4C4' stroke-width='2' fill='none' opacity='0.1'/%3E%3Cpath d='M72 70 Q64 80 72 90 Q80 100 72 110' stroke='%2352A86B' stroke-width='2' fill='none' opacity='0.1'/%3E%3Ccircle cx='130' cy='95' r='10' stroke='%23E8C4C4' stroke-width='2' fill='none' opacity='0.12'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+    pointer-events: none;
+  }
+
+  .left-logo {
+    position: relative; z-index: 1;
+    font-weight: 800; font-size: 1rem;
+    color: white; letter-spacing: -0.02em;
+    text-decoration: none;
+  }
+  .left-logo span { color: var(--rosa-vivo); }
+
+  .left-content {
+    position: relative; z-index: 1;
+  }
+
+  .left-eyebrow {
+    font-size: 0.65rem; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--rosa-vivo); margin-bottom: 1rem; display: block;
+  }
+
+  .left-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 3.5vw, 3.5rem);
+    font-weight: 400; color: white;
+    line-height: 1.05; margin-bottom: 1.5rem;
+  }
+  .left-title em { color: var(--rosa-vivo); font-style: italic; }
+
+  .left-desc {
+    font-size: 0.9rem; color: rgba(255,255,255,0.55);
+    line-height: 1.8; max-width: 380px;
+  }
+
+  /* destaques / bullets */
+  .left-features {
+    margin-top: 2rem;
+    display: flex; flex-direction: column; gap: 0.75rem;
+  }
+  .left-feature {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    font-size: 0.82rem; color: rgba(255,255,255,0.65);
+    line-height: 1.5;
+  }
+  .left-feature-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; flex-shrink: 0; margin-top: 0.1rem;
+  }
+
+  .left-footer {
+    position: relative; z-index: 1;
+    font-size: 0.72rem; color: rgba(255,255,255,0.25);
+  }
+
+  /* ── LADO DIREITO — formulário ── */
+  .right-panel {
+    display: flex; align-items: center; justify-content: center;
+    padding: clamp(2rem, 5vw, 4rem);
+    background: var(--branco);
+  }
+
+  .form-box {
+    width: 100%; max-width: 400px;
+    animation: fadeUp 0.5s ease forwards;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* abas */
+  .tabs {
+    display: flex; gap: 0;
+    border-bottom: 2px solid var(--cinza-claro);
+    margin-bottom: 2rem;
+  }
+  .tab-btn {
+    flex: 1; padding: 0.75rem 0.5rem;
+    font-family: 'Sora', sans-serif; font-size: 0.82rem; font-weight: 700;
+    background: none; border: none; cursor: pointer;
+    color: var(--cinza);
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+  .tab-btn.active { color: var(--roxo); border-bottom-color: var(--roxo); }
+
+  /* estados */
+  .form-state { display: none; }
+  .form-state.active { display: block; }
+
+  /* cabeçalho form */
+  .form-heading {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem; font-weight: 400;
+    color: var(--preto); margin-bottom: 0.35rem; line-height: 1.2;
+  }
+  .form-heading em { color: var(--rosa-vivo); font-style: italic; }
+  .form-sub {
+    font-size: 0.82rem; color: var(--cinza);
+    line-height: 1.65; margin-bottom: 1.75rem;
+  }
+
+  /* campos */
+  .field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+  .field label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cinza); }
+
+  .input-wrap { position: relative; }
+  input[type=email], input[type=password], input[type=text] {
+    font-family: 'Sora', sans-serif; font-size: 0.9rem;
+    width: 100%; padding: 0.8rem 1rem;
+    border: 1.5px solid var(--cinza-claro);
+    border-radius: 10px; background: var(--areia);
+    color: var(--preto); outline: none;
+    transition: border 0.2s, background 0.2s;
+  }
+  input:focus { border-color: var(--roxo); background: white; }
+  input.erro { border-color: var(--erro); }
+
+  .pw-toggle {
+    position: absolute; right: 0.85rem; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    color: var(--cinza); font-size: 1rem; line-height: 1;
+    padding: 0.2rem; transition: color 0.2s;
+  }
+  .pw-toggle:hover { color: var(--roxo); }
+
+  /* força da senha */
+  .strength-bar { height: 4px; border-radius: 100px; background: var(--cinza-claro); margin-top: 0.5rem; overflow: hidden; }
+  .strength-fill { height: 100%; border-radius: 100px; width: 0%; transition: width 0.3s, background 0.3s; }
+  .strength-label { font-size: 0.68rem; color: var(--cinza); margin-top: 0.25rem; text-align: right; min-height: 1em; }
+
+  /* link esqueceu senha */
+  .forgot-link {
+    font-size: 0.75rem; color: var(--rosa-vivo);
+    text-decoration: none; font-weight: 600;
+    float: right; transition: opacity 0.2s;
+  }
+  .forgot-link:hover { opacity: 0.75; }
+
+  /* botão principal */
+  .btn-submit {
+    width: 100%; padding: 0.9rem;
+    background: var(--roxo); color: white;
+    font-family: 'Sora', sans-serif; font-size: 0.92rem; font-weight: 700;
+    border: none; border-radius: 100px; cursor: pointer;
+    transition: all 0.2s; margin-top: 0.5rem;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  }
+  .btn-submit:hover:not(:disabled) { background: #3a2038; transform: translateY(-1px); }
+  .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+  /* alertas */
+  .alert {
+    border-radius: 10px; padding: 0.85rem 1rem;
+    font-size: 0.82rem; line-height: 1.5;
+    margin-bottom: 1rem; display: none;
+  }
+  .alert.show { display: block; }
+  .alert-erro { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; }
+  .alert-ok   { background: rgba(58,107,74,0.08); border: 1px solid rgba(58,107,74,0.25); color: var(--verde-escuro); }
+
+  /* spinner */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: white; border-radius: 50%;
+    animation: spin 0.7s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* divider */
+  .divider {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin: 1.5rem 0; color: var(--cinza); font-size: 0.72rem;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--cinza-claro);
+  }
+
+  /* link de volta */
+  .back-link {
+    display: block; text-align: center; margin-top: 1.5rem;
+    font-size: 0.78rem; color: var(--cinza); text-decoration: none;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--roxo); }
+
+  /* sucesso recuperação */
+  .success-icon { font-size: 3rem; text-align: center; margin-bottom: 1rem; }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    body { grid-template-columns: 1fr; }
+    .left-panel { display: none; }
+    .right-panel { padding: 2rem 1.5rem; align-items: flex-start; padding-top: 3rem; }
+  }
+</style>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-WLJZDV4H');</script>
+<!-- End Google Tag Manager -->
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WLJZDV4H"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- LADO ESQUERDO -->
+<div class="left-panel">
+  <a href="../index.html" class="left-logo">Pesquisadoras<span> do ES</span></a>
+
+  <div class="left-content">
+    <span class="left-eyebrow">Área exclusiva</span>
+    <h1 class="left-title">Seu espaço <em>no portal</em></h1>
+    <p class="left-desc">
+      Gerencie seu perfil, publique suas pesquisas e amplie sua visibilidade na comunidade científica do Espírito Santo.
+    </p>
+    <div class="left-features">
+      <div class="left-feature">
+        <div class="left-feature-icon">👤</div>
+        <div>Edite seu perfil e foto a qualquer momento</div>
+      </div>
+      <div class="left-feature">
+        <div class="left-feature-icon">📄</div>
+        <div>Adicione livros, artigos, teses e publicações</div>
+      </div>
+      <div class="left-feature">
+        <div class="left-feature-icon">🔗</div>
+        <div>Centralize seus links acadêmicos em um só lugar</div>
+      </div>
+      <div class="left-feature">
+        <div class="left-feature-icon">🌱</div>
+        <div>Apareça para estudantes, jornalistas e pesquisadoras</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="left-footer">
+    Pesquisadoras do ES · mulheres@kickgroup.com.br
+  </div>
+</div>
+
+<!-- LADO DIREITO -->
+<div class="right-panel">
+  <div class="form-box">
+
+    <!-- abas -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tabEntrar" onclick="switchTab('entrar')">Entrar</button>
+      <button class="tab-btn" id="tabRecuperar" onclick="switchTab('recuperar')">Esqueci minha senha</button>
+    </div>
+
+    <!-- ── LOGIN ── -->
+    <div class="form-state active" id="stateEntrar">
+      <h2 class="form-heading">Bem-vinda <em>de volta</em></h2>
+      <p class="form-sub">Entre com o email e a senha que você criou ao receber o convite.</p>
+
+      <div class="alert alert-erro" id="loginErro"></div>
+
+      <div class="field">
+        <label>E-mail</label>
+        <input type="email" id="loginEmail" placeholder="seu@email.com" autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label>
+          Senha
+          <a href="#" class="forgot-link" onclick="switchTab('recuperar');return false">Esqueceu?</a>
+        </label>
+        <div class="input-wrap">
+          <input type="password" id="loginSenha" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('loginSenha',this)">👁</button>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="btnLogin" onclick="fazerLogin()">
+        Entrar no painel →
+      </button>
+
+      <div class="divider">ou</div>
+
+      <p style="text-align:center;font-size:0.82rem;color:var(--cinza);line-height:1.65">
+        Ainda não tem acesso?<br>
+        <a href="../inscricao.html" style="color:var(--rosa-vivo);font-weight:700;text-decoration:none">Faça sua inscrição →</a>
+      </p>
+
+      <a href="../index.html" class="back-link">← Voltar ao portal</a>
+    </div>
+
+    <!-- ── RECUPERAR SENHA ── -->
+    <div class="form-state" id="stateRecuperar">
+      <h2 class="form-heading">Recuperar <em>acesso</em></h2>
+      <p class="form-sub">Digite seu email e enviaremos um link para você criar uma nova senha.</p>
+
+      <div class="alert alert-erro" id="recuperarErro"></div>
+      <div class="alert alert-ok"   id="recuperarOk"></div>
+
+      <div class="field" id="recuperarCampo">
+        <label>E-mail cadastrado</label>
+        <input type="email" id="recuperarEmail" placeholder="seu@email.com" autocomplete="email">
+      </div>
+
+      <button class="btn-submit" id="btnRecuperar" onclick="recuperarSenha()">
+        Enviar link de acesso →
+      </button>
+
+      <a href="#" class="back-link" onclick="switchTab('entrar');return false">← Voltar para o login</a>
+    </div>
+
+    <!-- ── SUCESSO RECUPERAÇÃO ── -->
+    <div class="form-state" id="stateEmailEnviado">
+      <div class="success-icon">📬</div>
+      <h2 class="form-heading" style="text-align:center">Email <em>enviado!</em></h2>
+      <p class="form-sub" style="text-align:center;margin-bottom:1.5rem">
+        Verifique sua caixa de entrada. O link para redefinir a senha expira em 1 hora.
+      </p>
+      <p style="text-align:center;font-size:0.78rem;color:var(--cinza);margin-bottom:1.5rem;line-height:1.65">
+        Não recebeu? Verifique o spam ou<br>
+        <a href="#" onclick="switchTab('recuperar');return false" style="color:var(--rosa-vivo);font-weight:700;text-decoration:none">tente novamente</a>
+      </p>
+      <a href="../index.html" class="back-link">← Voltar ao portal</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Redireciona se já estiver logada
+db.auth.getSession().then(({ data }) => {
+  if (data.session) verificarPesquisadora(data.session);
+});
+
+// Verifica se a sessão é de uma pesquisadora (não admin)
+async function verificarPesquisadora(session) {
+  const { data } = await db
+    .from('researchers')
+    .select('id')
+    .eq('auth_user_id', session.user.id)
+    .single();
+
+  if (data) {
+    location.href = 'painel.html';
+  }
+  // Se não encontrar registro de pesquisadora, deixa na tela de login
+  // (pode ser a admin acessando por engano)
+}
+
+// ── LOGIN ─────────────────────────────────────────────────
+async function fazerLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha  = document.getElementById('loginSenha').value;
+  const errEl  = document.getElementById('loginErro');
+  const btn    = document.getElementById('btnLogin');
+  errEl.classList.remove('show');
+
+  if (!email || !senha) {
+    errEl.textContent = 'Preencha e-mail e senha.';
+    errEl.classList.add('show'); return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Entrando…';
+
+  const { data, error } = await db.auth.signInWithPassword({ email, password: senha });
+
+  if (error) {
+    const msg = error.message.includes('Invalid login credentials')
+      ? 'E-mail ou senha incorretos.'
+      : error.message.includes('Email not confirmed')
+      ? 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.'
+      : error.message;
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.innerHTML = 'Entrar no painel →';
+    return;
+  }
+
+  // Verifica se é pesquisadora
+  const { data: researcher } = await db
+    .from('researchers')
+    .select('id, status')
+    .eq('auth_user_id', data.user.id)
+    .single();
+
+  if (!researcher) {
+    // Pode ser admin — redireciona para admin
+    await db.auth.signOut();
+    errEl.textContent = 'Esta conta não está vinculada a um perfil de pesquisadora. Se você é administradora, acesse a área administrativa.';
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.innerHTML = 'Entrar no painel →';
+    return;
+  }
+
+  if (researcher.status !== 'aprovada') {
+    await db.auth.signOut();
+    errEl.textContent = 'Seu perfil ainda está em análise. Em breve entraremos em contato.';
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.innerHTML = 'Entrar no painel →';
+    return;
+  }
+
+  location.href = 'painel.html';
+}
+
+// ── RECUPERAR SENHA ───────────────────────────────────────
+async function recuperarSenha() {
+  const email = document.getElementById('recuperarEmail').value.trim();
+  const errEl = document.getElementById('recuperarErro');
+  const btn   = document.getElementById('btnRecuperar');
+  errEl.classList.remove('show');
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'Digite um e-mail válido.';
+    errEl.classList.add('show'); return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Enviando…';
+
+  const { error } = await db.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://pesquisadorasdoes.com.br/pesquisadora/definir-senha.html'
+  });
+
+  btn.disabled = false;
+  btn.innerHTML = 'Enviar link de acesso →';
+
+  if (error) {
+    errEl.textContent = 'Erro ao enviar email: ' + error.message;
+    errEl.classList.add('show'); return;
+  }
+
+  // Mostra estado de sucesso
+  showState('stateEmailEnviado');
+}
+
+// ── NAVEGAÇÃO ─────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.form-state').forEach(s => s.classList.remove('active'));
+
+  if (tab === 'entrar') {
+    document.getElementById('tabEntrar').classList.add('active');
+    document.getElementById('stateEntrar').classList.add('active');
+  } else {
+    document.getElementById('tabRecuperar').classList.add('active');
+    document.getElementById('stateRecuperar').classList.add('active');
+  }
+
+  // Limpa alertas
+  ['loginErro','recuperarErro','recuperarOk'].forEach(id => {
+    document.getElementById(id)?.classList.remove('show');
+  });
+}
+
+function showState(id) {
+  document.querySelectorAll('.form-state').forEach(s => s.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+  // Esconde abas no estado de sucesso
+  document.querySelector('.tabs').style.display = id === 'stateEmailEnviado' ? 'none' : '';
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  input.type  = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+
+// Enter faz login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const entrar = document.getElementById('stateEntrar');
+    const recuperar = document.getElementById('stateRecuperar');
+    if (entrar.classList.contains('active'))    fazerLogin();
+    if (recuperar.classList.contains('active')) recuperarSenha();
+  }
+});
+</script>
+</body>
+</html>

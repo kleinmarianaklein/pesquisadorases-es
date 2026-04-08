@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZKJ88LSLJY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-ZKJ88LSLJY');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meu Painel — Pesquisadoras do ES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../config.js"></script>
+<style>
+  :root {
+    --verde:#3A6B4A;--verde-vivo:#52A86B;--verde-escuro:#2A4D35;
+    --areia:#F5EFE6;--areia-escura:#EDE3D5;--rosa:#E8C4C4;--rosa-vivo:#C4748A;
+    --roxo:#4A2E4A;--branco:#FFFAF6;--cinza:#7A6B6B;--cinza-claro:#DDD0C8;
+    --preto:#1E1218;--sidebar:260px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'Sora',sans-serif;background:var(--areia);color:var(--preto);display:flex;min-height:100vh;}
+
+  /* SIDEBAR */
+  .sidebar{width:var(--sidebar);background:var(--roxo);color:white;position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;padding:0;z-index:50;overflow:hidden;}
+  .sidebar::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ccircle cx='20' cy='20' r='10' stroke='%23E8C4C4' stroke-width='1.5' fill='none' opacity='0.08'/%3E%3Cline x1='20' y1='30' x2='20' y2='38' stroke='%23E8C4C4' stroke-width='1.5' opacity='0.08'/%3E%3Cline x1='15' y1='34' x2='25' y2='34' stroke='%23E8C4C4' stroke-width='1.5' opacity='0.08'/%3E%3C/svg%3E");background-size:120px 120px;pointer-events:none;}
+  .sidebar-inner{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;padding:1.75rem 1.5rem;}
+  .sidebar-logo{font-weight:800;font-size:.9rem;color:white;letter-spacing:-0.02em;margin-bottom:.2rem;}
+  .sidebar-logo span{color:var(--rosa-vivo);}
+  .sidebar-tagline{font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:2rem;}
+  .sidebar-perfil{background:rgba(255,255,255,.08);border-radius:14px;padding:1rem;margin-bottom:1.75rem;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:.75rem;}
+  .sidebar-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--rosa-vivo),var(--roxo));display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:1.1rem;color:white;flex-shrink:0;overflow:hidden;border:2px solid rgba(255,255,255,.2);}
+  .sidebar-avatar img{width:100%;height:100%;object-fit:cover;}
+  .sidebar-nome{font-size:.82rem;font-weight:700;color:white;line-height:1.3;}
+  .sidebar-area{font-size:.68rem;color:rgba(255,255,255,.5);margin-top:.15rem;}
+  .nav-item{display:flex;align-items:center;gap:.75rem;padding:.7rem .9rem;border-radius:10px;cursor:pointer;transition:all .2s;margin-bottom:.2rem;font-size:.85rem;font-weight:500;color:rgba(255,255,255,.55);border:none;background:none;width:100%;text-align:left;font-family:'Sora',sans-serif;}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:white;}
+  .nav-item.active{background:rgba(255,255,255,.15);color:white;}
+  .nav-item .icon{font-size:1rem;width:22px;text-align:center;flex-shrink:0;}
+  .nav-item .badge-count{margin-left:auto;background:var(--rosa-vivo);color:white;font-size:.58rem;font-weight:700;padding:.1rem .45rem;border-radius:100px;min-width:18px;text-align:center;}
+  .sidebar-footer{margin-top:auto;padding-top:1rem;border-top:1px solid rgba(255,255,255,.1);}
+  .btn-logout{font-size:.78rem;color:rgba(255,255,255,.4);background:none;border:none;cursor:pointer;font-family:'Sora',sans-serif;padding:.4rem .6rem;border-radius:8px;transition:all .2s;width:100%;text-align:left;display:flex;align-items:center;gap:.5rem;}
+  .btn-logout:hover{background:rgba(255,255,255,.08);color:white;}
+  .ver-portal{font-size:.72rem;color:rgba(255,255,255,.3);text-decoration:none;display:block;margin-top:.5rem;padding:.3rem .6rem;transition:color .2s;}
+  .ver-portal:hover{color:rgba(255,255,255,.7);}
+
+  /* MAIN */
+  .main{margin-left:var(--sidebar);flex:1;padding:2.5rem 2rem;min-height:100vh;}
+  .page{display:none;animation:fadeIn .3s ease;}
+  .page.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .page-header{margin-bottom:2rem;}
+  .page-eyebrow{font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--rosa-vivo);margin-bottom:.4rem;display:block;}
+  .page-title{font-family:'DM Serif Display',serif;font-size:2rem;font-weight:400;color:var(--preto);line-height:1.1;}
+  .page-title em{color:var(--verde);font-style:italic;}
+  .page-sub{font-size:.85rem;color:var(--cinza);margin-top:.4rem;line-height:1.6;}
+
+  /* CARDS */
+  .card{background:var(--branco);border-radius:18px;padding:1.75rem;border:1.5px solid var(--cinza-claro);margin-bottom:1.5rem;}
+  .card-title{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;color:var(--preto);margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem;}
+
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;}
+  .stat-card{background:var(--branco);border-radius:16px;padding:1.25rem;border:1.5px solid var(--cinza-claro);transition:border-color .2s,transform .2s;}
+  .stat-card:hover{border-color:var(--rosa-vivo);transform:translateY(-2px);}
+  .stat-num{font-family:'DM Serif Display',serif;font-size:2.2rem;color:var(--roxo);line-height:1;margin-bottom:.4rem;}
+  .stat-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--cinza);}
+
+  /* FORMS */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+  .form-grid.single{grid-template-columns:1fr;}
+  .form-group{display:flex;flex-direction:column;gap:.35rem;}
+  .form-group.full{grid-column:1/-1;}
+  .form-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cinza);}
+  .form-input,.form-select,.form-textarea{font-family:'Sora',sans-serif;font-size:.88rem;padding:.75rem 1rem;border:1.5px solid var(--cinza-claro);border-radius:10px;background:var(--areia);color:var(--preto);outline:none;transition:border .2s,background .2s;width:100%;}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--roxo);background:white;}
+  .form-textarea{resize:vertical;min-height:100px;}
+  .char-count{font-size:.68rem;color:var(--cinza);text-align:right;}
+
+  /* BOTÕES */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;font-family:'Sora',sans-serif;font-size:.85rem;font-weight:700;padding:.7rem 1.5rem;border-radius:100px;border:none;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap;}
+  .btn-primary{background:var(--roxo);color:white;}
+  .btn-primary:hover:not(:disabled){background:#3a2038;transform:translateY(-1px);}
+  .btn-verde{background:var(--verde);color:white;}
+  .btn-verde:hover:not(:disabled){background:var(--verde-escuro);transform:translateY(-1px);}
+  .btn-rosa{background:var(--rosa-vivo);color:white;}
+  .btn-rosa:hover:not(:disabled){opacity:.85;transform:translateY(-1px);}
+  .btn-outline{background:white;color:var(--cinza);border:1.5px solid var(--cinza-claro);}
+  .btn-outline:hover{border-color:var(--roxo);color:var(--roxo);}
+  .btn-danger{background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5;}
+  .btn-danger:hover{background:#fca5a5;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+  .btn-sm{font-size:.75rem;padding:.4rem .9rem;}
+
+  /* AVATAR UPLOAD */
+  .avatar-upload-wrap{display:flex;align-items:center;gap:1.25rem;}
+  .avatar-preview{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--rosa-vivo),var(--roxo));display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:1.8rem;color:white;flex-shrink:0;overflow:hidden;border:3px solid var(--cinza-claro);cursor:pointer;transition:border-color .2s;}
+  .avatar-preview:hover{border-color:var(--rosa-vivo);}
+  .avatar-preview img{width:100%;height:100%;object-fit:cover;}
+
+  /* PUBLICAÇÕES */
+  .obras-list{display:flex;flex-direction:column;gap:.75rem;}
+  .obra-item{background:var(--areia);border-radius:12px;padding:1.1rem 1.25rem;border:1.5px solid var(--cinza-claro);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;transition:border-color .2s;}
+  .obra-item:hover{border-color:var(--rosa-vivo);}
+  .obra-tipo-badge{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:white;background:var(--roxo);padding:.2rem .6rem;border-radius:100px;white-space:nowrap;flex-shrink:0;}
+  .obra-titulo{font-weight:600;font-size:.88rem;line-height:1.4;margin-bottom:.2rem;}
+  .obra-meta{font-size:.72rem;color:var(--cinza);}
+  .obra-actions{display:flex;gap:.4rem;flex-shrink:0;}
+  .nova-obra-form{background:var(--areia-escura);border-radius:14px;padding:1.5rem;border:1.5px solid var(--cinza-claro);margin-top:1rem;display:none;}
+  .nova-obra-form.open{display:block;animation:fadeIn .2s ease;}
+
+  /* ── FÓRUM ── */
+  .forum-topico-card{background:var(--branco);border-radius:14px;border:1.5px solid var(--cinza-claro);padding:1.25rem;margin-bottom:.75rem;cursor:pointer;transition:all .2s;}
+  .forum-topico-card:hover{border-color:var(--rosa-vivo);transform:translateY(-1px);box-shadow:0 4px 16px rgba(74,46,74,.08);}
+  .forum-topico-header{display:flex;align-items:flex-start;gap:.75rem;margin-bottom:.5rem;}
+  .forum-cat-emoji{font-size:1.1rem;flex-shrink:0;margin-top:.1rem;}
+  .forum-topico-titulo{font-weight:700;font-size:.88rem;line-height:1.4;flex:1;}
+  .forum-topico-meta{font-size:.72rem;color:var(--cinza);display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+  .forum-status-badge{display:inline-block;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:.15rem .5rem;border-radius:100px;}
+  .badge-pendente{background:#fef3c7;color:#92400e;}
+  .badge-aprovado{background:#d1fae5;color:#065f46;}
+  .badge-pinned{background:rgba(58,107,74,.1);color:var(--verde-escuro);}
+  .badge-closed{background:var(--areia-escura);color:var(--cinza);}
+  .forum-reply-form{background:var(--areia);border-radius:12px;padding:1.25rem;border:1.5px solid var(--cinza-claro);margin-top:1rem;}
+  .forum-thread{background:var(--branco);border-radius:18px;border:1.5px solid var(--cinza-claro);overflow:hidden;margin-bottom:1.5rem;}
+  .forum-thread-header{background:linear-gradient(135deg,var(--roxo),#6B4068);padding:1.5rem;color:white;}
+  .forum-thread-cat{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.65);margin-bottom:.5rem;}
+  .forum-thread-titulo{font-family:'DM Serif Display',serif;font-size:1.3rem;font-weight:400;line-height:1.2;margin-bottom:.75rem;}
+  .forum-thread-author{display:flex;align-items:center;gap:.65rem;}
+  .forum-thread-avatar{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;overflow:hidden;flex-shrink:0;}
+  .forum-thread-avatar img{width:100%;height:100%;object-fit:cover;}
+  .forum-thread-body{padding:1.5rem;}
+  .forum-thread-text{font-size:.9rem;line-height:1.8;color:#333;white-space:pre-wrap;word-break:break-word;}
+  .forum-reply-item{padding:1rem 1.5rem;border-top:1px solid var(--cinza-claro);}
+  .forum-reply-author{display:flex;align-items:center;gap:.65rem;margin-bottom:.75rem;}
+  .forum-reply-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--verde),var(--verde-escuro));display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:white;overflow:hidden;flex-shrink:0;}
+  .forum-reply-avatar img{width:100%;height:100%;object-fit:cover;}
+  .forum-reply-name{font-weight:700;font-size:.82rem;}
+  .forum-reply-date{font-size:.68rem;color:var(--cinza);margin-left:auto;}
+  .forum-reply-text{font-size:.85rem;line-height:1.7;color:#333;white-space:pre-wrap;word-break:break-word;}
+  .forum-new-topic-form{background:var(--areia-escura);border-radius:14px;padding:1.5rem;border:1.5px solid var(--cinza-claro);margin-bottom:1.5rem;display:none;}
+  .forum-new-topic-form.open{display:block;animation:fadeIn .2s ease;}
+  .forum-tabs{display:flex;border-bottom:2px solid var(--cinza-claro);margin-bottom:1.25rem;gap:0;}
+  .forum-tab{flex:1;padding:.6rem .4rem;font-size:.75rem;font-weight:600;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--cinza);font-family:'Sora',sans-serif;transition:all .2s;}
+  .forum-tab.active{border-bottom-color:var(--rosa-vivo);color:var(--rosa-vivo);}
+  .forum-cat-filter{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.25rem;}
+  .forum-cat-btn{font-size:.72rem;font-weight:600;padding:.35rem .85rem;border-radius:100px;border:1.5px solid var(--cinza-claro);background:transparent;cursor:pointer;transition:all .2s;color:var(--cinza);font-family:'Sora',sans-serif;}
+  .forum-cat-btn:hover{border-color:var(--rosa-vivo);color:var(--rosa-vivo);}
+  .forum-cat-btn.active{background:var(--rosa-vivo);border-color:var(--rosa-vivo);color:white;}
+  .forum-back-btn{display:inline-flex;align-items:center;gap:.4rem;font-size:.82rem;font-weight:600;color:var(--rosa-vivo);background:none;border:none;cursor:pointer;font-family:'Sora',sans-serif;margin-bottom:1.25rem;padding:0;transition:gap .2s;}
+  .forum-back-btn:hover{gap:.6rem;}
+  .forum-closed-notice{background:var(--areia-escura);border-radius:10px;padding:.9rem 1.1rem;font-size:.82rem;color:var(--cinza);text-align:center;border:1.5px solid var(--cinza-claro);margin-top:1rem;}
+
+  /* PERFIL PREVIEW */
+  .perfil-preview{background:linear-gradient(135deg,var(--roxo),#6B4068);border-radius:16px;padding:1.5rem;color:white;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.25rem;}
+  .perfil-preview-avatar{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:1.5rem;flex-shrink:0;overflow:hidden;border:2px solid rgba(255,255,255,.2);}
+  .perfil-preview-avatar img{width:100%;height:100%;object-fit:cover;}
+  .perfil-preview-nome{font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:.2rem;}
+  .perfil-preview-inst{font-size:.75rem;color:rgba(255,255,255,.6);}
+  .perfil-preview-area{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--rosa);background:rgba(255,255,255,.1);padding:.2rem .65rem;border-radius:100px;display:inline-block;margin-top:.4rem;}
+
+  /* EMPTY / LOADING / TOAST */
+  .empty-state{text-align:center;padding:3rem 2rem;color:var(--cinza);}
+  .empty-state-icon{font-size:3rem;margin-bottom:1rem;}
+  .empty-state-title{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--preto);margin-bottom:.5rem;}
+  .empty-state-desc{font-size:.85rem;line-height:1.7;}
+  .loading{text-align:center;padding:3rem;color:var(--cinza);}
+  .spinner{width:30px;height:30px;border:3px solid var(--cinza-claro);border-top-color:var(--roxo);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .toast{position:fixed;bottom:2rem;right:2rem;background:var(--roxo);color:white;padding:.9rem 1.4rem;border-radius:12px;font-size:.85rem;font-weight:600;box-shadow:0 8px 32px rgba(74,46,74,.3);transform:translateY(100px);transition:transform .3s;z-index:999;}
+  .toast.show{transform:translateY(0);}
+  .toast.verde{background:var(--verde);}
+  .toast.erro{background:#b91c1c;}
+  .alert{border-radius:10px;padding:.85rem 1rem;font-size:.82rem;line-height:1.5;margin-top:.75rem;display:none;}
+  .alert.show{display:block;}
+  .alert-ok{background:rgba(58,107,74,.08);border:1px solid rgba(58,107,74,.25);color:var(--verde-escuro);}
+  .alert-erro{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;}
+  .divider{height:1px;background:var(--cinza-claro);margin:1.5rem 0;}
+  .senha-strength{height:4px;border-radius:100px;background:var(--cinza-claro);margin-top:.5rem;overflow:hidden;}
+  .senha-strength-fill{height:100%;border-radius:100px;width:0%;transition:width .3s,background .3s;}
+  .senha-strength-label{font-size:.68rem;color:var(--cinza);margin-top:.25rem;text-align:right;min-height:1em;}
+  .mobile-bar{display:none;position:fixed;top:0;left:0;right:0;z-index:100;height:60px;background:var(--roxo);align-items:center;justify-content:space-between;padding:0 1.25rem;}
+  .mobile-logo{font-weight:800;font-size:.88rem;color:white;}
+  .mobile-logo span{color:var(--rosa-vivo);}
+  .mobile-menu-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;gap:4px;}
+  .mobile-menu-btn span{display:block;width:20px;height:2px;background:white;}
+  @media(max-width:768px){
+    .sidebar{transform:translateX(-100%);transition:transform .3s;}
+    .sidebar.open{transform:translateX(0);}
+    .mobile-bar{display:flex;}
+    .main{margin-left:0;padding:1.5rem 1rem;padding-top:80px;}
+    .form-grid{grid-template-columns:1fr;}
+    .form-group.full{grid-column:1;}
+    .stats-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-WLJZDV4H');</script>
+<!-- End Google Tag Manager -->
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WLJZDV4H"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- MOBILE BAR -->
+<div class="mobile-bar">
+  <div class="mobile-logo">Pesquisadoras<span> do ES</span></div>
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-inner">
+    <div class="sidebar-logo">Pesquisadoras<span> do ES</span></div>
+    <div class="sidebar-tagline">Área da pesquisadora</div>
+    <div class="sidebar-perfil" id="sidebarPerfil">
+      <div class="sidebar-avatar" id="sidebarAvatar">?</div>
+      <div>
+        <div class="sidebar-nome" id="sidebarNome">Carregando…</div>
+        <div class="sidebar-area" id="sidebarArea">—</div>
+      </div>
+    </div>
+    <button class="nav-item active" onclick="showPage('inicio')" id="nav-inicio">
+      <span class="icon">🏠</span> Início
+    </button>
+    <button class="nav-item" onclick="showPage('perfil')" id="nav-perfil">
+      <span class="icon">👤</span> Meu perfil
+    </button>
+    <button class="nav-item" onclick="showPage('publicacoes')" id="nav-publicacoes">
+      <span class="icon">📄</span> Publicações
+    </button>
+    <button class="nav-item" onclick="showPage('forum')" id="nav-forum">
+      <span class="icon">💬</span> Fórum
+      <span class="badge-count" id="forumBadge" style="display:none">0</span>
+    </button>
+    <button class="nav-item" onclick="showPage('senha')" id="nav-senha">
+      <span class="icon">🔒</span> Alterar senha
+    </button>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="logout()"><span>↩</span> Sair</button>
+      <a href="../index.html" class="ver-portal">← Ver portal público</a>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- INÍCIO -->
+  <div class="page active" id="page-inicio">
+    <div class="page-header">
+      <span class="page-eyebrow">Bem-vinda</span>
+      <h1 class="page-title">Olá, <em id="nomeBoasVindas">pesquisadora</em>!</h1>
+      <p class="page-sub">Este é seu painel pessoal. Aqui você gerencia seu perfil, publicações e participa do fórum.</p>
+    </div>
+    <div class="perfil-preview" id="perfilPreview">
+      <div class="perfil-preview-avatar" id="previewAvatar">?</div>
+      <div>
+        <div class="perfil-preview-nome" id="previewNome">—</div>
+        <div class="perfil-preview-inst" id="previewInst">—</div>
+        <div class="perfil-preview-area" id="previewArea">—</div>
+      </div>
+    </div>
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-num" id="statObras">—</div><div class="stat-label">Publicações</div></div>
+      <div class="stat-card"><div class="stat-num" id="statLinks">—</div><div class="stat-label">Links acadêmicos</div></div>
+      <div class="stat-card"><div class="stat-num" id="statTopicos">—</div><div class="stat-label">Tópicos no fórum</div></div>
+      <div class="stat-card"><div class="stat-num"><span class="badge" style="background:rgba(58,107,74,.12);color:var(--verde-escuro);font-size:.78rem;font-weight:700;padding:.3rem .7rem;border-radius:100px">✓ Ativa</span></div><div class="stat-label">Status no portal</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">✨ Ações rápidas</div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="showPage('perfil')">✏️ Editar meu perfil</button>
+        <button class="btn btn-verde" onclick="showPage('publicacoes')">📄 Minhas publicações</button>
+        <button class="btn btn-rosa" onclick="showPage('forum')">💬 Acessar fórum</button>
+        <a href="../index.html#pesquisadoras" target="_blank" class="btn btn-outline">🔗 Ver perfil público</a>
+      </div>
+    </div>
+    <div class="card" id="checklistCard">
+      <div class="card-title">📋 Complete seu perfil</div>
+      <div id="checklistItems" style="display:flex;flex-direction:column;gap:.6rem"></div>
+    </div>
+  </div>
+
+  <!-- MEU PERFIL -->
+  <div class="page" id="page-perfil">
+    <div class="page-header">
+      <span class="page-eyebrow">Meu painel</span>
+      <h1 class="page-title">Meu <em>perfil</em></h1>
+      <p class="page-sub">As alterações ficam visíveis no portal assim que você salvar.</p>
+    </div>
+    <div class="alert alert-erro" id="alertPerfilErro"></div>
+    <div class="alert alert-ok"  id="alertPerfilOk"></div>
+    <div class="card">
+      <div class="card-title">📷 Foto de perfil</div>
+      <div class="avatar-upload-wrap">
+        <div class="avatar-preview" id="avatarPreview" onclick="document.getElementById('fotoInput').click()" title="Clique para trocar">?</div>
+        <div>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('fotoInput').click()">Trocar foto</button>
+          <input type="file" id="fotoInput" accept="image/*" style="display:none" onchange="previewFoto(this)">
+          <p style="font-size:.72rem;color:var(--cinza);margin-top:.4rem" id="fotoStatus">Formato quadrado recomendado</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">👩‍🔬 Dados pessoais</div>
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Nome completo</label><input type="text" class="form-input" id="pNome" placeholder="Dra. Maria da Silva"></div>
+        <div class="form-group full">
+          <label class="form-label">Mini bio <span style="font-weight:400;color:var(--cinza)">(aparece no seu card)</span></label>
+          <textarea class="form-textarea" id="pBio" maxlength="280" placeholder="Pesquisadora em…" oninput="document.getElementById('bioCount').textContent=this.value.length+'/280'" style="min-height:80px"></textarea>
+          <div class="char-count" id="bioCount">0/280</div>
+        </div>
+        <div class="form-group"><label class="form-label">Área principal</label>
+          <select class="form-select" id="pArea">
+            <option value="">Selecione…</option>
+            <option>Ciências Exatas e da Terra</option><option>Ciências Biológicas</option><option>Engenharias</option>
+            <option>Ciências da Saúde</option><option>Ciências Agrárias</option><option>Ciências Sociais Aplicadas</option>
+            <option>Ciências Sociais</option><option>Ciências Humanas</option><option>Linguística, Letras e Artes</option><option>Multidisciplinar</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Instituição</label>
+          <select class="form-select" id="pInst">
+            <option value="">Selecione…</option>
+            <option>UFES - Universidade Federal do Espírito Santo</option><option>IFES - Instituto Federal do Espírito Santo</option>
+            <option>UVV - Universidade Vila Velha</option><option>FUCAPE</option><option>EMESCAM</option>
+            <option>FDV - Faculdade de Direito de Vitória</option><option>MULTIVIX</option><option>FAESA</option><option>Outra</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Cidade (ES)</label><input type="text" class="form-input" id="pCidade" placeholder="Ex: Vitória, Serra…"></div>
+        <div class="form-group"><label class="form-label">E-mail público</label><input type="email" class="form-input" id="pEmail" placeholder="contato@universidade.br"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔗 Links acadêmicos</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Lattes (CNPq)</label><input type="url" class="form-input" id="pLattes" placeholder="http://lattes.cnpq.br/…"></div>
+        <div class="form-group"><label class="form-label">ORCID</label><input type="url" class="form-input" id="pOrcid" placeholder="https://orcid.org/0000-…"></div>
+        <div class="form-group"><label class="form-label">LinkedIn</label><input type="url" class="form-input" id="pLinkedin" placeholder="https://linkedin.com/in/…"></div>
+        <div class="form-group"><label class="form-label">Google Scholar</label><input type="url" class="form-input" id="pScholar" placeholder="https://scholar.google.com/…"></div>
+        <div class="form-group"><label class="form-label">ResearchGate</label><input type="url" class="form-input" id="pResearchgate" placeholder="https://researchgate.net/…"></div>
+        <div class="form-group"><label class="form-label">Site pessoal</label><input type="url" class="form-input" id="pSite" placeholder="https://…"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+      <button class="btn btn-primary" id="btnSalvarPerfil" onclick="salvarPerfil()">💾 Salvar alterações</button>
+      <button class="btn btn-outline" onclick="carregarPerfil()">↩ Descartar</button>
+    </div>
+  </div>
+
+  <!-- PUBLICAÇÕES -->
+  <div class="page" id="page-publicacoes">
+    <div class="page-header">
+      <span class="page-eyebrow">Meu painel</span>
+      <h1 class="page-title">Minhas <em>publicações</em></h1>
+      <p class="page-sub">Adicione livros, artigos, teses e outros trabalhos para aparecerem no portal.</p>
+    </div>
+    <div style="margin-bottom:1rem">
+      <button class="btn btn-verde" onclick="toggleNovaObra()">+ Nova publicação</button>
+    </div>
+    <div class="nova-obra-form" id="novaObraForm">
+      <div style="font-family:'DM Serif Display',serif;font-size:1rem;margin-bottom:1.25rem;color:var(--preto)" id="obraFormTitle">Nova publicação</div>
+      <input type="hidden" id="obraEditId">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Título *</label><input type="text" class="form-input" id="oTitulo" placeholder="Título completo da publicação"></div>
+        <div class="form-group"><label class="form-label">Tipo *</label>
+          <select class="form-select" id="oTipo">
+            <option value="">Selecione…</option><option>Livro</option><option>Tese de Doutorado</option>
+            <option>Dissertação de Mestrado</option><option>TCC</option><option>Artigo Científico</option>
+            <option>Capítulo de Livro</option><option>Monografia</option><option>Relatório Técnico</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Ano</label><input type="number" class="form-input" id="oAno" placeholder="2024" min="1950" max="2099"></div>
+        <div class="form-group full"><label class="form-label">Resumo</label><textarea class="form-textarea" id="oResumo" placeholder="Breve descrição…" style="min-height:80px"></textarea></div>
+        <div class="form-group"><label class="form-label">Link de acesso (PDF / DOI)</label><input type="url" class="form-input" id="oAcesso" placeholder="https://…"></div>
+        <div class="form-group"><label class="form-label">Link de compra</label><input type="url" class="form-input" id="oCompra" placeholder="https://…"></div>
+        <div class="form-group full"><label class="form-label">Tags <span style="font-weight:400;color:var(--cinza)">(separadas por vírgula)</span></label><input type="text" class="form-input" id="oTags" placeholder="Ex: saúde pública, epidemiologia, gênero"></div>
+        <div class="form-group full">
+          <label class="form-label">📷 Capa <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--cinza)">(opcional)</span></label>
+          <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-top:.35rem">
+            <div id="oCapaPreview" style="width:56px;height:76px;border-radius:8px;background:var(--areia-escura);border:1.5px solid var(--cinza-claro);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem">📚</div>
+            <div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('oCapaInput').click()">Escolher imagem</button>
+              <button type="button" class="btn btn-outline btn-sm" id="oCapaRemoveBtn" style="display:none" onclick="removerObraCapa()">✕ Remover</button>
+              <input type="file" id="oCapaInput" accept="image/*" style="display:none" onchange="previewObraCapa(this)">
+              <p style="font-size:.7rem;color:var(--cinza);margin-top:.35rem">JPG, PNG ou WebP · Formato vertical recomendado</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.75rem;margin-top:1.25rem;flex-wrap:wrap">
+        <button class="btn btn-verde" id="btnSalvarObra" onclick="salvarObra()">Salvar publicação</button>
+        <button class="btn btn-outline" onclick="fecharNovaObra()">Cancelar</button>
+      </div>
+      <div class="alert alert-erro" id="alertObraErro" style="margin-top:.75rem"></div>
+    </div>
+    <div id="obrasLista"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- ══════════════════════════ FÓRUM ══════════════════════════ -->
+  <div class="page" id="page-forum">
+    <div class="page-header">
+      <span class="page-eyebrow">Comunidade</span>
+      <h1 class="page-title">Fórum das <em>Pesquisadoras</em></h1>
+      <p class="page-sub">Espaço exclusivo para troca, colaboração e apoio entre as pesquisadoras cadastradas.</p>
+    </div>
+
+    <!-- LISTA DE TÓPICOS -->
+    <div id="forumListView">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem">
+        <div class="forum-tabs" style="flex:1;min-width:240px;margin-bottom:0;border-bottom:none;border:1.5px solid var(--cinza-claro);border-radius:100px;overflow:hidden;padding:.2rem">
+          <button class="forum-tab active" id="ftabTodos"    onclick="switchForumTab('todos')">Todos</button>
+          <button class="forum-tab"        id="ftabMeus"     onclick="switchForumTab('meus')">Meus tópicos</button>
+          <button class="forum-tab"        id="ftabPendentes" onclick="switchForumTab('pendentes')">Aguardando</button>
+        </div>
+        <button class="btn btn-rosa btn-sm" onclick="abrirNovoTopico()">+ Novo tópico</button>
+      </div>
+
+      <!-- Filtro de categorias -->
+      <div class="forum-cat-filter" id="forumCatFilter"></div>
+
+      <!-- Formulário novo tópico -->
+      <div class="forum-new-topic-form" id="forumNewTopicForm">
+        <div style="font-family:'DM Serif Display',serif;font-size:1rem;margin-bottom:1.1rem">Novo tópico</div>
+        <div class="form-grid single" style="gap:.85rem">
+          <div class="form-group"><label class="form-label">Categoria *</label>
+            <select class="form-select" id="ntCategoria"><option value="">Selecione…</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Título *</label>
+            <input type="text" class="form-input" id="ntTitulo" placeholder="Descreva o tópico em uma frase" maxlength="120" oninput="document.getElementById('ntTituloCount').textContent=this.value.length+'/120'">
+            <div class="char-count" id="ntTituloCount">0/120</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mensagem *</label>
+            <textarea class="form-textarea" id="ntCorpo" placeholder="Escreva aqui…" maxlength="4000" oninput="document.getElementById('ntCorpoCount').textContent=this.value.length+'/4000'" style="min-height:130px"></textarea>
+            <div class="char-count" id="ntCorpoCount">0/4000</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:.75rem;margin-top:1rem;flex-wrap:wrap">
+          <button class="btn btn-rosa" id="btnEnviarTopico" onclick="enviarTopico()">Enviar tópico</button>
+          <button class="btn btn-outline" onclick="fecharNovoTopico()">Cancelar</button>
+        </div>
+        <div class="alert alert-ok"   id="ntAlertOk" style="margin-top:.75rem">✓ Tópico enviado! Aparecerá após aprovação da equipe.</div>
+        <div class="alert alert-erro" id="ntAlertErro" style="margin-top:.75rem"></div>
+      </div>
+
+      <!-- Lista -->
+      <div id="forumTopicosWrap"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
+    <!-- THREAD INDIVIDUAL -->
+    <div id="forumThreadView" style="display:none">
+      <button class="forum-back-btn" onclick="voltarListaForum()">← Voltar ao fórum</button>
+      <div id="forumThreadContent"></div>
+    </div>
+  </div>
+  <!-- ══════════════════════════ /FÓRUM ══════════════════════════ -->
+
+  <!-- ALTERAR SENHA -->
+  <div class="page" id="page-senha">
+    <div class="page-header">
+      <span class="page-eyebrow">Segurança</span>
+      <h1 class="page-title">Alterar <em>senha</em></h1>
+      <p class="page-sub">Escolha uma senha forte para proteger sua conta.</p>
+    </div>
+    <div class="card" style="max-width:480px">
+      <div class="alert alert-erro" id="alertSenhaErro"></div>
+      <div class="alert alert-ok"  id="alertSenhaOk"></div>
+      <div class="form-group" style="margin-bottom:1.1rem">
+        <label class="form-label">Nova senha</label>
+        <div style="position:relative">
+          <input type="password" class="form-input" id="novaSenha" placeholder="Mínimo 8 caracteres" oninput="avaliarSenha(this.value)" style="padding-right:2.75rem">
+          <button type="button" onclick="togglePw('novaSenha',this)" style="position:absolute;right:.85rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--cinza);font-size:1rem">👁</button>
+        </div>
+        <div class="senha-strength"><div class="senha-strength-fill" id="senhaFill"></div></div>
+        <div class="senha-strength-label" id="senhaLabel"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:1.5rem">
+        <label class="form-label">Confirmar nova senha</label>
+        <div style="position:relative">
+          <input type="password" class="form-input" id="confirmaSenha" placeholder="Repita a senha" style="padding-right:2.75rem">
+          <button type="button" onclick="togglePw('confirmaSenha',this)" style="position:absolute;right:.85rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--cinza);font-size:1rem">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="btnAlterarSenha" onclick="alterarSenha()">🔒 Alterar senha</button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let researcherData = null;
+let fotoFile = null;
+let obraEditando = null;
+let obraCapaFile = null;
+
+// ── FÓRUM STATE ───────────────────────────────────────────
+let forumTabAtual = 'todos';
+let forumCatAtual = '';
+let forumCategorias = [];
+let forumTopicos = [];
+
+// ── INIT ──────────────────────────────────────────────────
+async function init() {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { location.href = 'login.html'; return; }
+  currentUser = session.user;
+  await carregarPerfil();
+  await carregarObras();
+}
+
+async function carregarPerfil() {
+  const { data, error } = await db.from('researchers').select('*').eq('auth_user_id', currentUser.id).single();
+  if (error || !data) {
+    const { data: d2 } = await db.from('researchers').select('*').eq('email', currentUser.email).single();
+    if (!d2) { showToast('Erro ao carregar perfil.', 'erro'); return; }
+    researcherData = d2;
+    // Vincula auth_user_id automaticamente se ainda não estava definido
+    if (!d2.auth_user_id) {
+      await db.from('researchers').update({ auth_user_id: currentUser.id }).eq('id', d2.id);
+    }
+  } else { researcherData = data; }
+  preencherFormulario();
+  atualizarSidebar();
+  atualizarInicio();
+  carregarEstatisticasForum();
+}
+
+function preencherFormulario() {
+  const r = researcherData;
+  setValue('pNome', r.nome); setValue('pBio', r.mini_bio); setValue('pArea', r.area_principal);
+  setValue('pInst', r.instituicao); setValue('pCidade', r.estado); setValue('pEmail', r.email);
+  setValue('pLattes', r.lattes); setValue('pOrcid', r.orcid); setValue('pLinkedin', r.linkedin);
+  setValue('pScholar', r.google_scholar); setValue('pResearchgate', r.research_gate); setValue('pSite', r.site);
+  document.getElementById('bioCount').textContent = (r.mini_bio||'').length + '/280';
+  if (r.foto_url) document.getElementById('avatarPreview').innerHTML = `<img src="${r.foto_url}" alt="">`;
+  else document.getElementById('avatarPreview').textContent = iniciais(r.nome);
+}
+
+function atualizarSidebar() {
+  const r = researcherData;
+  document.getElementById('sidebarNome').textContent = primeiroNome(r.nome);
+  document.getElementById('sidebarArea').textContent = r.area_principal || '—';
+  if (r.foto_url) document.getElementById('sidebarAvatar').innerHTML = `<img src="${r.foto_url}" alt="">`;
+  else document.getElementById('sidebarAvatar').textContent = iniciais(r.nome);
+}
+
+function atualizarInicio() {
+  const r = researcherData;
+  document.getElementById('nomeBoasVindas').textContent = primeiroNome(r.nome);
+  document.getElementById('previewNome').textContent = r.nome || '—';
+  document.getElementById('previewInst').textContent = r.instituicao || '—';
+  document.getElementById('previewArea').textContent = r.area_principal || '—';
+  if (r.foto_url) document.getElementById('previewAvatar').innerHTML = `<img src="${r.foto_url}" alt="">`;
+  else document.getElementById('previewAvatar').textContent = iniciais(r.nome);
+  const links = [r.lattes, r.orcid, r.linkedin, r.google_scholar, r.research_gate, r.site].filter(Boolean).length;
+  document.getElementById('statLinks').textContent = links;
+  renderChecklist(r);
+}
+
+async function carregarEstatisticasForum() {
+  const { count } = await db.from('forum_posts')
+    .select('*', { count: 'exact', head: true })
+    .eq('researcher_id', researcherData.id)
+    .eq('aprovado', true);
+  document.getElementById('statTopicos').textContent = count || 0;
+}
+
+function renderChecklist(r) {
+  const items = [
+    { ok: !!(r.foto_url),         label: 'Adicionar foto de perfil',   action: "showPage('perfil')" },
+    { ok: !!(r.mini_bio),         label: 'Preencher mini bio',          action: "showPage('perfil')" },
+    { ok: !!(r.lattes || r.orcid),label: 'Adicionar Lattes ou ORCID',   action: "showPage('perfil')" },
+    { ok: !!(r.linkedin),         label: 'Adicionar LinkedIn',           action: "showPage('perfil')" },
+  ];
+  const pendentes = items.filter(i => !i.ok);
+  const card = document.getElementById('checklistCard');
+  if (!pendentes.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  document.getElementById('checklistItems').innerHTML = pendentes.map(i => `
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:var(--areia);border-radius:8px;cursor:pointer" onclick="${i.action}">
+      <span style="font-size:.85rem;color:var(--cinza-claro)">○</span>
+      <span style="font-size:.85rem;color:var(--cinza);flex:1">${i.label}</span>
+      <span style="font-size:.72rem;color:var(--rosa-vivo);font-weight:600">Completar →</span>
+    </div>`).join('');
+}
+
+// ── SALVAR PERFIL ─────────────────────────────────────────
+async function salvarPerfil() {
+  const btn = document.getElementById('btnSalvarPerfil');
+  const errEl = document.getElementById('alertPerfilErro');
+  const okEl = document.getElementById('alertPerfilOk');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block"></span> Salvando…';
+  const payload = {
+    nome: getVal('pNome'), mini_bio: getVal('pBio')||null, area_principal: getVal('pArea')||null,
+    instituicao: getVal('pInst')||null, estado: getVal('pCidade')||null, email: getVal('pEmail')||null,
+    lattes: getVal('pLattes')||null, orcid: getVal('pOrcid')||null, linkedin: getVal('pLinkedin')||null,
+    google_scholar: getVal('pScholar')||null, research_gate: getVal('pResearchgate')||null, site: getVal('pSite')||null,
+  };
+  if (fotoFile && researcherData?.id) {
+    const ext = fotoFile.name.split('.').pop();
+    const path = `${researcherData.id}.${ext}`;
+    const { error: upErr } = await db.storage.from('avatars').upload(path, fotoFile, { upsert: true, contentType: fotoFile.type });
+    if (!upErr) { const { data: u } = db.storage.from('avatars').getPublicUrl(path); payload.foto_url = u.publicUrl; fotoFile = null; document.getElementById('fotoStatus').textContent = 'Foto salva!'; }
+  }
+  const { error } = await db.from('researchers').update(payload).eq('id', researcherData.id);
+  btn.disabled = false; btn.innerHTML = '💾 Salvar alterações';
+  if (error) { errEl.textContent = 'Erro ao salvar: ' + error.message; errEl.classList.add('show'); return; }
+  Object.assign(researcherData, payload);
+  atualizarSidebar(); atualizarInicio();
+  okEl.textContent = '✓ Perfil atualizado com sucesso!';
+  okEl.classList.add('show'); showToast('Perfil salvo!', 'verde');
+  setTimeout(() => okEl.classList.remove('show'), 4000);
+}
+
+function previewFoto(input) {
+  const file = input.files[0]; if (!file) return;
+  fotoFile = file;
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById('avatarPreview').innerHTML = `<img src="${e.target.result}" alt="">`; document.getElementById('fotoStatus').textContent = file.name + ' — salve para confirmar'; };
+  reader.readAsDataURL(file);
+}
+
+// ── OBRAS ─────────────────────────────────────────────────
+async function carregarObras() {
+  if (!researcherData) return;
+  const { data } = await db.from('works').select('*').eq('researcher_id', researcherData.id).order('ano', { ascending: false });
+  const lista = document.getElementById('obrasLista');
+  document.getElementById('statObras').textContent = data?.length || 0;
+  if (!data?.length) {
+    lista.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📄</div><div class="empty-state-title">Nenhuma publicação ainda</div><p class="empty-state-desc">Adicione seus livros, artigos, teses e outros trabalhos.</p></div>`;
+    return;
+  }
+  lista.innerHTML = `<div class="obras-list">${data.map(w => obraCard(w)).join('')}</div>`;
+}
+
+function obraCard(w) {
+  const tags = Array.isArray(w.tags) ? w.tags.slice(0,3).map(t => `<span style="font-size:.6rem;padding:.15rem .5rem;border-radius:100px;background:var(--areia-escura);color:var(--cinza)">${t}</span>`).join('') : '';
+  return `<div class="obra-item">
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;flex-wrap:wrap">
+        <span class="obra-tipo-badge">${w.tipo}</span>
+        ${w.ano ? `<span style="font-size:.72rem;color:var(--cinza);font-weight:600">${w.ano}</span>` : ''}
+      </div>
+      <div class="obra-titulo">${w.titulo}</div>
+      ${w.resumo ? `<div class="obra-meta" style="margin-top:.2rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${w.resumo}</div>` : ''}
+      ${tags ? `<div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.5rem">${tags}</div>` : ''}
+    </div>
+    <div class="obra-actions">
+      <button class="btn btn-outline btn-sm" onclick="editarObra('${w.id}')">✏️</button>
+      <button class="btn btn-danger btn-sm" onclick="deletarObra('${w.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+
+function toggleNovaObra() {
+  obraEditando = null;
+  document.getElementById('obraFormTitle').textContent = 'Nova publicação';
+  document.getElementById('obraEditId').value = '';
+  ['oTitulo','oResumo','oAcesso','oCompra','oTags'].forEach(id => setValue(id, ''));
+  setValue('oTipo', ''); setValue('oAno', '');
+  const form = document.getElementById('novaObraForm');
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function fecharNovaObra() {
+  document.getElementById('novaObraForm').classList.remove('open');
+  obraEditando = null;
+  obraCapaFile = null;
+  document.getElementById('oCapaInput').value = '';
+  document.getElementById('oCapaPreview').innerHTML = '📚';
+  document.getElementById('oCapaRemoveBtn').style.display = 'none';
+}
+function previewObraCapa(input) {
+  const file = input.files[0]; if (!file) return;
+  obraCapaFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('oCapaPreview').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+    document.getElementById('oCapaRemoveBtn').style.display = 'inline-flex';
+  };
+  reader.readAsDataURL(file);
+}
+function removerObraCapa() {
+  obraCapaFile = null;
+  document.getElementById('oCapaInput').value = '';
+  document.getElementById('oCapaPreview').innerHTML = '📚';
+  document.getElementById('oCapaRemoveBtn').style.display = 'none';
+}
+async function uploadObraCapa(file, obraId) {
+  if (!file || !obraId) return null;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const path = `${obraId}.${ext}`;
+  const { error } = await db.storage.from('work-photos').upload(path, file, { upsert: true, contentType: file.type });
+  if (error) { console.warn('Erro upload capa:', error.message); return null; }
+  const { data } = db.storage.from('work-photos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function editarObra(id) {
+  const { data } = await db.from('works').select('*').eq('id', id).single();
+  if (!data) return;
+  obraEditando = id;
+  document.getElementById('obraFormTitle').textContent = 'Editar publicação';
+  document.getElementById('obraEditId').value = id;
+  setValue('oTitulo', data.titulo); setValue('oTipo', data.tipo);
+  setValue('oAno', data.ano||''); setValue('oResumo', data.resumo||'');
+  setValue('oAcesso', data.link_acesso||''); setValue('oCompra', data.link_compra||'');
+  setValue('oTags', Array.isArray(data.tags) ? data.tags.join(', ') : '');
+  // Mostra capa existente (se houver)
+  obraCapaFile = null;
+  const prev = document.getElementById('oCapaPreview');
+  if (data.capa_url) {
+    prev.innerHTML = `<img src="${data.capa_url}" style="width:100%;height:100%;object-fit:cover">`;
+    document.getElementById('oCapaRemoveBtn').style.display = 'inline-flex';
+  } else {
+    prev.innerHTML = '📚';
+    document.getElementById('oCapaRemoveBtn').style.display = 'none';
+  }
+  const form = document.getElementById('novaObraForm');
+  form.classList.add('open');
+  form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function salvarObra() {
+  const titulo = getVal('oTitulo'); const tipo = getVal('oTipo');
+  const errEl = document.getElementById('alertObraErro');
+  errEl.classList.remove('show');
+  if (!titulo || !tipo) { errEl.textContent = 'Preencha pelo menos o título e o tipo.'; errEl.classList.add('show'); return; }
+  const btn = document.getElementById('btnSalvarObra');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  const payload = {
+    researcher_id: researcherData.id, titulo, tipo,
+    ano: parseInt(getVal('oAno'))||null, resumo: getVal('oResumo')||null,
+    link_acesso: getVal('oAcesso')||null, link_compra: getVal('oCompra')||null,
+    tags: getVal('oTags').split(',').map(t => t.trim()).filter(Boolean),
+    area_conhecimento: researcherData.area_principal||null, status: 'aprovada',
+  };
+  let error, obraId = obraEditando;
+  if (obraEditando) {
+    ({ error } = await db.from('works').update(payload).eq('id', obraEditando));
+  } else {
+    const { data: nova, error: insErr } = await db.from('works').insert([payload]).select().single();
+    error = insErr; obraId = nova?.id;
+  }
+  btn.disabled = false; btn.textContent = 'Salvar publicação';
+  if (error) { errEl.textContent = 'Erro: ' + error.message; errEl.classList.add('show'); return; }
+  if (obraCapaFile && obraId) {
+    btn.disabled = true; btn.textContent = 'Enviando capa…';
+    const capaUrl = await uploadObraCapa(obraCapaFile, obraId);
+    if (capaUrl) await db.from('works').update({ capa_url: capaUrl }).eq('id', obraId);
+    btn.disabled = false; btn.textContent = 'Salvar publicação';
+  }
+  fecharNovaObra(); await carregarObras();
+  showToast(obraEditando ? 'Publicação atualizada!' : 'Publicação adicionada!', 'verde');
+}
+
+async function deletarObra(id) {
+  if (!confirm('Remover esta publicação do portal?')) return;
+  const { error } = await db.from('works').delete().eq('id', id);
+  if (error) { showToast('Erro ao remover.', 'erro'); return; }
+  await carregarObras(); showToast('Publicação removida.');
+}
+
+// ══════════════════════════════════════════════════════════
+// ── FÓRUM ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+
+async function iniciarForum() {
+  await carregarCategoriasForum();
+  await carregarTopicosForum();
+}
+
+async function carregarCategoriasForum() {
+  const { data } = await db.from('forum_categories').select('*').order('ordem');
+  forumCategorias = data || [];
+
+  // Preenche select do form novo tópico
+  const sel = document.getElementById('ntCategoria');
+  sel.innerHTML = '<option value="">Selecione…</option>';
+  forumCategorias.forEach(c => {
+    const o = document.createElement('option'); o.value = c.id; o.textContent = c.emoji + ' ' + c.nome; sel.appendChild(o);
+  });
+
+  // Renderiza filtros de categoria
+  const filterWrap = document.getElementById('forumCatFilter');
+  filterWrap.innerHTML = `<button class="forum-cat-btn active" data-cat="" onclick="filtrarCategoria(this,'')">Todas</button>` +
+    forumCategorias.map(c => `<button class="forum-cat-btn" data-cat="${c.id}" onclick="filtrarCategoria(this,${c.id})">${c.emoji} ${c.nome}</button>`).join('');
+}
+
+async function carregarTopicosForum() {
+  const wrap = document.getElementById('forumTopicosWrap');
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+  let query = db.from('forum_posts')
+    .select('*, forum_categories(nome, emoji)')
+    .order('pinned', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (forumTabAtual === 'meus') {
+    query = query.eq('researcher_id', researcherData.id);
+  } else if (forumTabAtual === 'pendentes') {
+    query = query.eq('researcher_id', researcherData.id).eq('aprovado', false);
+  } else {
+    query = query.eq('aprovado', true);
+  }
+
+  if (forumCatAtual) query = query.eq('category_id', parseInt(forumCatAtual));
+
+  const { data } = await query;
+  forumTopicos = data || [];
+
+  if (!forumTopicos.length) {
+    wrap.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">💬</div>
+      <div class="empty-state-title">${forumTabAtual === 'meus' ? 'Você ainda não criou tópicos' : forumTabAtual === 'pendentes' ? 'Nenhum tópico aguardando aprovação' : 'Nenhum tópico ainda'}</div>
+      <p class="empty-state-desc">${forumTabAtual === 'todos' ? 'Seja a primeira a criar um tópico nesta categoria!' : ''}</p>
+    </div>`;
+    return;
+  }
+
+  wrap.innerHTML = forumTopicos.map(p => {
+    const cat = p.forum_categories || {};
+    const isMeu = p.researcher_id === researcherData.id;
+    let statusBadge = '';
+    if (!p.aprovado) statusBadge = '<span class="forum-status-badge badge-pendente">⏳ Aguardando</span>';
+    else if (p.pinned) statusBadge = '<span class="forum-status-badge badge-pinned">📌 Fixado</span>';
+    else if (p.closed) statusBadge = '<span class="forum-status-badge badge-closed">🔒 Fechado</span>';
+    return `<div class="forum-topico-card" onclick="abrirTopico('${p.id}')">
+      <div class="forum-topico-header">
+        <div class="forum-cat-emoji">${cat.emoji||'💬'}</div>
+        <div style="flex:1">
+          <div class="forum-topico-titulo">${esc(p.titulo)}</div>
+          <div style="font-size:.68rem;color:var(--cinza);margin-top:.1rem">${esc(cat.nome||'—')}</div>
+        </div>
+        ${statusBadge}
+        ${isMeu ? '<span style="font-size:.62rem;font-weight:700;color:var(--rosa-vivo);background:rgba(196,116,138,.1);padding:.15rem .5rem;border-radius:100px">meu</span>' : ''}
+      </div>
+      <div class="forum-topico-meta">
+        <span>🕐 ${formatDate(p.created_at)}</span>
+        <span>👁 ${p.views||0} views</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filtrarCategoria(btn, catId) {
+  forumCatAtual = catId ? String(catId) : '';
+  document.querySelectorAll('.forum-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  carregarTopicosForum();
+}
+
+function switchForumTab(tab) {
+  forumTabAtual = tab;
+  document.querySelectorAll('.forum-tab').forEach(b => { b.classList.remove('active'); });
+  const tabMap = { todos: 'ftabTodos', meus: 'ftabMeus', pendentes: 'ftabPendentes' };
+  document.getElementById(tabMap[tab])?.classList.add('active');
+  carregarTopicosForum();
+}
+
+function abrirNovoTopico() {
+  const form = document.getElementById('forumNewTopicForm');
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function fecharNovoTopico() {
+  document.getElementById('forumNewTopicForm').classList.remove('open');
+}
+
+async function enviarTopico() {
+  const cat   = document.getElementById('ntCategoria').value;
+  const titulo = document.getElementById('ntTitulo').value.trim();
+  const corpo  = document.getElementById('ntCorpo').value.trim();
+  const okEl  = document.getElementById('ntAlertOk');
+  const errEl = document.getElementById('ntAlertErro');
+  okEl.classList.remove('show'); errEl.classList.remove('show');
+
+  if (!cat || !titulo || !corpo) {
+    errEl.textContent = 'Preencha categoria, título e mensagem.';
+    errEl.classList.add('show'); return;
+  }
+
+  const btn = document.getElementById('btnEnviarTopico');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+
+  const { error } = await db.from('forum_posts').insert([{
+    category_id: parseInt(cat),
+    researcher_id: researcherData.id,
+    titulo, corpo, aprovado: false
+  }]);
+
+  btn.disabled = false; btn.textContent = 'Enviar tópico';
+
+  if (error) { errEl.textContent = 'Erro: ' + error.message; errEl.classList.add('show'); return; }
+
+  setValue('ntTitulo', ''); setValue('ntCorpo', ''); setValue('ntCategoria', '');
+  document.getElementById('ntTituloCount').textContent = '0/120';
+  document.getElementById('ntCorpoCount').textContent = '0/4000';
+  okEl.classList.add('show');
+  showToast('Tópico enviado! Aguarde aprovação.', 'verde');
+  // Atualiza lista para mostrar pendente
+  switchForumTab('pendentes');
+}
+
+// ── THREAD INDIVIDUAL ─────────────────────────────────────
+async function abrirTopico(postId) {
+  document.getElementById('forumListView').style.display = 'none';
+  document.getElementById('forumThreadView').style.display = 'block';
+  document.getElementById('forumThreadContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+  // Incrementa views (só para aprovados)
+  db.rpc('increment_forum_views', { post_uuid: postId }).catch(() => {});
+
+  const { data: post } = await db.from('forum_posts')
+    .select('*, researchers(nome, foto_url, instituicao), forum_categories(nome, emoji)')
+    .eq('id', postId).single();
+
+  if (!post) {
+    document.getElementById('forumThreadContent').innerHTML = '<div class="empty-state"><p>Tópico não encontrado.</p></div>';
+    return;
+  }
+
+  const { data: respostas } = await db.from('forum_replies')
+    .select('*, researchers(nome, foto_url, instituicao)')
+    .eq('post_id', postId).eq('aprovado', true)
+    .order('created_at', { ascending: true });
+
+  const r = post.researchers || {};
+  const cat = post.forum_categories || {};
+  const avPost = r.foto_url ? `<img src="${r.foto_url}" alt="">` : iniciais(r.nome||'?');
+
+  const repliesHtml = respostas?.length
+    ? respostas.map(rep => {
+        const rr = rep.researchers || {};
+        const avRep = rr.foto_url ? `<img src="${rr.foto_url}" alt="">` : iniciais(rr.nome||'?');
+        return `<div class="forum-reply-item">
+          <div class="forum-reply-author">
+            <div class="forum-reply-avatar">${avRep}</div>
+            <div>
+              <div class="forum-reply-name">${esc(rr.nome||'—')}</div>
+              <div style="font-size:.68rem;color:var(--cinza)">${esc(rr.instituicao||'')}</div>
+            </div>
+            <div class="forum-reply-date">${formatDate(rep.created_at)}</div>
+          </div>
+          <div class="forum-reply-text">${esc(rep.corpo)}</div>
+        </div>`;
+      }).join('')
+    : '<div style="padding:1rem 1.5rem;font-size:.85rem;color:var(--cinza)">Nenhuma resposta ainda. Seja a primeira!</div>';
+
+  const formResposta = post.closed
+    ? `<div class="forum-closed-notice">🔒 Este tópico está fechado para novas respostas.</div>`
+    : !post.aprovado
+    ? `<div class="forum-closed-notice">⏳ Este tópico ainda aguarda aprovação da equipe.</div>`
+    : `<div style="padding:1rem 1.5rem;border-top:1px solid var(--cinza-claro)">
+        <div style="font-family:'DM Serif Display',serif;font-size:.95rem;margin-bottom:.85rem">Sua resposta</div>
+        <textarea class="form-textarea" id="replyCorpo" placeholder="Escreva sua resposta…" maxlength="4000"
+          oninput="document.getElementById('replyCount').textContent=this.value.length+'/4000'"
+          style="min-height:110px;background:var(--areia)"></textarea>
+        <div class="char-count" id="replyCount" style="margin-top:.25rem">0/4000</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.85rem;flex-wrap:wrap;gap:.75rem">
+          <span style="font-size:.72rem;color:var(--cinza)">Sua resposta aparecerá após aprovação.</span>
+          <button class="btn btn-rosa btn-sm" id="btnEnviarResposta" onclick="enviarResposta('${post.id}')">Enviar resposta</button>
+        </div>
+        <div class="alert alert-ok"   id="replyOk"   style="margin-top:.75rem">✓ Resposta enviada! Aparecerá em breve.</div>
+        <div class="alert alert-erro" id="replyErro" style="margin-top:.75rem"></div>
+      </div>`;
+
+  document.getElementById('forumThreadContent').innerHTML = `
+    <div class="forum-thread">
+      <div class="forum-thread-header">
+        <div class="forum-thread-cat">${cat.emoji||'💬'} ${esc(cat.nome||'—')}</div>
+        <div class="forum-thread-titulo">${esc(post.titulo)}</div>
+        <div class="forum-thread-author">
+          <div class="forum-thread-avatar">${avPost}</div>
+          <div>
+            <div style="font-weight:700;font-size:.82rem">${esc(r.nome||'—')}</div>
+            <div style="font-size:.68rem;opacity:.65">${esc(r.instituicao||'')} · ${formatDate(post.created_at)}</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:.4rem;flex-wrap:wrap">
+            ${post.pinned ? '<span class="forum-status-badge badge-pinned">📌 Fixado</span>' : ''}
+            ${post.closed ? '<span class="forum-status-badge badge-closed">🔒 Fechado</span>' : ''}
+          </div>
+        </div>
+      </div>
+      <div class="forum-thread-body">
+        <div class="forum-thread-text">${esc(post.corpo)}</div>
+        <div style="margin-top:1rem;font-size:.75rem;color:var(--cinza)">👁 ${post.views||0} visualizações · 💬 ${respostas?.length||0} resposta${respostas?.length !== 1 ? 's' : ''}</div>
+      </div>
+      ${repliesHtml}
+      ${formResposta}
+    </div>`;
+}
+
+async function enviarResposta(postId) {
+  const corpo = (document.getElementById('replyCorpo')?.value||'').trim();
+  const okEl  = document.getElementById('replyOk');
+  const errEl = document.getElementById('replyErro');
+  okEl.classList.remove('show'); errEl.classList.remove('show');
+
+  if (!corpo) { errEl.textContent = 'Escreva sua resposta antes de enviar.'; errEl.classList.add('show'); return; }
+
+  const btn = document.getElementById('btnEnviarResposta');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+
+  const { error } = await db.from('forum_replies').insert([{
+    post_id: postId, researcher_id: researcherData.id, corpo, aprovado: false
+  }]);
+
+  btn.disabled = false; btn.textContent = 'Enviar resposta';
+
+  if (error) { errEl.textContent = 'Erro: ' + error.message; errEl.classList.add('show'); return; }
+
+  if (document.getElementById('replyCorpo')) document.getElementById('replyCorpo').value = '';
+  if (document.getElementById('replyCount')) document.getElementById('replyCount').textContent = '0/4000';
+  okEl.classList.add('show');
+}
+
+function voltarListaForum() {
+  document.getElementById('forumListView').style.display = 'block';
+  document.getElementById('forumThreadView').style.display = 'none';
+}
+
+// ── ALTERAR SENHA ─────────────────────────────────────────
+async function alterarSenha() {
+  const nova = document.getElementById('novaSenha').value;
+  const confirma = document.getElementById('confirmaSenha').value;
+  const errEl = document.getElementById('alertSenhaErro');
+  const okEl  = document.getElementById('alertSenhaOk');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+  if (nova.length < 8) { errEl.textContent = 'A senha deve ter pelo menos 8 caracteres.'; errEl.classList.add('show'); return; }
+  if (nova !== confirma) { errEl.textContent = 'As senhas não coincidem.'; errEl.classList.add('show'); return; }
+  const btn = document.getElementById('btnAlterarSenha');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  const { error } = await db.auth.updateUser({ password: nova });
+  btn.disabled = false; btn.textContent = '🔒 Alterar senha';
+  if (error) { errEl.textContent = 'Erro: ' + error.message; errEl.classList.add('show'); return; }
+  document.getElementById('novaSenha').value = '';
+  document.getElementById('confirmaSenha').value = '';
+  document.getElementById('senhaFill').style.width = '0%';
+  document.getElementById('senhaLabel').textContent = '';
+  okEl.textContent = '✓ Senha alterada com sucesso!';
+  okEl.classList.add('show'); showToast('Senha alterada!', 'verde');
+  setTimeout(() => okEl.classList.remove('show'), 5000);
+}
+
+function avaliarSenha(val) {
+  const fill = document.getElementById('senhaFill');
+  const label = document.getElementById('senhaLabel');
+  if (!val) { fill.style.width = '0%'; label.textContent = ''; return; }
+  let score = 0;
+  if (val.length >= 8) score++; if (val.length >= 12) score++;
+  if (/[A-Z]/.test(val)) score++; if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const lvs = [
+    { w:'20%',bg:'#E24B4A',txt:'Muito fraca'},{w:'40%',bg:'#EF9F27',txt:'Fraca'},
+    { w:'60%',bg:'#EF9F27',txt:'Razoável'},{w:'80%',bg:'#52A86B',txt:'Boa'},{w:'100%',bg:'#3A6B4A',txt:'Forte'}
+  ];
+  const lv = lvs[Math.min(score, 4)];
+  fill.style.width = lv.w; fill.style.background = lv.bg;
+  label.textContent = lv.txt; label.style.color = lv.bg;
+}
+
+function togglePw(id, btn) {
+  const input = document.getElementById(id);
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+
+// ── NAVEGAÇÃO ─────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+  const nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Inicia fórum ao abrir pela primeira vez
+  if (name === 'forum') {
+    if (!forumCategorias.length) iniciarForum();
+    else {
+      document.getElementById('forumListView').style.display = 'block';
+      document.getElementById('forumThreadView').style.display = 'none';
+    }
+  }
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+async function logout() { await db.auth.signOut(); location.href = 'login.html'; }
+
+// ── HELPERS ───────────────────────────────────────────────
+function showToast(msg, tipo = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast' + (tipo ? ' ' + tipo : '');
+  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function iniciais(n) { return (n||'?').split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join('')||'?'; }
+function primeiroNome(n) { return (n||'pesquisadora').split(' ')[0]; }
+function getVal(id) { return (document.getElementById(id)?.value||'').trim(); }
+function setValue(id, val) { const el = document.getElementById(id); if (el) el.value = val||''; }
+function formatDate(d) {
+  const diff = (Date.now() - new Date(d)) / 1000;
+  if (diff < 60) return 'agora mesmo';
+  if (diff < 3600) return Math.floor(diff/60) + ' min atrás';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h atrás';
+  if (diff < 604800) return Math.floor(diff/86400) + ' dias atrás';
+  return new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'short' });
+}
+
+init();
+</script>
+</body>
+</html>

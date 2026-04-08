@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZKJ88LSLJY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-ZKJ88LSLJY');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inscrição — Pesquisadoras do ES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+:root {
+  --verde:        #3A6B4A;
+  --verde-vivo:   #52A86B;
+  --verde-escuro: #2A4D35;
+  --areia:        #F5EFE6;
+  --areia-escura: #EDE3D5;
+  --rosa:         #E8C4C4;
+  --rosa-vivo:    #C4748A;
+  --roxo:         #4A2E4A;
+  --roxo-medio:   #6B4068;
+  --branco:       #FFFAF6;
+  --cinza:        #7A6B6B;
+  --cinza-claro:  #DDD0C8;
+  --preto:        #1E1218;
+  --erro:         #C0392B;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Sora', sans-serif; background: var(--areia); color: var(--preto); min-height: 100vh; }
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(1.5rem,5vw,4rem); height: 68px; background: rgba(74,46,74,0.96); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255,255,255,0.08); }
+.nav-logo { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1rem; color: var(--branco); text-decoration: none; letter-spacing: -0.02em; }
+.nav-logo span { color: var(--rosa-vivo); }
+.nav-back { font-size: 0.78rem; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+.nav-back:hover { color: white; }
+.page-wrap { max-width: 720px; margin: 0 auto; padding: 100px 1.5rem 4rem; }
+.progress-bar { display: flex; margin-bottom: 2.5rem; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--cinza-claro); }
+.progress-step { flex: 1; padding: 0.7rem 0.5rem; text-align: center; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cinza); background: white; border-right: 1px solid var(--cinza-claro); transition: all 0.3s; }
+.progress-step:last-child { border-right: none; }
+.progress-step.active { background: var(--roxo); color: white; }
+.progress-step.done { background: rgba(58,107,74,0.08); color: var(--verde); }
+.step-num { display: block; font-family: 'DM Serif Display', serif; font-size: 0.95rem; margin-bottom: 0.1rem; }
+.card { background: white; border-radius: 20px; padding: 2rem; border: 1.5px solid var(--cinza-claro); margin-bottom: 1.5rem; }
+.card h2 { font-family: 'DM Serif Display', serif; font-size: 1.35rem; font-weight: 400; margin-bottom: 0.5rem; }
+.card .sub { font-size: 0.83rem; color: var(--cinza); line-height: 1.7; margin-bottom: 1.75rem; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+.field { display: flex; flex-direction: column; gap: 0.4rem; }
+.field.full { grid-column: 1 / -1; }
+label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cinza); }
+label .req { color: var(--rosa-vivo); margin-left: 2px; }
+input[type=text], input[type=email], input[type=url], input[type=number], textarea, select { font-family: 'Sora', sans-serif; font-size: 0.88rem; padding: 0.75rem 1rem; border: 1.5px solid var(--cinza-claro); border-radius: 10px; background: var(--areia); color: var(--preto); outline: none; transition: border 0.2s; width: 100%; }
+input:focus, textarea:focus, select:focus { border-color: var(--roxo); background: white; }
+input.erro, textarea.erro, select.erro { border-color: var(--erro); }
+textarea { resize: vertical; min-height: 110px; }
+.char-count { font-size: 0.68rem; color: var(--cinza); text-align: right; margin-top: -0.2rem; }
+.err-msg { font-size: 0.73rem; color: var(--erro); margin-top: 0.25rem; display: none; }
+.err-msg.show { display: block; }
+.obras-wrap { margin-top: 1rem; }
+.obra-item { background: var(--areia); border-radius: 12px; padding: 1.25rem; border: 1.5px solid var(--cinza-claro); margin-bottom: 0.75rem; position: relative; }
+.obra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.obra-grid .full { grid-column: 1/-1; }
+.obra-remove { position: absolute; top: 0.75rem; right: 0.75rem; background: none; border: none; cursor: pointer; color: var(--cinza); font-size: 1rem; line-height: 1; padding: 0.2rem; }
+.obra-remove:hover { color: var(--erro); }
+.btn-add-obra { width: 100%; padding: 0.7rem; background: transparent; border: 1.5px dashed var(--cinza-claro); border-radius: 10px; font-family: 'Sora', sans-serif; font-size: 0.82rem; color: var(--cinza); cursor: pointer; transition: all 0.2s; margin-top: 0.25rem; }
+.btn-add-obra:hover { border-color: var(--verde); color: var(--verde); }
+.consent-box { background: var(--areia); border-radius: 14px; padding: 1.5rem; border: 1.5px solid var(--cinza-claro); margin-top: 1.5rem; }
+.consent-text { font-size: 0.83rem; color: var(--cinza); line-height: 1.75; max-height: 300px; overflow-y: auto; margin-bottom: 1.25rem; padding-right: 0.5rem; }
+.consent-text h3 { font-size: 0.88rem; font-weight: 700; color: var(--preto); margin: 1rem 0 0.4rem; }
+.consent-text h3:first-child { margin-top: 0; }
+.consent-text ul { padding-left: 1.25rem; margin-top: 0.3rem; }
+.consent-text li { margin-bottom: 0.3rem; }
+.consent-check { display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; }
+.consent-check input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; accent-color: var(--verde); cursor: pointer; }
+.consent-check span { font-size: 0.83rem; color: var(--preto); line-height: 1.5; font-weight: 600; }
+.review-section { margin-bottom: 1.5rem; }
+.review-section h3 { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--cinza); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--cinza-claro); }
+.review-row { display: flex; gap: 0.5rem; margin-bottom: 0.4rem; font-size: 0.85rem; }
+.review-label { color: var(--cinza); min-width: 110px; font-size: 0.78rem; flex-shrink: 0; }
+.review-val { color: var(--preto); word-break: break-word; }
+.review-obra { background: var(--areia); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-left: 3px solid var(--rosa-vivo); }
+.review-obra-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.2rem; }
+.review-obra-meta { font-size: 0.75rem; color: var(--cinza); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: 'Sora', sans-serif; font-size: 0.88rem; font-weight: 700; padding: 0.85rem 2rem; border-radius: 100px; border: none; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+.btn-primary { background: var(--roxo); color: white; }
+.btn-primary:hover:not(:disabled) { background: #3a2038; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-success { background: var(--verde); color: white; }
+.btn-success:hover:not(:disabled) { background: var(--verde-escuro); }
+.btn-success:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-outline { background: transparent; color: var(--cinza); border: 1.5px solid var(--cinza-claro); }
+.btn-outline:hover { border-color: var(--roxo); color: var(--roxo); }
+.btn-full { width: 100%; }
+.nav-btns { display: flex; gap: 0.75rem; justify-content: space-between; flex-wrap: wrap; }
+.nav-btns .btn { flex: 1; min-width: 120px; }
+.form-section { display: none; }
+.form-section.active { display: block; animation: fadeIn 0.35s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.success-card { background: white; border-radius: 20px; padding: 3rem 2rem; text-align: center; border: 1.5px solid var(--cinza-claro); }
+.success-icon { font-size: 4rem; margin-bottom: 1rem; }
+.success-card h2 { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--verde); margin-bottom: 0.75rem; }
+.success-card p { font-size: 0.93rem; color: var(--cinza); line-height: 1.8; max-width: 440px; margin: 0 auto 2rem; }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.lgpd-text { font-size: 0.83rem; color: var(--cinza); line-height: 1.75; max-height: 380px; overflow-y: auto; margin-bottom: 1.25rem; padding-right: 0.5rem; }
+.lgpd-text h3 { font-size: 0.88rem; font-weight: 700; color: var(--preto); margin: 1.1rem 0 0.35rem; }
+.lgpd-text h3:first-child { margin-top: 0; }
+.lgpd-text ul { padding-left: 1.25rem; margin-top: 0.25rem; }
+.lgpd-text li { margin-bottom: 0.25rem; }
+.lgpd-text p { margin-bottom: 0.5rem; }
+.step-error-banner { display: none; background: rgba(192,57,43,0.08); border: 1.5px solid rgba(192,57,43,0.3); border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.82rem; color: var(--erro); margin-bottom: 1rem; }
+.step-error-banner.show { display: block; }
+/* FOTO */
+.foto-wrap { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 0.25rem; }
+.foto-preview { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--rosa), var(--roxo-medio)); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: white; font-weight: 700; flex-shrink: 0; overflow: hidden; border: 2.5px solid var(--cinza-claro); cursor: pointer; transition: border-color 0.2s; }
+.foto-preview:hover { border-color: var(--roxo); }
+.foto-preview img { width: 100%; height: 100%; object-fit: cover; }
+.foto-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: 'Sora', sans-serif; font-size: 0.78rem; font-weight: 600; padding: 0.5rem 1.1rem; border-radius: 100px; border: 1.5px solid var(--cinza-claro); background: white; cursor: pointer; color: var(--cinza); transition: all 0.2s; }
+.foto-btn:hover { border-color: var(--roxo); color: var(--roxo); }
+.foto-hint { font-size: 0.7rem; color: var(--cinza); margin-top: 0.3rem; }
+@media(max-width:600px){
+  .form-grid, .obra-grid { grid-template-columns: 1fr; }
+  .field.full, .obra-grid .full { grid-column: 1; }
+  .progress-step { font-size: 0.52rem; padding: 0.55rem 0.2rem; }
+}
+</style>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-WLJZDV4H');</script>
+<!-- End Google Tag Manager -->
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WLJZDV4H"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<nav>
+  <a href="index.html" class="nav-logo">Pesquisadoras<span>ES</span></a>
+  <a href="index.html" class="nav-back">&#8592; Voltar ao site</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="progress-bar">
+    <div class="progress-step active" id="step0"><span class="step-num">1</span>Consentimento</div>
+    <div class="progress-step"        id="step1"><span class="step-num">2</span>Seus dados</div>
+    <div class="progress-step"        id="step2"><span class="step-num">3</span>Area &amp; links</div>
+    <div class="progress-step"        id="step3"><span class="step-num">4</span>Obras</div>
+    <div class="progress-step"        id="step4"><span class="step-num">5</span>Revisao</div>
+    <div class="progress-step"        id="step5"><span class="step-num">6</span>Privacidade</div>
+  </div>
+
+  <!-- ETAPA 0 -->
+  <div class="form-section active" id="section0">
+    <div class="card">
+      <h2>Termo de Consentimento</h2>
+      <p class="sub">Leia e aceite os termos antes de continuar.</p>
+      <div class="consent-box">
+        <div class="consent-text">
+          <h3>1. Quem somos</h3>
+          <p>O portal <strong>Pesquisadoras do ES</strong> e uma iniciativa de P&amp;D da <strong>KICk</strong> (kickgroup.com.br), com sede em Vitoria/ES.</p>
+          <h3>2. Dados coletados</h3>
+          <ul>
+            <li>Nome completo e titulo academico</li>
+            <li>Endereco de e-mail</li>
+            <li>Area de atuacao, instituicao e cidade</li>
+            <li>Mini biografia (ate 280 caracteres)</li>
+            <li>Links publicos: Lattes, ORCID, LinkedIn, Google Scholar, ResearchGate, site pessoal</li>
+            <li>Dados de publicacoes: titulo, tipo, ano, resumo, tags e links</li>
+            <li>Foto de perfil (opcional)</li>
+          </ul>
+          <h3>3. Finalidade</h3>
+          <ul>
+            <li>Criar e exibir publicamente seu perfil no portal</li>
+            <li>Catalogar e dar visibilidade as suas publicacoes</li>
+            <li>Gerar estatisticas agregadas sobre pesquisa feminina no ES</li>
+          </ul>
+          <h3>4. Base legal (LGPD)</h3>
+          <p>Consentimento livre e informado (Art. 7, I da Lei 13.709/2018). Voce pode revogar a qualquer momento.</p>
+          <h3>5. Compartilhamento</h3>
+          <p>Dados de perfil sao exibidos publicamente. Nao vendemos nem compartilhamos com terceiros para fins comerciais.</p>
+          <h3>6. Seus direitos</h3>
+          <ul>
+            <li>Acessar, corrigir ou solicitar a exclusao dos seus dados</li>
+            <li>Revogar o consentimento a qualquer momento</li>
+          </ul>
+          <p>Para exercer seus direitos: mulheres arroba kickgroup ponto com ponto br</p>
+          <h3>7. Retencao</h3>
+          <p>Dados mantidos enquanto o perfil estiver ativo. Exclusao em ate 30 dias uteis apos solicitacao.</p>
+        </div>
+        <label class="consent-check">
+          <input type="checkbox" id="consentimento">
+          <span>Li e compreendi o Termo de Consentimento. Autorizo o tratamento dos meus dados pessoais para as finalidades descritas acima, conforme a LGPD.</span>
+        </label>
+        <div class="err-msg" id="err0">Voce precisa aceitar o termo para continuar.</div>
+      </div>
+    </div>
+    <div class="nav-btns" style="justify-content:flex-end">
+      <button class="btn btn-primary" style="max-width:280px" onclick="goStep(1)">Li e aceito os termos</button>
+    </div>
+  </div>
+
+  <!-- ETAPA 1 -->
+  <div class="form-section" id="section1">
+    <div class="card">
+      <h2>Seus dados</h2>
+      <p class="sub">Campos com <span style="color:var(--rosa-vivo)">*</span> sao obrigatorios.</p>
+      <div class="step-error-banner" id="banner-step1"></div>
+      <div class="form-grid">
+        <div class="field full">
+          <label>Nome completo <span class="req">*</span></label>
+          <input type="text" id="nome" placeholder="Ex: Dra. Ana Lima">
+          <div class="err-msg" id="err-nome"></div>
+        </div>
+        <div class="field full">
+          <label>Mini bio <span class="req">*</span></label>
+          <textarea id="bio" maxlength="280" placeholder="Pesquisadora em... (ate 280 caracteres)" oninput="document.getElementById('bioCount').textContent=this.value.length+'/280'"></textarea>
+          <div class="char-count" id="bioCount">0/280</div>
+          <div class="err-msg" id="err-bio"></div>
+        </div>
+        <div class="field">
+          <label>E-mail <span class="req">*</span></label>
+          <input type="email" id="email" placeholder="seu@email.com">
+          <div class="err-msg" id="err-email"></div>
+        </div>
+        <div class="field">
+          <label>Cidade (ES)</label>
+          <input type="text" id="cidade" placeholder="Ex: Vitoria, Serra, Cachoeiro...">
+        </div>
+        <div class="field full">
+          <label>Foto de perfil <span style="font-weight:400;font-size:0.7rem;color:var(--cinza)">(opcional)</span></label>
+          <div class="foto-wrap">
+            <div class="foto-preview" id="fotoPreview" onclick="document.getElementById('fotoInput').click()" title="Clique para escolher foto">📷</div>
+            <div>
+              <button type="button" class="foto-btn" onclick="document.getElementById('fotoInput').click()">Escolher foto</button>
+              <input type="file" id="fotoInput" accept="image/*" style="display:none" onchange="previewFotoInscricao(this)">
+              <div class="foto-hint" id="fotoHint">Formato quadrado recomendado · JPG, PNG ou WebP</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goStep(0)">Voltar</button>
+      <button class="btn btn-primary" onclick="goStep(2)">Continuar</button>
+    </div>
+  </div>
+
+  <!-- ETAPA 2 -->
+  <div class="form-section" id="section2">
+    <div class="card">
+      <h2>Area e Instituicao</h2>
+      <p class="sub">Campos com <span style="color:var(--rosa-vivo)">*</span> sao obrigatorios.</p>
+      <div class="step-error-banner" id="banner-step2">
+        Selecione sua <strong>Area principal</strong> e sua <strong>Instituicao</strong> para continuar.
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Area principal <span class="req">*</span></label>
+          <select id="area">
+            <option value="">Selecione...</option>
+            <option>Ciencias Exatas e da Terra</option>
+            <option>Ciencias Biologicas</option>
+            <option>Engenharias</option>
+            <option>Ciencias da Saude</option>
+            <option>Ciencias Agrarias</option>
+            <option>Ciencias Sociais Aplicadas</option>
+            <option>Ciencias Humanas</option>
+            <option>Linguistica, Letras e Artes</option>
+            <option>Multidisciplinar</option>
+          </select>
+          <div class="err-msg" id="err-area">Selecione uma area.</div>
+        </div>
+        <div class="field">
+          <label>Instituicao principal <span class="req">*</span></label>
+          <select id="instituicao">
+            <option value="">Selecione...</option>
+            <option>UFES - Universidade Federal do Espirito Santo</option>
+            <option>IFES - Instituto Federal do Espirito Santo</option>
+            <option>UVV - Universidade Vila Velha</option>
+            <option>FUCAPE</option>
+            <option>EMESCAM</option>
+            <option>FDV - Faculdade de Direito de Vitoria</option>
+            <option>MULTIVIX</option>
+            <option>FAESA</option>
+            <option>Outra</option>
+          </select>
+          <div class="err-msg" id="err-inst">Selecione uma instituicao.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Links e perfis</h2>
+      <p class="sub">Cole os links dos seus perfis academicos. Todos opcionais.</p>
+      <div class="form-grid">
+        <div class="field"><label>Lattes (CNPq)</label><input type="url" id="lattes" placeholder="http://lattes.cnpq.br/..."></div>
+        <div class="field"><label>ORCID</label><input type="url" id="orcid" placeholder="https://orcid.org/..."></div>
+        <div class="field"><label>LinkedIn</label><input type="url" id="linkedin" placeholder="https://linkedin.com/in/..."></div>
+        <div class="field"><label>Google Scholar</label><input type="url" id="scholar" placeholder="https://scholar.google.com/..."></div>
+        <div class="field"><label>ResearchGate</label><input type="url" id="researchgate" placeholder="https://researchgate.net/..."></div>
+        <div class="field"><label>Site pessoal</label><input type="url" id="site" placeholder="https://..."></div>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goStep(1)">Voltar</button>
+      <button class="btn btn-primary" onclick="goStep(3)">Continuar</button>
+    </div>
+  </div>
+
+  <!-- ETAPA 3 -->
+  <div class="form-section" id="section3">
+    <div class="card">
+      <h2>Publicacoes</h2>
+      <p class="sub">Adicione suas publicacoes ou pule esta etapa.</p>
+      <div class="obras-wrap" id="obrasWrap"></div>
+      <button class="btn-add-obra" onclick="addObra()">+ Adicionar publicacao</button>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goStep(2)">Voltar</button>
+      <button class="btn btn-primary" onclick="goStep(4)">Continuar</button>
+    </div>
+  </div>
+
+  <!-- ETAPA 4 -->
+  <div class="form-section" id="section4">
+    <div class="card">
+      <h2>Revise seus dados</h2>
+      <p class="sub">Confira antes de enviar.</p>
+      <div id="reviewContent"></div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goStep(3)">Voltar</button>
+      <button class="btn btn-primary" onclick="goStep(5)">Confirmar e avancar</button>
+    </div>
+  </div>
+
+  <!-- ETAPA 5 -->
+  <div class="form-section" id="section5">
+    <div class="card">
+      <h2>Politica de Privacidade</h2>
+      <p class="sub">Leia nossa Politica de Privacidade antes de concluir.</p>
+      <div class="lgpd-text">
+        <h3>1. Controlador dos dados</h3>
+        <p>KICk (kickgroup.com.br), responsavel pelo portal Pesquisadoras do ES, sede em Vitoria/ES. Contato: mulheres arroba kickgroup ponto com ponto br</p>
+        <h3>2. Dados coletados</h3>
+        <ul>
+          <li>Identificacao: nome, e-mail, foto.</li>
+          <li>Profissionais: area, instituicao, cidade, links — exibidos publicamente.</li>
+          <li>Publicacoes: titulos, tipos, anos, resumos, tags.</li>
+        </ul>
+        <h3>3. Cookies</h3>
+        <p>Apenas cookies estritamente necessarios. Sem rastreamento publicitario.</p>
+        <h3>4. Seguranca</h3>
+        <p>Criptografia HTTPS e infraestrutura certificada (Supabase/AWS Sao Paulo).</p>
+        <h3>5. Exercicio de direitos</h3>
+        <p>Para acessar, corrigir ou excluir seus dados envie e-mail com assunto "Dados pessoais - [seu nome]". Resposta em ate 15 dias uteis.</p>
+      </div>
+      <div class="consent-box" style="margin-top:0">
+        <label class="consent-check">
+          <input type="checkbox" id="aceitaPrivacidade">
+          <span>Li e aceito a Politica de Privacidade e confirmo que as informacoes fornecidas sao verdadeiras.</span>
+        </label>
+        <div class="err-msg" id="errPrivacidade">Voce precisa aceitar a Politica de Privacidade para concluir.</div>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goStep(4)">Voltar</button>
+      <button class="btn btn-success btn-full" id="btnSubmit" onclick="submitForm()">Concluir inscricao</button>
+    </div>
+  </div>
+
+  <!-- SUCESSO -->
+  <div class="form-section" id="sectionSuccess">
+    <div class="success-card">
+      <div class="success-icon">🎉</div>
+      <h2>Inscricao enviada!</h2>
+      <p>Obrigada, <strong id="successNome"></strong>! Seu perfil foi enviado para analise. Quando aprovada, voce recebera um e-mail com o link para criar sua senha e acessar o painel.</p>
+      <a href="index.html" class="btn btn-primary">Voltar ao portal</a>
+    </div>
+  </div>
+</div>
+
+<script src="inscricao.js"></script>
+</body>
+</html>

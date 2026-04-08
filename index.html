@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Redirecionamento de convite/recuperação de senha — deve rodar ANTES do Supabase.js -->
+<script>
+(function(){
+  var h=window.location.hash.replace(/^#/,'');
+  var q=window.location.search.replace(/^\?/,'');
+  var hP=new URLSearchParams(h);
+  var qP=new URLSearchParams(q);
+  var tipo=hP.get('type')||qP.get('type');
+  var tokenHash=qP.get('token_hash');
+  var accessToken=hP.get('access_token');
+  var code=qP.get('code');
+  if(tipo==='invite'||tipo==='recovery'||tokenHash||(accessToken&&tipo)||code){
+    window.location.replace('pesquisadora/definir-senha.html'+window.location.search+window.location.hash);
+  }
+})();
+</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZKJ88LSLJY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-ZKJ88LSLJY');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pesquisadoras do ES — Movimento para a visibilidade de mulheres nas ciências</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+:root {
+  --verde:        #3A6B4A;
+  --verde-vivo:   #52A86B;
+  --verde-escuro: #2A4D35;
+  --areia:        #F5EFE6;
+  --areia-escura: #EDE3D5;
+  --rosa:         #E8C4C4;
+  --rosa-vivo:    #C4748A;
+  --roxo:         #4A2E4A;
+  --roxo-medio:   #6B4068;
+  --branco:       #FFFAF6;
+  --cinza:        #7A6B6B;
+  --cinza-claro:  #DDD0C8;
+  --preto:        #1E1218;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Sora', sans-serif; background: var(--areia); color: var(--preto); line-height: 1.6; overflow-x: hidden; }
+
+/* NAV */
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(1.5rem,5vw,4rem); height: 68px; background: rgba(74,46,74,0.94); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255,255,255,0.08); }
+.nav-logo { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1rem; color: var(--branco); text-decoration: none; letter-spacing: -0.02em; }
+.nav-logo span { color: var(--rosa-vivo); }
+.nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+.nav-links a { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--branco); }
+.nav-btn { background: var(--rosa-vivo) !important; color: white !important; font-weight: 700 !important; padding: 0.45rem 1.2rem; border-radius: 100px; transition: all 0.2s !important; }
+.nav-btn:hover { opacity: 0.85 !important; }
+.nav-btn-painel { background: rgba(255,255,255,0.12) !important; color: rgba(255,255,255,0.8) !important; font-weight: 600 !important; padding: 0.45rem 1.2rem; border-radius: 100px; border: 1px solid rgba(255,255,255,0.2) !important; transition: all 0.2s !important; }
+.nav-btn-painel:hover { background: rgba(255,255,255,0.2) !important; color: white !important; }
+.nav-toggle { display: none; background: none; border: none; cursor: pointer; flex-direction: column; gap: 5px; }
+.nav-toggle span { display: block; width: 22px; height: 2px; background: white; transition: 0.3s; }
+
+/* HERO BANNER */
+.hero-banner { margin-top: 68px; width: 100%; line-height: 0; }
+.hero-banner-img { display: block; width: 100%; height: auto; }
+.btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--rosa-vivo); color: white; font-family: 'Sora', sans-serif; font-size: 0.85rem; font-weight: 700; padding: 0.85rem 2rem; border-radius: 100px; text-decoration: none; border: none; cursor: pointer; transition: all 0.25s; white-space: nowrap; }
+.btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn-outline { display: inline-flex; align-items: center; gap: 0.5rem; background: transparent; color: rgba(255,255,255,0.7); font-family: 'Sora', sans-serif; font-size: 0.85rem; font-weight: 500; padding: 0.85rem 2rem; border-radius: 100px; text-decoration: none; border: 1.5px solid rgba(255,255,255,0.2); cursor: pointer; transition: all 0.25s; white-space: nowrap; }
+.btn-outline:hover { border-color: rgba(255,255,255,0.6); color: white; }
+
+/* TICKER */
+.ticker-wrap { background: var(--rosa-vivo); overflow: hidden; padding: 0.85rem 0; white-space: nowrap; }
+.ticker-inner { display: inline-flex; animation: ticker 28s linear infinite; }
+.ticker-inner span { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.9); padding: 0 2.5rem; }
+.ticker-sep { color: rgba(255,255,255,0.35) !important; }
+@keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+
+/* NUMEROS STRIP */
+.numeros-strip { background: var(--verde-escuro); padding: clamp(3rem,5vw,4.5rem) clamp(1.5rem,5vw,4rem); }
+.numeros-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 0; }
+.numero-item { flex: 1; text-align: center; padding: 1rem 2rem; }
+.numero-num { font-family: 'DM Serif Display', serif; font-size: clamp(3.5rem,6vw,6rem); color: var(--areia); line-height: 1; margin-bottom: 0.75rem; }
+.numero-linha { width: 2rem; height: 2px; background: var(--rosa-vivo); margin: 0 auto 0.75rem; }
+.numero-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(245,239,230,0.5); }
+.numero-divider { width: 1px; height: 80px; background: rgba(245,239,230,0.12); flex-shrink: 0; }
+
+/* SEÇÃO PADRÃO */
+section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
+.section-eyebrow { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--rosa-vivo); margin-bottom: 1rem; display: block; }
+.section-title { font-family: 'DM Serif Display', serif; font-size: clamp(2rem,4vw,3.5rem); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1rem; }
+.section-title em { color: var(--verde); font-style: italic; }
+.section-desc { font-size: 0.95rem; color: var(--cinza); max-width: 560px; line-height: 1.8; }
+
+/* SEPARADOR TICKER */
+.section-ticker { background: var(--areia-escura); overflow: hidden; padding: 0.9rem 0; border-top: 1px solid var(--cinza-claro); border-bottom: 1px solid var(--cinza-claro); }
+.section-ticker .ticker-inner span { color: var(--cinza); font-size: 0.68rem; letter-spacing: 0.2em; }
+.section-ticker .ticker-sep { color: var(--cinza-claro) !important; }
+
+/* BLOG */
+#blog-preview { background: var(--branco); }
+.blog-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 1.25rem; margin-top: 2.5rem; }
+.blog-card { background: var(--areia); border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.3s; border: 1.5px solid var(--cinza-claro); }
+.blog-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(74,46,74,0.12); border-color: var(--rosa-vivo); }
+.blog-card-img { height: 180px; background: linear-gradient(135deg,var(--verde),var(--verde-escuro)); display: flex; align-items: center; justify-content: center; font-size: 3rem; overflow: hidden; position: relative; }
+.blog-card-img img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0; }
+.blog-card-body { padding: 1.25rem; }
+.blog-cat-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.65rem; }
+.blog-cat-tag { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--rosa-vivo); background: rgba(196,116,138,0.1); padding: 0.2rem 0.6rem; border-radius: 100px; }
+.blog-card-title { font-family: 'DM Serif Display', serif; font-size: 1.05rem; line-height: 1.4; margin-bottom: 0.4rem; }
+.blog-card-meta { font-size: 0.73rem; color: var(--cinza); }
+.blog-card-excerpt { font-size: 0.83rem; color: var(--cinza); margin-top: 0.65rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* VIDEO WIDE BANNER */
+.video-wide-banner { width:100%; height:320px; overflow:hidden; position:relative; background:#000; }
+.video-wide-banner video { width:100%; height:100%; object-fit:cover; object-position:center 30%; display:block; position:absolute; top:0; left:0; transition:opacity 0.5s; }
+#vid1 { object-position: center 45%; }
+.video-wide-banner video.hidden { opacity:0; pointer-events:none; }
+
+/* PESQUISADORAS */
+#pesquisadoras { background: var(--areia); }
+.search-bar { position: relative; margin: 2rem 0 1.5rem; }
+.search-bar input { width: 100%; padding: 1rem 1rem 1rem 3rem; border: 1.5px solid var(--cinza-claro); border-radius: 12px; font-family: 'Sora', sans-serif; font-size: 0.9rem; color: var(--preto); background: var(--branco); transition: border 0.2s; outline: none; }
+.search-bar input:focus { border-color: var(--verde); }
+.search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--cinza); pointer-events: none; }
+.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+.filter-btn { font-size: 0.73rem; font-weight: 600; padding: 0.45rem 1rem; border-radius: 100px; border: 1.5px solid var(--cinza-claro); background: transparent; cursor: pointer; transition: all 0.2s; color: var(--cinza); font-family: 'Sora', sans-serif; }
+.filter-btn:hover { border-color: var(--verde); color: var(--verde); }
+.filter-btn.active { background: var(--verde); border-color: var(--verde); color: white; }
+.filter-label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--cinza); margin: 1rem 0 0.5rem; display: block; }
+.researchers-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 1.25rem; }
+.researcher-card { background: var(--branco); border-radius: 16px; padding: 1.75rem; cursor: pointer; transition: all 0.3s; border: 1.5px solid var(--cinza-claro); display: flex; flex-direction: column; gap: 1rem; }
+.researcher-card:hover { border-color: var(--rosa-vivo); box-shadow: 0 8px 32px rgba(74,46,74,0.1); transform: translateY(-2px); }
+.rc-top { display: flex; align-items: flex-start; gap: 1rem; }
+.rc-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg,var(--verde),var(--verde-escuro)); display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: white; flex-shrink: 0; overflow: hidden; }
+.rc-avatar img { width:100%;height:100%;object-fit:cover; }
+.rc-name { font-family: 'DM Serif Display', serif; font-size: 1rem; margin-bottom: 0.15rem; line-height: 1.3; }
+.rc-inst { font-size: 0.73rem; color: var(--cinza); }
+.rc-area { display: inline-block; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--verde); background: rgba(58,107,74,0.1); padding: 0.2rem 0.65rem; border-radius: 100px; }
+.rc-bio { font-size: 0.83rem; color: var(--cinza); line-height: 1.65; }
+.rc-links { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: auto; }
+.rc-link { font-size: 0.68rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 100px; text-decoration: none; border: 1px solid var(--cinza-claro); color: var(--cinza); transition: all 0.2s; }
+.rc-link:hover { border-color: var(--verde); color: var(--verde); }
+
+/* OBRAS */
+#obras { background: var(--branco); }
+.works-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 1.25rem; margin-top: 2rem; }
+.work-card { background: var(--areia); border-radius: 16px; padding: 1.5rem; transition: all 0.3s; border: 1.5px solid var(--cinza-claro); display: flex; flex-direction: column; gap: 0.75rem; cursor: pointer; }
+.work-card:hover { border-color: var(--rosa-vivo); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(74,46,74,0.08); }
+.wc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.wc-type { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: white; background: var(--verde); padding: 0.2rem 0.6rem; border-radius: 100px; white-space: nowrap; }
+.wc-year { font-size: 0.68rem; color: var(--cinza); font-weight: 600; }
+.wc-title { font-family: 'DM Serif Display', serif; font-size: 1rem; line-height: 1.4; }
+.wc-author { font-size: 0.78rem; color: var(--rosa-vivo); font-weight: 600; }
+.wc-resumo { font-size: 0.83rem; color: var(--cinza); line-height: 1.65; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.wc-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.wc-tag { font-size: 0.67rem; padding: 0.2rem 0.55rem; border-radius: 100px; background: var(--rosa); color: var(--roxo); }
+.wc-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--cinza-claro); }
+.wc-btn { font-size: 0.73rem; font-weight: 600; padding: 0.4rem 0.9rem; border-radius: 100px; text-decoration: none; transition: all 0.2s; cursor: pointer; font-family: 'Sora', sans-serif; }
+.wc-btn-compra { background: var(--rosa-vivo); color: white; border: none; }
+.wc-btn-compra:hover { opacity: 0.85; }
+.wc-btn-acesso { background: transparent; color: var(--verde); border: 1.5px solid var(--verde); }
+.wc-btn-acesso:hover { background: rgba(58,107,74,0.06); }
+
+/* LIVROS */
+#livros { background: var(--roxo); color: white; position: relative; overflow: hidden; }
+#livros::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ccircle cx='25' cy='25' r='11' stroke='%23C4748A' stroke-width='2' fill='none' opacity='0.3'/%3E%3Cline x1='25' y1='36' x2='25' y2='45' stroke='%23C4748A' stroke-width='2' opacity='0.3'/%3E%3Cline x1='19' y1='41' x2='31' y2='41' stroke='%23C4748A' stroke-width='2' opacity='0.3'/%3E%3Cpath d='M82 15 L82 30 L92 44 L72 44 Z' stroke='%2352A86B' stroke-width='1.5' fill='none' opacity='0.25'/%3E%3Cpath d='M45 75 Q52 85 45 95 Q38 105 45 115' stroke='%23E8C4C4' stroke-width='1.5' fill='none' opacity='0.2'/%3E%3Cpath d='M55 75 Q48 85 55 95 Q62 105 55 115' stroke='%2352A86B' stroke-width='1.5' fill='none' opacity='0.2'/%3E%3C/svg%3E"); background-size: 120px 120px; pointer-events: none; }
+#livros .section-eyebrow { color: var(--rosa); position: relative; z-index: 1; }
+#livros .section-title { color: white; position: relative; z-index: 1; }
+#livros .section-title em { color: var(--rosa-vivo); }
+#livros .section-desc { color: rgba(255,255,255,0.55); position: relative; z-index: 1; }
+.books-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 1.25rem; margin-top: 2.5rem; position: relative; z-index: 1; }
+.book-card { background: rgba(255,255,255,0.08); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s; display: flex; flex-direction: column; gap: 0.75rem; }
+.book-card:hover { background: rgba(255,255,255,0.14); transform: translateY(-3px); }
+.book-cover { width: 100%; aspect-ratio: 3/4; background: linear-gradient(135deg,rgba(196,116,138,0.25),rgba(82,168,107,0.1)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; }
+.book-cover img { width:100%; height:100%; object-fit:cover; display:block; border-radius:10px; }
+.book-title { font-family: 'DM Serif Display', serif; font-size: 0.95rem; color: white; line-height: 1.4; }
+.book-author { font-size: 0.73rem; color: rgba(255,255,255,0.45); }
+.book-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 0.73rem; font-weight: 700; margin-top: auto; padding: 0.5rem 1rem; border-radius: 100px; background: var(--rosa-vivo); color: white; text-decoration: none; transition: all 0.2s; cursor: pointer; font-family: 'Sora', sans-serif; border: none; }
+.book-btn:hover { opacity: 0.85; }
+
+/* GRUPOS DE PESQUISA */
+#grupos-pesquisa { background: var(--areia-escura); }
+#grupos-pesquisa .section-title em { color: var(--roxo); }
+
+/* SOBRE */
+#sobre { background: var(--areia-escura); display: flex; flex-direction: column; gap: 3rem; position: relative; overflow: hidden; }
+#sobre::after { content: ''; position: absolute; right: -40px; top: -40px; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(196,116,138,0.12) 0%, transparent 70%); pointer-events: none; }
+.sobre-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 3rem; }
+.sobre-stat { background: var(--branco); border-radius: 14px; padding: 1.25rem 1.5rem; border: 1px solid var(--cinza-claro); }
+.sobre-stat-num { font-family: 'DM Serif Display', serif; font-size: 2.5rem; color: var(--verde); line-height: 1; margin-bottom: 0.3rem; }
+.sobre-stat-label { font-size: 0.68rem; color: var(--cinza); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.sobre-manifesto { background: var(--branco); border-radius: 20px; padding: 2.5rem; border-left: 4px solid var(--rosa-vivo); box-shadow: 0 4px 24px rgba(74,46,74,0.08); }
+.manifesto-quote { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 1.4rem; line-height: 1.6; color: var(--roxo); margin-bottom: 1.5rem; }
+.manifesto-text { font-size: 0.9rem; color: var(--cinza); line-height: 1.8; }
+.manifesto-text a { color: var(--verde); }
+
+/* CTA */
+.inscricao-cta { background: var(--roxo-medio); color: white; text-align: center; padding: clamp(3rem,7vw,6rem) clamp(1.5rem,5vw,4rem); position: relative; overflow: hidden; }
+.inscricao-cta::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='20' cy='20' r='9' stroke='%23E8C4C4' stroke-width='1.5' fill='none' opacity='0.2'/%3E%3Cline x1='20' y1='29' x2='20' y2='36' stroke='%23E8C4C4' stroke-width='1.5' opacity='0.2'/%3E%3Cline x1='15' y1='33' x2='25' y2='33' stroke='%23E8C4C4' stroke-width='1.5' opacity='0.2'/%3E%3Ccircle cx='75' cy='75' r='8' stroke='%2352A86B' stroke-width='1.5' fill='none' opacity='0.15'/%3E%3C/svg%3E"); background-size: 100px 100px; pointer-events: none; }
+.inscricao-cta h2 { font-family: 'DM Serif Display', serif; font-size: clamp(2rem,4vw,3.5rem); margin-bottom: 1rem; letter-spacing: -0.02em; position: relative; z-index: 1; }
+.inscricao-cta p { font-size: 1rem; color: rgba(255,255,255,0.65); max-width: 500px; margin: 0 auto 2rem; line-height: 1.75; position: relative; z-index: 1; }
+.btn-light { background: white; color: var(--roxo); border: none; position: relative; z-index: 1; }
+.btn-light:hover { background: var(--areia); opacity: 1; }
+
+/* FOOTER */
+footer { background: var(--roxo); color: rgba(255,255,255,0.4); padding: 3rem clamp(1.5rem,5vw,4rem); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; border-top: 1px solid rgba(255,255,255,0.06); }
+.footer-brand { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1rem; color: white; text-decoration: none; }
+.footer-brand span { color: var(--rosa-vivo); }
+footer p { font-size: 0.78rem; }
+footer a { color: var(--rosa-vivo); text-decoration: none; }
+.footer-social { display: flex; gap: 0.6rem; align-items: center; }
+.footer-social-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.1); transition: background 0.2s; }
+.footer-social-btn:hover { background: rgba(255,255,255,0.22); }
+.footer-links { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+.footer-links a { font-size: 0.78rem; }
+.footer-links a.dim { color: rgba(255,255,255,0.35); }
+
+/* MODAL PESQUISADORA */
+.modal-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(30,18,24,0.8); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 1.5rem; }
+.modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal { background: var(--branco); border-radius: 24px; max-width: 660px; width: 100%; max-height: 92vh; overflow-y: auto; position: relative; box-shadow: 0 24px 80px rgba(30,18,24,0.35); }
+.modal-close { position: absolute; top: 1.25rem; right: 1.25rem; background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; color: white; transition: all 0.2s; z-index: 10; }
+.modal-close:hover { background: rgba(255,255,255,0.25); }
+.modal-header { background: linear-gradient(135deg,var(--roxo),var(--roxo-medio)); padding: 2rem 2rem 3.5rem; }
+.modal-header-avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.2); overflow: hidden; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; font-size: 2rem; color: white; margin-bottom: 1rem; }
+.modal-header-avatar img { width:100%;height:100%;object-fit:cover; }
+.modal-name { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: white; line-height: 1.2; margin-bottom: 0.4rem; }
+.modal-inst { font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 0.65rem; }
+.modal-area-badge { display: inline-block; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--verde); background: rgba(255,255,255,0.92); padding: 0.3rem 0.8rem; border-radius: 100px; }
+.modal-body { padding: 2rem; margin-top: -1.5rem; background: var(--branco); border-radius: 20px 20px 0 0; position: relative; }
+.modal-bio { font-size: 0.93rem; color: var(--cinza); line-height: 1.8; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--cinza-claro); }
+.modal-links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.75rem; }
+.modal-works-title { font-family: 'DM Serif Display', serif; font-size: 1.1rem; margin-bottom: 1rem; color: var(--preto); }
+.modal-works-empty { font-size: 0.85rem; color: var(--cinza); font-style: italic; padding: 0.5rem 0 1rem; }
+.modal-work-item { padding: 1rem 1.1rem; border-radius: 12px; background: var(--areia); margin-bottom: 0.65rem; border-left: 3px solid var(--rosa-vivo); cursor: pointer; }
+.modal-work-title { font-weight: 600; font-size: 0.88rem; margin-bottom: 0.3rem; line-height: 1.4; }
+.modal-work-meta { font-size: 0.73rem; color: var(--cinza); display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.5rem; }
+.modal-work-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* MODAL OBRA */
+.obra-modal-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(30,18,24,0.8); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 1.5rem; }
+.obra-modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+.obra-modal { background: var(--branco); border-radius: 24px; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 24px 80px rgba(30,18,24,0.35); }
+.obra-modal-header { background: linear-gradient(135deg, var(--verde-escuro), var(--verde)); padding: 1.75rem 2rem; border-radius: 24px 24px 0 0; }
+.obra-modal-tipo { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(255,255,255,0.7); margin-bottom: 0.5rem; }
+.obra-modal-titulo { font-family: 'DM Serif Display', serif; font-size: 1.3rem; color: white; line-height: 1.3; margin-bottom: 0.4rem; }
+.obra-modal-autor { font-size: 0.82rem; color: rgba(255,255,255,0.65); }
+.obra-modal-body { padding: 1.75rem 2rem; }
+.obra-modal-close { position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; color: white; }
+
+/* UTILS */
+.loading { text-align: center; padding: 3rem; color: var(--cinza); }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--cinza-claro); border-top-color: var(--verde); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty { text-align: center; padding: 3rem; color: var(--cinza); font-size: 0.93rem; grid-column: 1/-1; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+.fade-up   { animation: fadeUp 0.7s ease forwards; }
+.fade-up-2 { animation: fadeUp 0.7s 0.15s ease forwards; opacity: 0; }
+.fade-up-3 { animation: fadeUp 0.7s 0.3s ease forwards; opacity: 0; }
+
+@media(max-width:900px){
+  .hero h1 { font-size: clamp(2.8rem,10vw,5rem); }
+  .numero-item { padding: 0.5rem 1rem; }
+  .numero-num { font-size: clamp(2.2rem,7vw,3.5rem); }
+  .nav-links { display:none;flex-direction:column;position:fixed;top:68px;left:0;right:0;background:var(--roxo);padding:2rem;border-bottom:1px solid rgba(255,255,255,0.08);gap:1.5rem;z-index:99; }
+  .nav-links.open { display: flex; }
+  .nav-toggle { display: flex; }
+}
+</style>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-WLJZDV4H');</script>
+<!-- End Google Tag Manager -->
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WLJZDV4H"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<nav>
+  <a href="index.html" class="nav-logo">Pesquisadoras<span> do ES</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#pesquisadoras">Pesquisadoras</a></li>
+    <li><a href="publicacoes.html">Publicações</a></li>
+    <li><a href="#livros">Livros</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="#sobre">Sobre</a></li>
+    <li><a href="sustentabilidade-privacidade.html">Sustentabilidade</a></li>
+    <li><a href="pesquisadora/login.html" class="nav-btn-painel">Sou pesquisadora</a></li>
+    <li><a href="inscricao.html" class="nav-btn">Inscreva-se</a></li>
+  </ul>
+  <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+</nav>
+
+<section class="hero-banner">
+  <picture>
+    <source srcset="banner01.webp" type="image/webp">
+    <img src="banner01-opt.jpg" alt="Visibilidade para Mulheres na Ciência — Pesquisadoras do Espírito Santo" class="hero-banner-img">
+  </picture>
+</section>
+
+<div class="ticker-wrap" aria-hidden="true">
+  <div class="ticker-inner">
+    <span>Pesquisadoras do ES</span><span class="ticker-sep">·</span>
+    <span>Science</span><span class="ticker-sep">·</span>
+    <span>Equity</span><span class="ticker-sep">·</span>
+    <span>Visibility</span><span class="ticker-sep">·</span>
+    <span>Women in Science</span><span class="ticker-sep">·</span>
+    <span>Espírito Santo</span><span class="ticker-sep">·</span>
+    <span>Pesquisadoras do ES</span><span class="ticker-sep">·</span>
+    <span>Science</span><span class="ticker-sep">·</span>
+    <span>Equity</span><span class="ticker-sep">·</span>
+    <span>Visibility</span><span class="ticker-sep">·</span>
+    <span>Women in Science</span><span class="ticker-sep">·</span>
+    <span>Espírito Santo</span><span class="ticker-sep">·</span>
+  </div>
+</div>
+
+<section class="numeros-strip">
+  <div class="numeros-inner">
+    <div class="numero-item">
+      <div class="numero-num" id="statP">—</div>
+      <div class="numero-linha"></div>
+      <div class="numero-label">Pesquisadoras</div>
+    </div>
+    <div class="numero-divider"></div>
+    <div class="numero-item">
+      <div class="numero-num" id="statO">—</div>
+      <div class="numero-linha"></div>
+      <div class="numero-label">Publicações</div>
+    </div>
+    <div class="numero-divider"></div>
+    <div class="numero-item">
+      <div class="numero-num" id="statI">—</div>
+      <div class="numero-linha"></div>
+      <div class="numero-label">Instituições</div>
+    </div>
+  </div>
+</section>
+
+<section id="blog-preview">
+  <span class="section-eyebrow">Do blog</span>
+  <h2 class="section-title">Últimas <em>publicações</em></h2>
+  <p class="section-desc">Mande o seu texto ou artigo: <a href="mailto:mulheres@kickgroup.com.br" style="color:var(--verde)">mulheres@kickgroup.com.br</a></p>
+  <div class="blog-grid" id="blogGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
+  <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary">Ver todos os artigos</a></div>
+</section>
+
+<div class="video-wide-banner">
+  <video id="vid1" src="https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/Background/Inicial.mp4" autoplay muted playsinline preload="auto"></video>
+  <video id="vid2" src="https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/Background/Inicial2.mp4" muted playsinline preload="auto" class="hidden"></video>
+  <video id="vid3" src="https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/Background/Mulheresdabatem.mp4" muted playsinline preload="auto" class="hidden"></video>
+</div>
+<script>
+(function(){
+  const v1=document.getElementById('vid1'),v2=document.getElementById('vid2');
+  v1.addEventListener('ended',()=>{ v1.classList.add('hidden'); v2.classList.remove('hidden'); v2.play(); });
+  v2.addEventListener('ended',()=>{ v2.classList.add('hidden'); v1.classList.remove('hidden'); v1.currentTime=0; v1.play(); });
+})();
+</script>
+
+<section id="pesquisadoras">
+  <span class="section-eyebrow">Quem são elas</span>
+  <h2 class="section-title">Pesquisadoras em <em>destaque</em></h2>
+  <p class="section-desc">Conheça as mulheres que fazem ciência no Espírito Santo.</p>
+  <div class="search-bar">
+    <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="searchInput" placeholder="Buscar por nome, área ou instituição…">
+  </div>
+  <span class="filter-label">Área</span>
+  <div class="filters" id="areaFilters"></div>
+  <span class="filter-label">Instituição</span>
+  <div class="filters" id="instFilters"></div>
+  <div class="researchers-grid" id="researchersGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
+</section>
+
+<section id="obras">
+  <span class="section-eyebrow">Produção científica</span>
+  <h2 class="section-title">Obras & <em>Publicações</em></h2>
+  <p class="section-desc">Teses, dissertações, artigos e livros das pesquisadoras capixabas.</p>
+  <div class="filters" id="tipoFilters" style="margin-top:1.5rem"></div>
+  <div class="works-grid" id="worksGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
+  <div style="text-align:center;margin-top:2rem"><a href="publicacoes.html" class="btn-primary">Ver todas as publicações</a></div>
+</section>
+
+<div class="section-ticker" aria-hidden="true">
+  <div class="ticker-inner" style="animation-duration:22s;animation-direction:reverse">
+    <span>Publicações</span><span class="ticker-sep">—</span><span>Publicações</span><span class="ticker-sep">—</span>
+    <span>Publicações</span><span class="ticker-sep">—</span><span>Publicações</span><span class="ticker-sep">—</span>
+    <span>Publicações</span><span class="ticker-sep">—</span><span>Publicações</span><span class="ticker-sep">—</span>
+    <span>Publicações</span><span class="ticker-sep">—</span><span>Publicações</span><span class="ticker-sep">—</span>
+  </div>
+</div>
+
+<section id="livros">
+  <span class="section-eyebrow">Adquira!</span>
+  <h2 class="section-title">Nossa <em>Livraria</em></h2>
+  <p class="section-desc">Apoie diretamente as autoras capixabas.</p>
+  <div class="books-grid" id="booksGrid">
+    <div class="loading" style="color:rgba(255,255,255,.55)">
+      <div class="spinner" style="border-color:rgba(255,255,255,.15);border-top-color:var(--rosa-vivo)"></div>Carregando...
+    </div>
+  </div>
+</section>
+
+<section id="grupos-pesquisa">
+  <span class="section-eyebrow">Rede científica</span>
+  <h2 class="section-title">Grupos de <em>Pesquisa</em></h2>
+  <p class="section-desc">Grupos de pesquisa liderados ou integrados por mulheres no Espírito Santo.</p>
+  <div style="margin-top:2.5rem;display:flex;align-items:center;justify-content:center;min-height:180px;">
+    <div style="text-align:center;padding:3rem 2.5rem;background:var(--branco);border-radius:20px;border:2px dashed var(--cinza-claro);max-width:500px;width:100%;">
+      <div style="font-size:3rem;margin-bottom:1rem;">🔬</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--roxo);margin-bottom:0.5rem;">Em Breve</div>
+      <p style="font-size:0.88rem;color:var(--cinza);line-height:1.75;max-width:340px;margin:0 auto;">Esta seção está em construção. Em breve você poderá explorar os grupos de pesquisa das cientistas capixabas.</p>
+      <div style="margin-top:1.5rem;display:inline-flex;align-items:center;gap:0.5rem;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:var(--rosa-vivo);background:rgba(196,116,138,0.1);padding:0.4rem 1.1rem;border-radius:100px;">🚧 Em construção</div>
+    </div>
+  </div>
+</section>
+
+<div class="inscricao-cta">
+  <h2>Você é pesquisadora capixaba?</h2>
+  <p>Cadastre seu perfil e suas publicações no portal e ganhe visibilidade para o seu trabalho.</p>
+  <a href="inscricao.html" class="btn-primary btn-light">Fazer minha inscrição</a>
+</div>
+
+<section id="sobre">
+  <div>
+    <span class="section-eyebrow">O projeto</span>
+    <h2 class="section-title">Por que <em>visibilidade</em> importa</h2>
+    <p class="section-desc" style="margin-bottom:1rem;max-width:100%">O portal Pesquisadoras do ES nasceu da necessidade de dar visibilidade às mulheres que produzem conhecimento científico no Espírito Santo.</p>
+    <p class="section-desc" style="max-width:100%">Aqui você encontra perfis, publicações, pesquisas e formas de acessar e adquirir as obras dessas cientistas. O projeto foi desenvolvido pela área de P&D da KICk, com o propósito de tornar visíveis as mulheres que fazem ciência no Brasil. A iniciativa está alinhada à Agenda 2030 da ONU, comprometendo-se especialmente com o ODS 5 — Igualdade de Gênero, o ODS 4 — Educação de Qualidade, e o ODS 10 — Redução das Desigualdades.</p>
+    <div class="sobre-stats" id="sobreStats"></div>
+  </div>
+  <div class="sobre-manifesto">
+    <p class="manifesto-quote">"Quando uma mulher cientista é vista, cem outras encontram o caminho."</p>
+    <p class="manifesto-text">Este portal é um espaço vivo, colaborativo e em constante crescimento. Se você conhece pesquisadoras capixabas que deveriam estar aqui, <a href="inscricao.html">indique ou convide</a> para se inscrever.</p>
+  </div>
+</section>
+
+<footer>
+  <a href="index.html" class="footer-brand">Pesquisadoras<span> do ES</span></a>
+  <div style="display:flex;flex-direction:column;gap:0.9rem;align-items:flex-end;">
+    <div class="footer-social">
+      <a href="https://www.linkedin.com/company/pesquisadorasdoes/" target="_blank" rel="noopener" class="footer-social-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.75)"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>
+      <a href="https://www.instagram.com/pesquisadorasdoes" target="_blank" rel="noopener" class="footer-social-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.75)"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+      </a>
+    </div>
+    <div class="footer-links">
+      <a href="sustentabilidade-privacidade.html">Sustentabilidade & Privacidade</a>
+      <span style="color:rgba(255,255,255,0.2)">·</span>
+      <a href="admin/login.html" class="dim">Área administrativa</a>
+    </div>
+  </div>
+</footer>
+
+<!-- MODAL PESQUISADORA -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div id="modalHeader" class="modal-header"></div>
+    <div class="modal-body"><div id="modalContent"></div></div>
+  </div>
+</div>
+
+<!-- MODAL OBRA -->
+<div class="obra-modal-overlay" id="obraModalOverlay">
+  <div class="obra-modal">
+    <button class="obra-modal-close" onclick="closeObraModal()">✕</button>
+    <div class="obra-modal-header" id="obraModalHeader"></div>
+    <div class="obra-modal-body" id="obraModalBody"></div>
+  </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let allResearchers = [], allWorks = [];
+let filtroArea = '', filtroInst = '', filtroTipo = '', busca = '';
+
+// ── NORMALIZAÇÃO ──────────────────────────────────────────
+function normKey(s){ return String(s||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
+
+function uniqueBy(arr, keyFn){
+  const seen = new Map();
+  arr.filter(Boolean).forEach(v => { const k = keyFn(v); if(!seen.has(k)) seen.set(k, v); });
+  return [...seen.values()].sort((a,b) => normKey(a).localeCompare(normKey(b)));
+}
+
+function initials(name){ return (name||'').split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join(''); }
+const bookEmojis = {"Ciências Biológicas":"🐠","Ciências Humanas":"📖","Engenharias":"🏗️","Ciências da Saúde":"🩺","Ciências Exatas e da Terra":"🔬","Linguística, Letras e Artes":"🎭"};
+
+// ── CARREGAR DADOS ────────────────────────────────────────
+async function loadAll(){
+  try {
+    const [resRes, worksRes, postsRes] = await Promise.all([
+      db.from('researchers').select('*').eq('status','aprovada').order('destaque',{ascending:false}),
+      db.from('works').select('*, researchers!inner(status)').eq('researchers.status','aprovada').order('ano',{ascending:false}),
+      db.from('blog_posts').select('*').eq('publicado',true).or('secao.eq.blog,secao.is.null').order('created_at',{ascending:false}).limit(4)
+    ]);
+    allResearchers = resRes.data || [];
+    allWorks = worksRes.data || [];
+    const posts = postsRes.data || [];
+    renderStats();
+    renderFilters();
+    renderResearchers();
+    renderWorks();
+    renderBooks();
+    renderSobreStats();
+    renderBlogPreview(posts);
+  } catch(e) {
+    ['blogGrid','researchersGrid','worksGrid','booksGrid'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.innerHTML = '<div class="empty">Erro ao carregar.</div>';
+    });
+  }
+}
+
+// ── STATS ─────────────────────────────────────────────────
+function renderStats(){
+  const insts = new Set(allResearchers.map(r => normKey(r.instituicao||''))).size;
+  document.getElementById('statP').textContent = allResearchers.length;
+  document.getElementById('statO').textContent = allWorks.length;
+  document.getElementById('statI').textContent = insts;
+}
+
+// ── FILTROS — usa data-attributes para evitar quebra com caracteres especiais ──
+function renderFilters(){
+  const areas = uniqueBy(allResearchers.map(r => r.area_principal), normKey);
+  const insts  = uniqueBy(allResearchers.map(r => r.instituicao), normKey);
+  const tipos  = uniqueBy(allWorks.map(w => w.tipo), normKey);
+
+  document.getElementById('areaFilters').innerHTML =
+    filterBtn('Todas', '', filtroArea === '', 'area') +
+    areas.map(v => filterBtn(v, v, filtroArea === v, 'area')).join('');
+
+  document.getElementById('instFilters').innerHTML =
+    filterBtn('Todas', '', filtroInst === '', 'inst') +
+    insts.map(v => filterBtn(v, v, filtroInst === v, 'inst')).join('');
+
+  document.getElementById('tipoFilters').innerHTML =
+    filterBtn('Todos', '', filtroTipo === '', 'tipo') +
+    tipos.map(v => filterBtn(v, v, filtroTipo === v, 'tipo')).join('');
+}
+
+// CORREÇÃO: usa data-attributes em vez de onclick inline
+// Assim caracteres especiais (travessão, aspas, acentos) não quebram o JS
+function filterBtn(label, value, active, tipo) {
+  const safeValue = value.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  return `<button class="filter-btn${active ? ' active' : ''}" data-filtro="${tipo}" data-value="${safeValue}">${label}</button>`;
+}
+
+// Listener único para todos os botões de filtro
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  const tipo  = btn.dataset.filtro;
+  const valor = btn.dataset.value;
+  if (tipo === 'area') { filtroArea = valor; renderFilters(); renderResearchers(); }
+  if (tipo === 'inst') { filtroInst = valor; renderFilters(); renderResearchers(); }
+  if (tipo === 'tipo') { filtroTipo = valor; renderFilters(); renderWorks(); }
+});
+
+// ── PESQUISADORAS ─────────────────────────────────────────
+function renderResearchers(){
+  const grid = document.getElementById('researchersGrid');
+  const list = allResearchers.filter(r => {
+    const q = busca.toLowerCase();
+    if(q && !r.nome?.toLowerCase().includes(q) && !r.area_principal?.toLowerCase().includes(q) && !r.instituicao?.toLowerCase().includes(q)) return false;
+    if(filtroArea && normKey(r.area_principal||'') !== normKey(filtroArea)) return false;
+    if(filtroInst && normKey(r.instituicao||'')   !== normKey(filtroInst))  return false;
+    return true;
+  });
+
+  if(!list.length){ grid.innerHTML = '<div class="empty">Nenhuma pesquisadora encontrada.</div>'; return; }
+
+  grid.innerHTML = list.map(r => {
+    const links = [
+      r.lattes        ? `<a class="rc-link" href="${r.lattes}"         target="_blank">Lattes</a>`  : '',
+      r.orcid         ? `<a class="rc-link" href="${r.orcid}"          target="_blank">ORCID</a>`   : '',
+      r.linkedin      ? `<a class="rc-link" href="${r.linkedin}"       target="_blank">LinkedIn</a>`: '',
+      r.google_scholar? `<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>` : '',
+    ].filter(Boolean).join('');
+    const wc = allWorks.filter(w => w.researcher_id === r.id).length;
+    return `<div class="researcher-card" onclick="openModal('${r.id}')">
+      <div class="rc-top">
+        ${r.foto_url ? `<div class="rc-avatar"><img src="${r.foto_url}" alt="${r.nome}"></div>` : `<div class="rc-avatar">${initials(r.nome)}</div>`}
+        <div><div class="rc-name">${r.nome}</div><div class="rc-inst">${r.instituicao||''}</div></div>
+      </div>
+      <span class="rc-area">${r.area_principal||''}</span>
+      <p class="rc-bio">${r.mini_bio||''}</p>
+      <div class="rc-links">${links}</div>
+      ${wc ? `<div style="font-size:.72rem;color:var(--verde);font-weight:700;padding-top:.75rem;border-top:1px solid var(--cinza-claro)">↗ ${wc} publicaç${wc===1?'ão':'ões'}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── OBRAS ─────────────────────────────────────────────────
+function renderWorks(){
+  const grid = document.getElementById('worksGrid');
+  const filtered = allWorks.filter(w => !filtroTipo || normKey(w.tipo||'') === normKey(filtroTipo));
+  const list = [...filtered].sort((a,b) => (b.ano||0)-(a.ano||0)).slice(0,8);
+
+  if(!list.length){ grid.innerHTML = '<div class="empty">Nenhuma publicação encontrada.</div>'; return; }
+
+  grid.innerHTML = list.map(w => {
+    const author = allResearchers.find(r => r.id === w.researcher_id)?.nome || '—';
+    const tags = (w.tags||[]).map(t => `<span class="wc-tag">${t}</span>`).join('');
+    return `<div class="work-card" onclick="openObraModal('${w.id}')">
+      <div class="wc-top"><span class="wc-type">${w.tipo}</span><span class="wc-year">${w.ano||''}</span></div>
+      <div class="wc-title">${w.titulo}</div>
+      <div class="wc-author">${author}</div>
+      <p class="wc-resumo">${w.resumo||''}</p>
+      <div class="wc-tags">${tags}</div>
+      <div class="wc-actions">
+        ${w.link_compra ? `<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank" onclick="event.stopPropagation()">🛒 Comprar</a>` : ''}
+        ${w.link_acesso ? `<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank" onclick="event.stopPropagation()">Acessar →</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL OBRA ────────────────────────────────────────────
+function openObraModal(id){
+  const w = allWorks.find(x => x.id === id); if(!w) return;
+  const author = allResearchers.find(r => r.id === w.researcher_id);
+  const tags = (w.tags||[]).map(t => `<span style="font-size:.72rem;padding:.25rem .65rem;border-radius:100px;background:var(--rosa);color:var(--roxo)">${t}</span>`).join('');
+
+  document.getElementById('obraModalHeader').innerHTML = `
+    <div class="obra-modal-tipo">${w.tipo}${w.ano ? ' · '+w.ano : ''}</div>
+    <div class="obra-modal-titulo">${w.titulo}</div>
+    ${author ? `<div class="obra-modal-autor">por ${author.nome}</div>` : ''}`;
+
+  document.getElementById('obraModalBody').innerHTML = `
+    ${w.resumo ? `<p style="font-size:.9rem;color:var(--cinza);line-height:1.75;margin-bottom:1.25rem">${w.resumo}</p>` : ''}
+    ${tags ? `<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.25rem">${tags}</div>` : ''}
+    ${w.area_conhecimento ? `<div style="font-size:.75rem;color:var(--cinza);margin-bottom:1.25rem">Área: <strong>${w.area_conhecimento}</strong></div>` : ''}
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;padding-top:1rem;border-top:1px solid var(--cinza-claro)">
+      ${w.link_acesso ? `<a href="${w.link_acesso}" target="_blank" style="display:inline-flex;align-items:center;gap:.4rem;background:var(--verde);color:white;font-size:.85rem;font-weight:700;padding:.7rem 1.5rem;border-radius:100px;text-decoration:none;font-family:'Sora',sans-serif">Acessar publicação →</a>` : ''}
+      ${w.link_compra ? `<a href="${w.link_compra}" target="_blank" style="display:inline-flex;align-items:center;gap:.4rem;background:var(--rosa-vivo);color:white;font-size:.85rem;font-weight:700;padding:.7rem 1.5rem;border-radius:100px;text-decoration:none;font-family:'Sora',sans-serif">🛒 Comprar</a>` : ''}
+      ${author ? `<button onclick="closeObraModal();openModal('${author.id}')" style="display:inline-flex;align-items:center;gap:.4rem;background:transparent;color:var(--cinza);font-size:.85rem;font-weight:600;padding:.7rem 1.25rem;border-radius:100px;border:1.5px solid var(--cinza-claro);cursor:pointer;font-family:'Sora',sans-serif">Ver autora →</button>` : ''}
+    </div>`;
+
+  document.getElementById('obraModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeObraModal(){
+  document.getElementById('obraModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── MODAL PESQUISADORA ────────────────────────────────────
+function openModal(id){
+  const r = allResearchers.find(r => r.id === id); if(!r) return;
+  const rWorks = allWorks.filter(w => w.researcher_id === id);
+  const links = [
+    r.lattes        ? `<a class="rc-link" href="${r.lattes}"         target="_blank">🔬 Lattes</a>`     : '',
+    r.orcid         ? `<a class="rc-link" href="${r.orcid}"          target="_blank">ORCID</a>`         : '',
+    r.linkedin      ? `<a class="rc-link" href="${r.linkedin}"       target="_blank">LinkedIn</a>`      : '',
+    r.google_scholar? `<a class="rc-link" href="${r.google_scholar}" target="_blank">Scholar</a>`       : '',
+    r.research_gate ? `<a class="rc-link" href="${r.research_gate}"  target="_blank">ResearchGate</a>`  : '',
+    r.email         ? `<a class="rc-link" href="mailto:${r.email}"   target="_blank">✉ E-mail</a>`     : '',
+    r.site          ? `<a class="rc-link" href="${r.site}"           target="_blank">🌐 Site</a>`       : '',
+  ].filter(Boolean).join('');
+
+  const worksHtml = rWorks.length
+    ? `<div class="modal-works-title">📄 Publicações (${rWorks.length})</div>
+       ${rWorks.map(w => `
+         <div class="modal-work-item" onclick="closeModal();openObraModal('${w.id}')">
+           <div class="modal-work-title">${w.titulo}</div>
+           <div class="modal-work-meta"><span class="wc-type">${w.tipo}</span>${w.ano ? `<span>${w.ano}</span>` : ''}</div>
+           ${w.resumo ? `<div style="font-size:.82rem;color:var(--cinza);line-height:1.6;margin-top:.4rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${w.resumo}</div>` : ''}
+           <div class="modal-work-actions">
+             ${w.link_compra ? `<a class="wc-btn wc-btn-compra" href="${w.link_compra}" target="_blank" onclick="event.stopPropagation()" style="font-size:.73rem;padding:.35rem .8rem">🛒 Comprar</a>` : ''}
+             ${w.link_acesso ? `<a class="wc-btn wc-btn-acesso" href="${w.link_acesso}" target="_blank" onclick="event.stopPropagation()" style="font-size:.73rem;padding:.35rem .8rem">Acessar →</a>` : ''}
+           </div>
+         </div>`).join('')}`
+    : `<div class="modal-works-title">📄 Publicações</div><p class="modal-works-empty">Nenhuma publicação cadastrada ainda.</p>`;
+
+  document.getElementById('modalHeader').innerHTML = `
+    ${r.foto_url ? `<div class="modal-header-avatar"><img src="${r.foto_url}" alt="${r.nome}"></div>` : `<div class="modal-header-avatar">${initials(r.nome)}</div>`}
+    <div class="modal-name">${r.nome}</div>
+    <div class="modal-inst">${r.instituicao||''}</div>
+    <span class="modal-area-badge">${r.area_principal||''}</span>`;
+
+  document.getElementById('modalContent').innerHTML = `
+    <p class="modal-bio">${r.mini_bio||''}</p>
+    <div class="modal-links">${links}</div>
+    ${worksHtml}`;
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── LIVROS ────────────────────────────────────────────────
+function renderBooks(){
+  const grid = document.getElementById('booksGrid');
+  const books = allWorks.filter(w => w.link_compra || w.para_adquirir);
+  if(!books.length){ grid.innerHTML = '<div class="empty" style="color:rgba(255,255,255,.45)">Nenhum livro à venda no momento.</div>'; return; }
+  grid.innerHTML = books.map(b => {
+    const author = allResearchers.find(r => r.id === b.researcher_id)?.nome || '—';
+    const fotoUrl = b.foto_publicacao ? `https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/work-photos/${b.foto_publicacao}` : null;
+    const coverHtml = fotoUrl ? `<div class="book-cover"><img src="${fotoUrl}" alt="${b.titulo}" loading="lazy"></div>` : `<div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div>`;
+    return `<div class="book-card">${coverHtml}<div class="book-title">${b.titulo}</div><div class="book-author">${author}</div><a class="book-btn" href="${b.link_compra}" target="_blank">🛒 Adquirir</a></div>`;
+  }).join('');
+}
+
+// ── SOBRE ─────────────────────────────────────────────────
+function renderSobreStats(){
+  const el = document.getElementById('sobreStats');
+  const livros = allWorks.filter(w => w.tipo === 'Livro').length;
+  const insts  = new Set(allResearchers.map(r => r.instituicao)).size;
+  el.innerHTML = [
+    {num: allResearchers.length, label: 'Pesquisadoras cadastradas'},
+    {num: allWorks.length,       label: 'Publicações catalogadas'},
+    {num: livros,                label: 'Livros disponíveis'},
+    {num: insts,                 label: 'Instituições representadas'},
+  ].map(s => `<div class="sobre-stat"><div class="sobre-stat-num">${s.num}</div><div class="sobre-stat-label">${s.label}</div></div>`).join('');
+}
+
+// ── BLOG PREVIEW ──────────────────────────────────────────
+function renderBlogPreview(posts){
+  const grid = document.getElementById('blogGrid');
+  if(!posts.length){ grid.innerHTML = '<div class="empty">Nenhum artigo publicado ainda.</div>'; return; }
+  grid.innerHTML = posts.map(p => {
+    const capaHtml = p.foto_capa ? `<div class="blog-card-img"><img src="${p.foto_capa}" alt="${p.titulo}" loading="lazy"></div>` : `<div class="blog-card-img">${p.emoji||'✍️'}</div>`;
+    const cats = (p.categoria||'Artigo').split(',').map(c => c.trim()).filter(Boolean);
+    const tagsHtml = cats.map(c => `<span class="blog-cat-tag">${c}</span>`).join('');
+    return `<div class="blog-card" onclick="location.href='blog.html?post=${p.id}'">
+      ${capaHtml}
+      <div class="blog-card-body">
+        <div class="blog-cat-tags">${tagsHtml}</div>
+        <div class="blog-card-title">${p.titulo}</div>
+        <div class="blog-card-meta">${new Date(p.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</div>
+        <p class="blog-card-excerpt">${p.resumo||''}</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── EVENTOS ───────────────────────────────────────────────
+document.getElementById('modalClose').onclick = closeModal;
+document.getElementById('modalOverlay').onclick = e => { if(e.target === e.currentTarget) closeModal(); };
+document.getElementById('obraModalOverlay').onclick = e => { if(e.target === e.currentTarget) closeObraModal(); };
+document.getElementById('searchInput').addEventListener('input', function(){ busca = this.value; renderResearchers(); });
+document.getElementById('navToggle').onclick = () => document.getElementById('navLinks').classList.toggle('open');
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeModal(); closeObraModal(); } });
+
+loadAll();
+</script>
+</body>
+</html>
