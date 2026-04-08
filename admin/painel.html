@@ -522,13 +522,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             data-placeholder="Escreva o conteúdo aqui…"></div>
         </div>
         <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem">
-          <button class="btn-primary-lg" id="sustBtnPublicar" onclick="saveSust(true)" style="background:#2A4D35">🌱 Publicar agora</button>
+          <button class="btn-primary-lg" id="sustBtnPublicar" onclick="saveSust(true)" style="background:#aed768">🌱 Publicar agora</button>
           <button class="btn btn-outline" id="sustBtnRascunho" onclick="saveSust(false)" style="padding:.85rem 1.5rem;font-size:.9rem">💾 Salvar rascunho</button>
         </div>
       </div>
       <div>
         <div style="display:flex;border-bottom:2px solid var(--cinza-claro);margin-bottom:1.25rem">
-          <button id="sustTabPublicados" onclick="switchSustTab('publicados')" style="flex:1;padding:.6rem .4rem;font-size:.75rem;font-weight:600;background:none;border:none;cursor:pointer;border-bottom:2px solid #2A4D35;margin-bottom:-2px;color:#2A4D35;font-family:'DM Sans',sans-serif">🌱 Publicados</button>
+          <button id="sustTabPublicados" onclick="switchSustTab('publicados')" style="flex:1;padding:.6rem .4rem;font-size:.75rem;font-weight:600;background:none;border:none;cursor:pointer;border-bottom:2px solid #aed768;margin-bottom:-2px;color:#aed768;font-family:'DM Sans',sans-serif">🌱 Publicados</button>
           <button id="sustTabRascunhos" onclick="switchSustTab('rascunhos')" style="flex:1;padding:.6rem .4rem;font-size:.75rem;font-weight:600;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--cinza);font-family:'DM Sans',sans-serif">💾 Rascunhos</button>
         </div>
         <div id="sustPostsList"><div class="loading"><div class="spinner"></div></div></div>
@@ -1299,7 +1299,7 @@ function removeFotoSust(tipo){
 async function uploadSustFoto(file,postId,tipo){ if(!file) return null; const ext=file.name.split('.').pop(); const path=`sust/${postId}-${tipo}.${ext}`; const {error}=await db.storage.from('blog-images').upload(path,file,{upsert:true,contentType:file.type}); if(error){ console.warn('Erro upload foto sust:',error.message); return null; } const {data}=db.storage.from('blog-images').getPublicUrl(path); return data.publicUrl; }
 function switchSustTab(tab){
   sustTab=tab;
-  ['publicados','rascunhos'].forEach(t=>{ const btn=document.getElementById('sustTab'+t.charAt(0).toUpperCase()+t.slice(1)); if(btn){ btn.style.borderBottomColor=t===tab?'#2A4D35':'transparent'; btn.style.color=t===tab?'#2A4D35':'var(--cinza)'; } });
+  ['publicados','rascunhos'].forEach(t=>{ const btn=document.getElementById('sustTab'+t.charAt(0).toUpperCase()+t.slice(1)); if(btn){ btn.style.borderBottomColor=t===tab?'#aed768':'transparent'; btn.style.color=t===tab?'#aed768':'var(--cinza)'; } });
   renderSustPosts();
 }
 async function loadSustPosts(){ const {data}=await db.from('blog_posts').select('*').eq('secao','sustentabilidade').order('created_at',{ascending:false}); allSustPosts=data||[]; renderSustPosts(); }
@@ -1307,7 +1307,7 @@ function renderSustPosts(){
   const el=document.getElementById('sustPostsList'); if(!el) return;
   const filtered=allSustPosts.filter(p=>sustTab==='publicados'?p.publicado:!p.publicado);
   if(!filtered.length){ el.innerHTML=`<div class="empty">${sustTab==='publicados'?'Nenhum texto publicado.':'Nenhum rascunho salvo.'}</div>`; return; }
-  el.innerHTML=filtered.map(p=>{ const capaThumb=p.foto_capa?`<img src="${p.foto_capa}" style="width:100%;height:60px;object-fit:cover;border-radius:8px 8px 0 0;display:block;margin:-1rem -1rem .75rem">`:''; return `<div style="background:white;border-radius:12px;padding:1rem;border:1.5px solid var(--cinza-claro);margin-bottom:.75rem;overflow:hidden">${capaThumb}<div style="font-weight:600;font-size:.88rem;line-height:1.3;margin-bottom:.3rem">${p.emoji||'🌱'} ${p.titulo}</div><div style="font-size:.72rem;color:var(--cinza);margin-bottom:.75rem">${new Date(p.created_at).toLocaleDateString('pt-BR')} · ${p.autor?'por '+p.autor+' · ':''}<span style="color:${p.publicado?'#2A4D35':'var(--cinza)'}">${p.publicado?'🌱 Publicado':'💾 Rascunho'}</span></div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><button class="btn btn-outline" style="font-size:.72rem;padding:.3rem .7rem" onclick="editSustPost('${p.id}')">✏️ Editar</button>${p.publicado?`<button class="btn btn-outline" style="font-size:.72rem;padding:.3rem .7rem" onclick="unpublishSustPost('${p.id}')">📥 Despublicar</button>`:`<button class="btn btn-green" style="font-size:.72rem;padding:.3rem .7rem;background:#2A4D35" onclick="publishSustPost('${p.id}')">🌱 Publicar</button>`}<button class="btn btn-red" style="font-size:.72rem;padding:.3rem .7rem" onclick="deleteSustPost('${p.id}')">🗑</button></div></div>`; }).join('');
+  el.innerHTML=filtered.map(p=>{ const capaThumb=p.foto_capa?`<img src="${p.foto_capa}" style="width:100%;height:60px;object-fit:cover;border-radius:8px 8px 0 0;display:block;margin:-1rem -1rem .75rem">`:''; return `<div style="background:white;border-radius:12px;padding:1rem;border:1.5px solid var(--cinza-claro);margin-bottom:.75rem;overflow:hidden">${capaThumb}<div style="font-weight:600;font-size:.88rem;line-height:1.3;margin-bottom:.3rem">${p.emoji||'🌱'} ${p.titulo}</div><div style="font-size:.72rem;color:var(--cinza);margin-bottom:.75rem">${new Date(p.created_at).toLocaleDateString('pt-BR')} · ${p.autor?'por '+p.autor+' · ':''}<span style="color:${p.publicado?'#aed768':'var(--cinza)'}">${p.publicado?'🌱 Publicado':'💾 Rascunho'}</span></div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><button class="btn btn-outline" style="font-size:.72rem;padding:.3rem .7rem" onclick="editSustPost('${p.id}')">✏️ Editar</button>${p.publicado?`<button class="btn btn-outline" style="font-size:.72rem;padding:.3rem .7rem" onclick="unpublishSustPost('${p.id}')">📥 Despublicar</button>`:`<button class="btn btn-green" style="font-size:.72rem;padding:.3rem .7rem;background:#aed768" onclick="publishSustPost('${p.id}')">🌱 Publicar</button>`}<button class="btn btn-red" style="font-size:.72rem;padding:.3rem .7rem" onclick="deleteSustPost('${p.id}')">🗑</button></div></div>`; }).join('');
 }
 async function saveSust(publish){
   const titulo=document.getElementById('sustTitulo').value.trim(); if(!titulo){ alert('Preencha o título.'); return; }

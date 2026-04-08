@@ -34,14 +34,14 @@
 <script src="config.js"></script>
 <style>
 :root {
-  --verde:        #3A6B4A;
-  --verde-vivo:   #52A86B;
-  --verde-escuro: #2A4D35;
+  --verde: #aed768;
+  --verde-vivo: #aed768;
+  --verde-escuro: #aed768;
   --areia:        #F5EFE6;
   --areia-escura: #EDE3D5;
   --rosa:         #E8C4C4;
   --rosa-vivo:    #C4748A;
-  --roxo:         #4A2E4A;
+  --roxo: #4f1964;
   --roxo-medio:   #6B4068;
   --branco:       #FFFAF6;
   --cinza:        #7A6B6B;
@@ -83,19 +83,19 @@ nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; a
 
 /* NUMEROS STRIP */
 .numeros-strip { background: #ffffff; padding: clamp(3rem,5vw,4.5rem) clamp(1.5rem,5vw,4rem); position: relative; overflow: hidden; }
-.numeros-strip::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #3E1860 0%, #9966BB 25%, #D0AADF 50%, #8CC040 75%, #3E1860 100%); }
+.numeros-strip::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #4f1964 0%, #9966BB 25%, #D0AADF 50%, #aed768 75%, #4f1964 100%); }
 .numeros-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
 .numero-item { background: #ffffff; border-radius: 20px; padding: 2.5rem 2rem 2rem; position: relative; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; border: 1.5px solid rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 1rem; }
 .numero-item:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(62,24,96,0.12); }
 .numero-item::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; border-radius: 20px 20px 0 0; }
-.numero-item:nth-child(1)::before { background: #8CC040; }
+.numero-item:nth-child(1)::before { background: #aed768; }
 .numero-item:nth-child(2)::before { background: #D0AADF; }
 .numero-item:nth-child(3)::before { background: #9966BB; }
 .numero-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
 .numero-item:nth-child(1) .numero-icon { background: rgba(140,192,64,0.15); }
 .numero-item:nth-child(2) .numero-icon { background: rgba(208,170,223,0.25); }
 .numero-item:nth-child(3) .numero-icon { background: rgba(153,102,187,0.12); }
-.numero-num { font-family: 'DM Serif Display', serif; font-size: clamp(3.5rem,5vw,5.5rem); color: #3E1860; line-height: 1; letter-spacing: -0.03em; }
+.numero-num { font-family: 'DM Serif Display', serif; font-size: clamp(3.5rem,5vw,5.5rem); color: #4f1964; line-height: 1; letter-spacing: -0.03em; }
 .numero-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #9966BB; }
 .numero-desc { font-size: 0.82rem; color: #7A6A8A; line-height: 1.6; margin-top: auto; padding-top: 0.75rem; border-top: 1px solid rgba(62,24,96,0.07); }
 
@@ -112,7 +112,11 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
 .section-ticker .ticker-sep { color: var(--cinza-claro) !important; }
 
 /* BLOG */
-#blog-preview { background: var(--branco); }
+#blog-preview { background: #4f1964; }
+#blog-preview .section-eyebrow { color: #aed768; }
+#blog-preview .section-title { color: white; }
+#blog-preview .section-title em { color: #aed768; }
+#blog-preview .section-desc { color: rgba(255,255,255,0.75); }
 .blog-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 1.25rem; margin-top: 2.5rem; }
 .blog-card { background: var(--areia); border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.3s; border: 1.5px solid var(--cinza-claro); }
 .blog-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(74,46,74,0.12); border-color: var(--rosa-vivo); }
@@ -150,7 +154,7 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
 .rc-avatar img { width:100%;height:100%;object-fit:cover; }
 .rc-name { font-family: 'DM Serif Display', serif; font-size: 1rem; margin-bottom: 0.15rem; line-height: 1.3; }
 .rc-inst { font-size: 0.73rem; color: var(--cinza); }
-.rc-area { display: inline-block; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--verde); background: rgba(58,107,74,0.1); padding: 0.2rem 0.65rem; border-radius: 100px; }
+.rc-area { display: inline-block; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--verde); background: rgba(174,215,104,0.15); padding: 0.2rem 0.65rem; border-radius: 100px; }
 .rc-bio { font-size: 0.83rem; color: var(--cinza); line-height: 1.65; }
 .rc-links { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: auto; }
 .rc-link { font-size: 0.68rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 100px; text-decoration: none; border: 1px solid var(--cinza-claro); color: var(--cinza); transition: all 0.2s; }
@@ -353,9 +357,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section id="blog-preview">
   <span class="section-eyebrow">Do blog</span>
   <h2 class="section-title">Últimas <em>publicações</em></h2>
-  <p class="section-desc">Mande o seu texto ou artigo: <a href="mailto:mulheres@kickgroup.com.br" style="color:var(--verde)">mulheres@kickgroup.com.br</a></p>
+  <p class="section-desc">Mande o seu texto ou artigo: <a href="mailto:mulheres@kickgroup.com.br" style="color:white;font-weight:600">mulheres@kickgroup.com.br</a></p>
   <div class="blog-grid" id="blogGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
-  <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary">Ver todos os artigos</a></div>
+  <div style="text-align:center;margin-top:2rem"><a href="blog.html" class="btn-primary" style="background:#aed768;color:#4f1964">Ver todos os artigos</a></div>
 </section>
 
 <div class="video-wide-banner">
