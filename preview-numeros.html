@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview — Seção de Números</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Sora', sans-serif; background: #eee; display: flex; flex-direction: column; gap: 0; }
+
+/* ─── LABEL TOPO ───────────────────────────────────── */
+.label-versao {
+  background: #1E1218;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.6rem 2rem;
+}
+
+/* ══════════════════════════════════════════════════════
+   VERSÃO ATUAL
+══════════════════════════════════════════════════════ */
+.atual {
+  background: #2A4D35;
+  padding: 4rem 2rem;
+}
+.atual-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+.atual-item {
+  flex: 1;
+  text-align: center;
+  padding: 1rem 2rem;
+}
+.atual-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(3.5rem, 6vw, 6rem);
+  color: #F5EFE6;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+.atual-linha {
+  width: 2rem;
+  height: 2px;
+  background: #C4748A;
+  margin: 0 auto 0.75rem;
+}
+.atual-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245,239,230,0.5);
+}
+.atual-divider {
+  width: 1px;
+  height: 80px;
+  background: rgba(245,239,230,0.12);
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   NOVA VERSÃO  —  paleta: #3E1860 · #fff · #8CC040 · #D0AADF · #9966BB
+══════════════════════════════════════════════════════ */
+.nova {
+  background: #ffffff;
+  padding: 5rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* linha de topo decorativa com as 5 cores da paleta */
+.nova::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #3E1860 0%, #9966BB 25%, #D0AADF 50%, #8CC040 75%, #3E1860 100%);
+}
+
+.nova-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.nova-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2.5rem 2rem 2rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.nova-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 50px rgba(62,24,96,0.12);
+}
+
+/* barra colorida no topo do card */
+.nova-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  border-radius: 20px 20px 0 0;
+}
+.nova-card:nth-child(1)::before { background: #8CC040; }
+.nova-card:nth-child(2)::before { background: #D0AADF; }
+.nova-card:nth-child(3)::before { background: #9966BB; }
+
+.nova-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+.nova-card:nth-child(1) .nova-icon { background: rgba(140,192,64,0.15); }
+.nova-card:nth-child(2) .nova-icon { background: rgba(208,170,223,0.25); }
+.nova-card:nth-child(3) .nova-icon { background: rgba(153,102,187,0.12); }
+
+.nova-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(3.5rem, 5vw, 5.5rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #3E1860;
+}
+
+.nova-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9966BB;
+}
+
+.nova-desc {
+  font-size: 0.82rem;
+  color: #7A6A8A;
+  line-height: 1.6;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(62,24,96,0.07);
+}
+
+/* animação de entrada */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.nova-card { animation: fadeUp 0.5s ease both; }
+.nova-card:nth-child(1) { animation-delay: 0.1s; }
+.nova-card:nth-child(2) { animation-delay: 0.2s; }
+.nova-card:nth-child(3) { animation-delay: 0.3s; }
+
+/* ─── NOTA ────────────────────────────────────────── */
+.nota {
+  background: #1E1218;
+  color: rgba(255,255,255,0.45);
+  font-size: 0.7rem;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.nota strong { color: rgba(255,255,255,0.8); }
+</style>
+</head>
+<body>
+
+<!-- ── ATUAL ─────────────────────────────────────── -->
+<div class="label-versao">▲ versão atual</div>
+<section class="atual">
+  <div class="atual-inner">
+    <div class="atual-item">
+      <div class="atual-num">21</div>
+      <div class="atual-linha"></div>
+      <div class="atual-label">Pesquisadoras</div>
+    </div>
+    <div class="atual-divider"></div>
+    <div class="atual-item">
+      <div class="atual-num">205</div>
+      <div class="atual-linha"></div>
+      <div class="atual-label">Publicações</div>
+    </div>
+    <div class="atual-divider"></div>
+    <div class="atual-item">
+      <div class="atual-num">7</div>
+      <div class="atual-linha"></div>
+      <div class="atual-label">Instituições</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── NOVA ──────────────────────────────────────── -->
+<div class="label-versao" style="background:#C4748A; color:white;">▼ proposta nova</div>
+<section class="nova">
+  <div class="nova-inner">
+
+    <div class="nova-card">
+      <div class="nova-icon">🔬</div>
+      <div>
+        <div class="nova-num">21</div>
+        <div class="nova-label">Pesquisadoras</div>
+      </div>
+      <div class="nova-desc">Mulheres que lideram pesquisa científica no Espírito Santo</div>
+    </div>
+
+    <div class="nova-card">
+      <div class="nova-icon">📄</div>
+      <div>
+        <div class="nova-num">205</div>
+        <div class="nova-label">Publicações</div>
+      </div>
+      <div class="nova-desc">Artigos, livros, trabalhos e outras publicações</div>
+    </div>
+
+    <div class="nova-card">
+      <div class="nova-icon">🏛️</div>
+      <div>
+        <div class="nova-num">7</div>
+        <div class="nova-label">Instituições</div>
+      </div>
+      <div class="nova-desc">Universidades e institutos de pesquisa representados</div>
+    </div>
+
+  </div>
+</section>
+
+<div class="nota">
+  <strong>Nota:</strong> os números são dinâmicos — continuarão sendo puxados do banco de dados exatamente como antes.
+</div>
+
+</body>
+</html>

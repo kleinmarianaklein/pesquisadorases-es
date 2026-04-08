@@ -67,7 +67,7 @@ nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; a
 .nav-toggle span { display: block; width: 22px; height: 2px; background: white; transition: 0.3s; }
 
 /* HERO BANNER */
-.hero-banner { margin-top: 68px; width: 100%; line-height: 0; }
+.hero-banner { margin-top: 68px; width: 100%; line-height: 0; padding: 0 !important; }
 .hero-banner-img { display: block; width: 100%; height: auto; }
 .btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--rosa-vivo); color: white; font-family: 'Sora', sans-serif; font-size: 0.85rem; font-weight: 700; padding: 0.85rem 2rem; border-radius: 100px; text-decoration: none; border: none; cursor: pointer; transition: all 0.25s; white-space: nowrap; }
 .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
@@ -82,13 +82,22 @@ nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; a
 @keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }
 
 /* NUMEROS STRIP */
-.numeros-strip { background: var(--verde-escuro); padding: clamp(3rem,5vw,4.5rem) clamp(1.5rem,5vw,4rem); }
-.numeros-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 0; }
-.numero-item { flex: 1; text-align: center; padding: 1rem 2rem; }
-.numero-num { font-family: 'DM Serif Display', serif; font-size: clamp(3.5rem,6vw,6rem); color: var(--areia); line-height: 1; margin-bottom: 0.75rem; }
-.numero-linha { width: 2rem; height: 2px; background: var(--rosa-vivo); margin: 0 auto 0.75rem; }
-.numero-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(245,239,230,0.5); }
-.numero-divider { width: 1px; height: 80px; background: rgba(245,239,230,0.12); flex-shrink: 0; }
+.numeros-strip { background: #ffffff; padding: clamp(3rem,5vw,4.5rem) clamp(1.5rem,5vw,4rem); position: relative; overflow: hidden; }
+.numeros-strip::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #3E1860 0%, #9966BB 25%, #D0AADF 50%, #8CC040 75%, #3E1860 100%); }
+.numeros-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+.numero-item { background: #ffffff; border-radius: 20px; padding: 2.5rem 2rem 2rem; position: relative; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; border: 1.5px solid rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 1rem; }
+.numero-item:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(62,24,96,0.12); }
+.numero-item::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; border-radius: 20px 20px 0 0; }
+.numero-item:nth-child(1)::before { background: #8CC040; }
+.numero-item:nth-child(2)::before { background: #D0AADF; }
+.numero-item:nth-child(3)::before { background: #9966BB; }
+.numero-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+.numero-item:nth-child(1) .numero-icon { background: rgba(140,192,64,0.15); }
+.numero-item:nth-child(2) .numero-icon { background: rgba(208,170,223,0.25); }
+.numero-item:nth-child(3) .numero-icon { background: rgba(153,102,187,0.12); }
+.numero-num { font-family: 'DM Serif Display', serif; font-size: clamp(3.5rem,5vw,5.5rem); color: #3E1860; line-height: 1; letter-spacing: -0.03em; }
+.numero-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #9966BB; }
+.numero-desc { font-size: 0.82rem; color: #7A6A8A; line-height: 1.6; margin-top: auto; padding-top: 0.75rem; border-top: 1px solid rgba(62,24,96,0.07); }
 
 /* SEÇÃO PADRÃO */
 section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
@@ -267,8 +276,9 @@ footer a { color: var(--rosa-vivo); text-decoration: none; }
 
 @media(max-width:900px){
   .hero h1 { font-size: clamp(2.8rem,10vw,5rem); }
-  .numero-item { padding: 0.5rem 1rem; }
-  .numero-num { font-size: clamp(2.2rem,7vw,3.5rem); }
+  .numeros-inner { grid-template-columns: 1fr; }
+  .numero-item { padding: 1.5rem; }
+  .numero-num { font-size: clamp(2.8rem,10vw,4rem); }
   .nav-links { display:none;flex-direction:column;position:fixed;top:68px;left:0;right:0;background:var(--roxo);padding:2rem;border-bottom:1px solid rgba(255,255,255,0.08);gap:1.5rem;z-index:99; }
   .nav-links.open { display: flex; }
   .nav-toggle { display: flex; }
@@ -305,46 +315,37 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <section class="hero-banner">
   <picture>
-    <source srcset="banner01.webp" type="image/webp">
-    <img src="banner01-opt.jpg" alt="Visibilidade para Mulheres na Ciência — Pesquisadoras do Espírito Santo" class="hero-banner-img">
+    <source srcset="banner01.webp?v=2" type="image/webp">
+    <img src="banner01-opt.jpg?v=2" alt="Visibilidade para Mulheres na Ciência — Pesquisadoras do Espírito Santo" class="hero-banner-img">
   </picture>
 </section>
 
-<div class="ticker-wrap" aria-hidden="true">
-  <div class="ticker-inner">
-    <span>Pesquisadoras do ES</span><span class="ticker-sep">·</span>
-    <span>Science</span><span class="ticker-sep">·</span>
-    <span>Equity</span><span class="ticker-sep">·</span>
-    <span>Visibility</span><span class="ticker-sep">·</span>
-    <span>Women in Science</span><span class="ticker-sep">·</span>
-    <span>Espírito Santo</span><span class="ticker-sep">·</span>
-    <span>Pesquisadoras do ES</span><span class="ticker-sep">·</span>
-    <span>Science</span><span class="ticker-sep">·</span>
-    <span>Equity</span><span class="ticker-sep">·</span>
-    <span>Visibility</span><span class="ticker-sep">·</span>
-    <span>Women in Science</span><span class="ticker-sep">·</span>
-    <span>Espírito Santo</span><span class="ticker-sep">·</span>
-  </div>
-</div>
 
 <section class="numeros-strip">
   <div class="numeros-inner">
     <div class="numero-item">
-      <div class="numero-num" id="statP">—</div>
-      <div class="numero-linha"></div>
-      <div class="numero-label">Pesquisadoras</div>
+      <div class="numero-icon">🔬</div>
+      <div>
+        <div class="numero-num" id="statP">—</div>
+        <div class="numero-label">Pesquisadoras</div>
+      </div>
+      <div class="numero-desc">Mulheres que lideram pesquisa científica no Espírito Santo</div>
     </div>
-    <div class="numero-divider"></div>
     <div class="numero-item">
-      <div class="numero-num" id="statO">—</div>
-      <div class="numero-linha"></div>
-      <div class="numero-label">Publicações</div>
+      <div class="numero-icon">📄</div>
+      <div>
+        <div class="numero-num" id="statO">—</div>
+        <div class="numero-label">Publicações</div>
+      </div>
+      <div class="numero-desc">Artigos, livros, trabalhos e outras publicações</div>
     </div>
-    <div class="numero-divider"></div>
     <div class="numero-item">
-      <div class="numero-num" id="statI">—</div>
-      <div class="numero-linha"></div>
-      <div class="numero-label">Instituições</div>
+      <div class="numero-icon">🏛️</div>
+      <div>
+        <div class="numero-num" id="statI">—</div>
+        <div class="numero-label">Instituições</div>
+      </div>
+      <div class="numero-desc">Universidades e institutos de pesquisa representados</div>
     </div>
   </div>
 </section>
