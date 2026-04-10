@@ -939,7 +939,7 @@ async function abrirTopico(postId) {
   db.rpc('increment_forum_views', { post_uuid: postId }).catch(() => {});
 
   const { data: post, error: postError } = await db.from('forum_posts')
-    .select('*, researchers(nome, foto_url, instituicao), forum_categories(nome, emoji)')
+    .select('*, forum_categories(nome, emoji)')
     .eq('id', postId).single();
 
   if (postError || !post) {
@@ -948,12 +948,21 @@ async function abrirTopico(postId) {
     return;
   }
 
+  // Busca os dados do autor separadamente (researcher_id pode ser null em posts do admin)
+  let researcher = null;
+  if (post.researcher_id) {
+    const { data: rd } = await db.from('researchers')
+      .select('nome, foto_url, instituicao')
+      .eq('id', post.researcher_id).single();
+    researcher = rd;
+  }
+
   const { data: respostas } = await db.from('forum_replies')
     .select('*, researchers(nome, foto_url, instituicao)')
     .eq('post_id', postId).eq('aprovado', true)
     .order('created_at', { ascending: true });
 
-  const r = post.researchers || {};
+  const r = researcher || {};
   const cat = post.forum_categories || {};
   const avPost = r.foto_url ? `<img src="${r.foto_url}" alt="">` : iniciais(r.nome||'?');
 
