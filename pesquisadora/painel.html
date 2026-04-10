@@ -809,7 +809,7 @@ async function carregarCategoriasForum() {
   // Renderiza filtros de categoria
   const filterWrap = document.getElementById('forumCatFilter');
   filterWrap.innerHTML = `<button class="forum-cat-btn active" data-cat="" onclick="filtrarCategoria(this,'')">Todas</button>` +
-    forumCategorias.map(c => `<button class="forum-cat-btn" data-cat="${c.id}" onclick="filtrarCategoria(this,${c.id})">${c.emoji} ${c.nome}</button>`).join('');
+    forumCategorias.map(c => `<button class="forum-cat-btn" data-cat="${c.id}" onclick="filtrarCategoria(this,'${c.id}')">${c.emoji} ${c.nome}</button>`).join('');
 }
 
 async function carregarTopicosForum() {
@@ -934,15 +934,17 @@ async function abrirTopico(postId) {
   document.getElementById('forumThreadView').style.display = 'block';
   document.getElementById('forumThreadContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
+  try {
   // Incrementa views (só para aprovados)
   db.rpc('increment_forum_views', { post_uuid: postId }).catch(() => {});
 
-  const { data: post } = await db.from('forum_posts')
+  const { data: post, error: postError } = await db.from('forum_posts')
     .select('*, researchers(nome, foto_url, instituicao), forum_categories(nome, emoji)')
     .eq('id', postId).single();
 
-  if (!post) {
+  if (postError || !post) {
     document.getElementById('forumThreadContent').innerHTML = '<div class="empty-state"><p>Tópico não encontrado.</p></div>';
+    console.error('abrirTopico: erro ao buscar post', postError);
     return;
   }
 
@@ -1015,6 +1017,10 @@ async function abrirTopico(postId) {
       ${repliesHtml}
       ${formResposta}
     </div>`;
+  } catch (err) {
+    console.error('abrirTopico: erro inesperado', err);
+    document.getElementById('forumThreadContent').innerHTML = '<div class="empty-state"><p>Erro ao carregar tópico. Tente novamente.</p></div>';
+  }
 }
 
 async function enviarResposta(postId) {
