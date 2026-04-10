@@ -935,8 +935,8 @@ async function abrirTopico(postId) {
   document.getElementById('forumThreadContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
   try {
-  // Incrementa views (só para aprovados)
-  db.rpc('increment_forum_views', { post_uuid: postId }).catch(() => {});
+  // Incrementa views (só para aprovados) — fire and forget sem quebrar o fluxo
+  (async () => { try { await db.rpc('increment_forum_views', { post_uuid: postId }); } catch(e) {} })();
 
   const { data: post, error: postError } = await db.from('forum_posts')
     .select('*, forum_categories(nome, emoji)')
