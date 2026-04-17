@@ -147,6 +147,13 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
 .filter-btn.active { background: #4f1964; border-color: #4f1964; color: #aed768; }
 .filter-label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--cinza); margin: 1rem 0 0.5rem; display: block; }
 .researchers-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 1.25rem; }
+.pagination { display:flex; justify-content:center; align-items:center; gap:.4rem; margin-top:2rem; flex-wrap:wrap; }
+.page-btn { min-width:38px; height:38px; padding:0 .6rem; border-radius:10px; border:1.5px solid var(--cinza-claro); background:transparent; color:var(--cinza); font-size:.82rem; font-weight:600; cursor:pointer; font-family:'Sora',sans-serif; transition:all .2s; }
+.page-btn:hover:not(:disabled) { border-color:#4f1964; color:#4f1964; }
+.page-btn.active { background:#4f1964; border-color:#4f1964; color:#aed768; }
+.page-btn:disabled { opacity:.35; cursor:default; }
+.page-btn.arrow { font-size:1rem; }
+.page-ellipsis { color:var(--cinza); font-size:.85rem; padding:0 .2rem; }
 .researcher-card { background: var(--branco); border-radius: 16px; padding: 1.75rem; cursor: pointer; transition: all 0.3s; border: 1.5px solid var(--cinza-claro); display: flex; flex-direction: column; gap: 0.75rem; }
 .researcher-card:hover { border-color: var(--rosa-vivo); box-shadow: 0 8px 32px rgba(74,46,74,0.1); transform: translateY(-2px); }
 .rc-top { display: flex; align-items: flex-start; gap: 1rem; }
@@ -496,6 +503,8 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allResearchers = [], allWorks = [];
 let filtroArea = '', filtroInst = '', filtroTipo = '', busca = '';
+const PAGE_SIZE = 16;
+let currentPage = 1;
 
 // ── NORMALIZAÇÃO ──────────────────────────────────────────
 function normKey(s){ return String(s||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
@@ -575,8 +584,8 @@ document.addEventListener('click', function(e) {
   if (!btn) return;
   const tipo  = btn.dataset.filtro;
   const valor = btn.dataset.value;
-  if (tipo === 'area') { filtroArea = valor; renderFilters(); renderResearchers(); }
-  if (tipo === 'inst') { filtroInst = valor; renderFilters(); renderResearchers(); }
+  if (tipo === 'area') { filtroArea = valor; currentPage = 1; renderFilters(); renderResearchers(); }
+  if (tipo === 'inst') { filtroInst = valor; currentPage = 1; renderFilters(); renderResearchers(); }
   if (tipo === 'tipo') { filtroTipo = valor; renderFilters(); renderWorks(); }
 });
 
@@ -591,9 +600,18 @@ function renderResearchers(){
     return true;
   });
 
-  if(!list.length){ grid.innerHTML = '<div class="empty">Nenhuma pesquisadora encontrada.</div>'; return; }
+  if(!list.length){
+    grid.innerHTML = '<div class="empty">Nenhuma pesquisadora encontrada.</div>';
+    renderPagination(0);
+    return;
+  }
 
-  grid.innerHTML = list.map(r => {
+  const totalPages = Math.ceil(list.length / PAGE_SIZE);
+  if(currentPage > totalPages) currentPage = 1;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageList = list.slice(start, start + PAGE_SIZE);
+
+  grid.innerHTML = pageList.map(r => {
     const links = [
       r.lattes        ? `<a class="rc-link" href="${r.lattes}"         target="_blank">Lattes</a>`  : '',
       r.orcid         ? `<a class="rc-link" href="${r.orcid}"          target="_blank">ORCID</a>`   : '',
@@ -612,6 +630,42 @@ function renderResearchers(){
       ${wc ? `<div style="font-size:.72rem;color:var(--verde);font-weight:700;padding-top:.75rem;border-top:1px solid var(--cinza-claro)">↗ ${wc} publicaç${wc===1?'ão':'ões'}</div>` : ''}
     </div>`;
   }).join('');
+
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  const existing = document.getElementById('researchersPagination');
+  if(existing) existing.remove();
+  if(totalPages <= 1) return;
+
+  const nav = document.createElement('div');
+  nav.id = 'researchersPagination';
+  nav.className = 'pagination';
+
+  const mkBtn = (label, page, active, disabled, arrow) =>
+    `<button class="page-btn${active?' active':''}${arrow?' arrow':''}" ${disabled?'disabled':''} onclick="goPage(${page})">${label}</button>`;
+
+  let html = mkBtn('←', currentPage - 1, false, currentPage === 1, true);
+
+  for(let i = 1; i <= totalPages; i++){
+    if(i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)){
+      html += mkBtn(i, i, i === currentPage, false, false);
+    } else if(i === currentPage - 3 || i === currentPage + 3){
+      html += '<span class="page-ellipsis">…</span>';
+    }
+  }
+
+  html += mkBtn('→', currentPage + 1, false, currentPage === totalPages, true);
+  nav.innerHTML = html;
+
+  document.getElementById('researchersGrid').insertAdjacentElement('afterend', nav);
+}
+
+function goPage(page) {
+  currentPage = page;
+  renderResearchers();
+  document.getElementById('pesquisadoras').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ── OBRAS ─────────────────────────────────────────────────
@@ -767,7 +821,7 @@ function renderBlogPreview(posts){
 document.getElementById('modalClose').onclick = closeModal;
 document.getElementById('modalOverlay').onclick = e => { if(e.target === e.currentTarget) closeModal(); };
 document.getElementById('obraModalOverlay').onclick = e => { if(e.target === e.currentTarget) closeObraModal(); };
-document.getElementById('searchInput').addEventListener('input', function(){ busca = this.value; renderResearchers(); });
+document.getElementById('searchInput').addEventListener('input', function(){ busca = this.value; currentPage = 1; renderResearchers(); });
 document.getElementById('navToggle').onclick = () => document.getElementById('navLinks').classList.toggle('open');
 document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeModal(); closeObraModal(); } });
 
