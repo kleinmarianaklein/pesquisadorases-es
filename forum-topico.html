@@ -209,9 +209,12 @@ async function loadPost() {
   document.getElementById('breadTitle').textContent = post.titulo.length > 50 ? post.titulo.substring(0, 50) + '…' : post.titulo;
 
   const r = post.researchers || {};
-  const authorAvatar = r.foto_url
-    ? `<img src="${r.foto_url}" alt="">`
-    : iniciais(r.nome||'?');
+  const isAdminPost = !post.researcher_id;
+  const authorAvatar = isAdminPost
+    ? `<img src="${post.admin_foto_url||'/og-default.jpg'}" alt="">`
+    : (r.foto_url ? `<img src="${r.foto_url}" alt="">` : iniciais(r.nome||'?'));
+  const authorName = isAdminPost ? 'Equipe Pesquisadoras ES' : (r.nome || '—');
+  const authorInst = isAdminPost ? '' : (r.instituicao ? esc(r.instituicao) + (r.area_principal ? ' · ' + esc(r.area_principal) : '') : '');
 
   document.getElementById('postWrap').innerHTML = `
     <div class="post-card">
@@ -221,8 +224,8 @@ async function loadPost() {
         <div class="post-header-meta">
           <div class="post-author-avatar">${authorAvatar}</div>
           <div>
-            <div class="post-author-name">${esc(r.nome||'—')}</div>
-            <div class="post-author-inst">${esc(r.instituicao||'')}${r.area_principal?' · '+esc(r.area_principal):''}</div>
+            <div class="post-author-name">${esc(authorName)}</div>
+            <div class="post-author-inst">${authorInst}</div>
           </div>
           <div class="post-badges">
             ${post.pinned ? '<span class="badge badge-pinned">📌 Fixado</span>' : ''}

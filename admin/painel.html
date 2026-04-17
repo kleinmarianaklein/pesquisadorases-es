@@ -557,6 +557,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <label>Mensagem *</label>
           <textarea id="adminNovoCorpo" rows="4" placeholder="Conteúdo do tópico…" maxlength="4000" style="resize:vertical"></textarea>
         </div>
+        <div class="form-group full">
+          <label>Foto do autor <span style="font-weight:400;color:var(--cinza)">(opcional — padrão: og-default.jpg)</span></label>
+          <div style="display:flex;gap:1rem;align-items:center;margin-top:.4rem;flex-wrap:wrap">
+            <input type="file" id="adminTopicoFotoInput" accept="image/*" onchange="previewAdminFoto(this)" style="font-size:.82rem">
+            <div id="adminTopicoFotoPreview" style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid var(--cinza-claro);display:flex;align-items:center;justify-content:center;background:var(--cinza-claro)">
+              <img src="/og-default.jpg" alt="" style="width:100%;height:100%;object-fit:cover">
+            </div>
+          </div>
+        </div>
         <div class="form-group full" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:.5rem;font-weight:500;cursor:pointer">
             <input type="checkbox" id="adminTopicoDestaque" style="accent-color:var(--verde)"> Fixar tópico (pinned)
@@ -1357,6 +1366,20 @@ function renderAdminCatSelect(cats) {
     cats.map(c => `<option value="${c.id}">${c.emoji || ''} ${c.nome}</option>`).join('');
 }
 
+let adminTopicoFotoFile = null;
+
+function previewAdminFoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  adminTopicoFotoFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('adminTopicoFotoPreview');
+    prev.innerHTML = `<img src="${e.target.result}" alt="" style="width:100%;height:100%;object-fit:cover">`;
+  };
+  reader.readAsDataURL(file);
+}
+
 async function adminCriarTopico() {
   const catId  = document.getElementById('adminNovaCategoria').value;
   const titulo = document.getElementById('adminNovoTitulo').value.trim();
@@ -1373,17 +1396,32 @@ async function adminCriarTopico() {
 
   const categoryId = isNaN(parseInt(catId)) ? catId : parseInt(catId);
 
-  const { error } = await db.from('forum_posts').insert([{
+  const { data: postData, error } = await db.from('forum_posts').insert([{
     category_id: categoryId,
     researcher_id: null,
     titulo, corpo,
     aprovado: true,
     pinned
-  }]);
+  }]).select('id').single();
 
   if (error) {
     errEl.textContent = 'Erro: ' + error.message;
     errEl.style.display = 'inline'; return;
+  }
+
+  // Upload da foto (se selecionada)
+  if (adminTopicoFotoFile && postData?.id) {
+    try {
+      const ext  = adminTopicoFotoFile.name.split('.').pop().toLowerCase();
+      const path = 'admin-posts/' + postData.id + '.' + ext;
+      const { error: upErr } = await db.storage.from('avatars').upload(path, adminTopicoFotoFile, { upsert: true });
+      if (!upErr) {
+        const { data: urlData } = db.storage.from('avatars').getPublicUrl(path);
+        await db.from('forum_posts').update({ admin_foto_url: urlData.publicUrl }).eq('id', postData.id);
+      } else {
+        console.warn('Upload foto admin:', upErr.message);
+      }
+    } catch(e) { console.warn('Erro upload foto admin:', e); }
   }
 
   okEl.style.display = 'inline';
@@ -1391,6 +1429,9 @@ async function adminCriarTopico() {
   document.getElementById('adminNovoCorpo').value = '';
   document.getElementById('adminNovaCategoria').value = '';
   document.getElementById('adminTopicoDestaque').checked = false;
+  document.getElementById('adminTopicoFotoInput').value = '';
+  document.getElementById('adminTopicoFotoPreview').innerHTML = `<img src="/og-default.jpg" alt="" style="width:100%;height:100%;object-fit:cover">`;
+  adminTopicoFotoFile = null;
   setTimeout(() => { okEl.style.display = 'none'; }, 4000);
   if (forumTab === 'aprovados') loadForumAprovados();
 }

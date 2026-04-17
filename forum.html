@@ -272,7 +272,7 @@ async function loadCategories() {
 
 async function buildCategoryCard(cat) {
   const { data: posts, count } = await db.from('forum_posts')
-    .select('id, titulo, pinned, closed, views, created_at, researcher_id, researchers(nome, foto_url)', { count: 'exact' })
+    .select('id, titulo, pinned, closed, views, created_at, researcher_id, admin_foto_url, researchers(nome, foto_url)', { count: 'exact' })
     .eq('category_id', cat.id).eq('aprovado', true)
     .order('pinned', { ascending: false })
     .order('created_at', { ascending: false })
@@ -282,7 +282,7 @@ async function buildCategoryCard(cat) {
   const postsHtml = posts?.length
     ? posts.map(p => `
       <div class="topic-row" onclick="location.href='forum-topico.html?id=${p.id}'">
-        <div class="topic-avatar">${p.researchers?.foto_url ? `<img src="${p.researchers.foto_url}" alt="">` : iniciais(p.researchers?.nome||'Admin')}</div>
+        <div class="topic-avatar">${p.researchers?.foto_url ? `<img src="${p.researchers.foto_url}" alt="">` : (p.researchers ? iniciais(p.researchers.nome||'?') : `<img src="${p.admin_foto_url||'/og-default.jpg'}" alt="">`)}</div>
         <div class="topic-main">
           <div class="topic-title">${esc(p.titulo)}</div>
           <div class="topic-meta">${p.researchers?.nome||'Equipe Pesquisadoras ES'} · ${formatDate(p.created_at)}</div>
