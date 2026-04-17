@@ -209,7 +209,7 @@ async function loadPost() {
   document.getElementById('breadTitle').textContent = post.titulo.length > 50 ? post.titulo.substring(0, 50) + '…' : post.titulo;
 
   const r = post.researchers || {};
-  const isAdminPost = !post.researchers;
+  const isAdminPost = !post.researcher_id || !post.researchers || !r.nome;
   const authorAvatar = isAdminPost
     ? `<img src="${post.admin_foto_url||'/og-default.jpg'}" alt="">`
     : (r.foto_url ? `<img src="${r.foto_url}" alt="">` : iniciais(r.nome||'?'));
