@@ -116,9 +116,9 @@ async function uploadFotoInscricao(researcherId) {
   try {
     const ext  = fotoFile.name.split('.').pop().toLowerCase();
     const path = researcherId + '.' + ext;
-    const { error } = await db.storage.from('avatars').upload(path, fotoFile, { upsert: true });
+    const { error } = await db.storage.from('researchers-avatars').upload(path, fotoFile, { upsert: true });
     if (error) { console.warn('Erro no upload da foto:', error.message); return null; }
-    const { data } = db.storage.from('avatars').getPublicUrl(path);
+    const { data } = db.storage.from('researchers-avatars').getPublicUrl(path);
     return data.publicUrl;
   } catch (e) {
     console.warn('Erro inesperado no upload da foto:', e);
