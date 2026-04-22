@@ -116,13 +116,12 @@ async function uploadFotoInscricao() {
   const ext  = fotoFile.name.split('.').pop().toLowerCase();
   const path = 'cadastro-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
   console.log('[foto] Iniciando upload → bucket: researchers-avatars | path:', path, '| tamanho:', fotoFile.size, 'bytes | tipo:', fotoFile.type);
-  const { data: upData, error } = await db.storage.from('researchers-avatars').upload(path, fotoFile);
+  const { data: upData, error } = await db.storage.from('avatars').upload('researchers/' + path, fotoFile);
   if (error) {
-    // Lança o erro para aparecer no alert do formulário — facilita diagnóstico
     throw new Error('Falha no upload da foto: ' + error.message + (error.statusCode ? ' (HTTP ' + error.statusCode + ')' : ''));
   }
   console.log('[foto] Upload concluído:', upData);
-  const { data: urlData } = db.storage.from('researchers-avatars').getPublicUrl(path);
+  const { data: urlData } = db.storage.from('avatars').getPublicUrl('researchers/' + path);
   console.log('[foto] URL pública:', urlData.publicUrl);
   return urlData.publicUrl;
 }
