@@ -210,7 +210,19 @@ async function submitForm() {
     let fotoUrl = null;
     if (fotoFile) {
       btn.innerHTML = '<span class="spinner"></span> Enviando foto…';
-      fotoUrl = await uploadFotoInscricao();
+      try {
+        fotoUrl = await uploadFotoInscricao();
+      } catch(fotoErr) {
+        // Upload falhou — continua o cadastro sem foto (admin pode adicionar depois)
+        console.error('[foto] Upload falhou, continuando sem foto:', fotoErr.message);
+        // Avisa a usuária mas não aborta o cadastro
+        const continuar = confirm('⚠️ Não foi possível enviar a foto agora (' + fotoErr.message + ').\n\nSeu cadastro será salvo normalmente e a foto pode ser adicionada depois pelo administrador.\n\nClicar OK para continuar sem foto.');
+        if (!continuar) {
+          btn.disabled = false;
+          btn.innerHTML = '🎉 Concluir inscrição';
+          return;
+        }
+      }
     }
 
     btn.innerHTML = '<span class="spinner"></span> Enviando…';
