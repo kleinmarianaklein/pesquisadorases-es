@@ -111,17 +111,22 @@ function previewFotoInscricao(input) {
   reader.readAsDataURL(file);
 }
 
-async function uploadFotoInscricao(researcherId) {
-  if (!fotoFile || !researcherId) return null;
+async function uploadFotoInscricao() {
+  if (!fotoFile) return null;
   try {
     const ext  = fotoFile.name.split('.').pop().toLowerCase();
-    const path = researcherId + '.' + ext;
+    // Usa timestamp + random para garantir nome único sem depender do ID do banco
+    const path = 'cadastro-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
     const { error } = await db.storage.from('researchers-avatars').upload(path, fotoFile, { upsert: true });
-    if (error) { console.warn('Erro no upload da foto:', error.message); return null; }
+    if (error) {
+      console.error('[foto] Erro no upload para researchers-avatars:', error.message, error);
+      return null;
+    }
     const { data } = db.storage.from('researchers-avatars').getPublicUrl(path);
+    console.log('[foto] Upload ok. URL pública:', data.publicUrl);
     return data.publicUrl;
   } catch (e) {
-    console.warn('Erro inesperado no upload da foto:', e);
+    console.error('[foto] Erro inesperado no upload:', e);
     return null;
   }
 }
@@ -204,28 +209,31 @@ async function submitForm() {
 
   try {
     const g = id => { const el = document.getElementById(id); return el ? (el.value.trim() || null) : null; };
+
+    // 1. Faz upload da foto ANTES do insert (para incluir foto_url no payload inicial)
+    let fotoUrl = null;
+    if (fotoFile) {
+      btn.innerHTML = '<span class="spinner"></span> Enviando foto…';
+      fotoUrl = await uploadFotoInscricao();
+    }
+
+    btn.innerHTML = '<span class="spinner"></span> Enviando…';
+
     const payload = {
       nome: g('nome'), mini_bio: g('bio'), email: g('email'), estado: g('cidade'),
       area_principal: document.getElementById('area')?.value || null,
       instituicao:    document.getElementById('instituicao')?.value || null,
       lattes: g('lattes'), orcid: g('orcid'), linkedin: g('linkedin'),
       google_scholar: g('scholar'), research_gate: g('researchgate'), site: g('site'),
+      foto_url: fotoUrl,  // já inclui a URL no insert — sem update separado
       status: 'pendente', destaque: false, consentimento_lgpd: true,
     };
 
-    // 1. Insere a pesquisadora
+    // 2. Insere a pesquisadora (com foto_url já definida)
     const res = await db.from('researchers').insert([payload]).select().single();
     if (res.error) throw new Error(res.error.message);
     const researcherId = res.data.id;
-
-    // 2. Faz upload da foto (se houver) e atualiza o registro
-    if (fotoFile) {
-      btn.innerHTML = '<span class="spinner"></span> Enviando foto…';
-      const fotoUrl = await uploadFotoInscricao(researcherId);
-      if (fotoUrl) {
-        await db.from('researchers').update({ foto_url: fotoUrl }).eq('id', researcherId);
-      }
-    }
+    console.log('[cadastro] Pesquisadora inserida. ID:', researcherId, '| foto_url:', fotoUrl);
 
     // 3. Insere obras
     const obras = [];
