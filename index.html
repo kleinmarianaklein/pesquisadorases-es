@@ -778,7 +778,7 @@ function renderBooks(){
   if(!books.length){ grid.innerHTML = '<div class="empty" style="color:rgba(255,255,255,.45)">Nenhum livro à venda no momento.</div>'; return; }
   grid.innerHTML = books.map(b => {
     const author = allResearchers.find(r => r.id === b.researcher_id)?.nome || '—';
-    const fotoUrl = b.foto_publicacao ? `https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/work-photos/${b.foto_publicacao}` : null;
+    const fotoUrl = b.capa_url || null;
     const coverHtml = fotoUrl ? `<div class="book-cover"><img src="${fotoUrl}" alt="${b.titulo}" loading="lazy"></div>` : `<div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div>`;
     return `<div class="book-card">${coverHtml}<div class="book-title">${b.titulo}</div><div class="book-author">${author}</div><a class="book-btn" href="${b.link_compra}" target="_blank">🛒 Adquirir</a></div>`;
   }).join('');

@@ -712,12 +712,13 @@ function removerObraCapa() {
   document.getElementById('oCapaRemoveBtn').style.display = 'none';
 }
 async function uploadObraCapa(file, obraId) {
-  if (!file || !obraId) return null;
+  if (!file) return null;
   const ext = file.name.split('.').pop().toLowerCase();
-  const path = `${obraId}.${ext}`;
-  const { error } = await db.storage.from('work-photos').upload(path, file, { upsert: true, contentType: file.type });
-  if (error) { console.warn('Erro upload capa:', error.message); return null; }
-  const { data } = db.storage.from('work-photos').getPublicUrl(path);
+  // Usa avatars/works/ — bucket com política INSERT para anon e authenticated
+  const path = 'works/' + (obraId || ('obra-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8))) + '.' + ext;
+  const { error } = await db.storage.from('avatars').upload(path, file);
+  if (error) { console.warn('Erro upload capa:', error.message, error); return null; }
+  const { data } = db.storage.from('avatars').getPublicUrl(path);
   return data.publicUrl;
 }
 
