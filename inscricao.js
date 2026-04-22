@@ -113,22 +113,18 @@ function previewFotoInscricao(input) {
 
 async function uploadFotoInscricao() {
   if (!fotoFile) return null;
-  try {
-    const ext  = fotoFile.name.split('.').pop().toLowerCase();
-    // Usa timestamp + random para garantir nome único sem depender do ID do banco
-    const path = 'cadastro-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
-    const { error } = await db.storage.from('researchers-avatars').upload(path, fotoFile, { upsert: true });
-    if (error) {
-      console.error('[foto] Erro no upload para researchers-avatars:', error.message, error);
-      return null;
-    }
-    const { data } = db.storage.from('researchers-avatars').getPublicUrl(path);
-    console.log('[foto] Upload ok. URL pública:', data.publicUrl);
-    return data.publicUrl;
-  } catch (e) {
-    console.error('[foto] Erro inesperado no upload:', e);
-    return null;
+  const ext  = fotoFile.name.split('.').pop().toLowerCase();
+  const path = 'cadastro-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+  console.log('[foto] Iniciando upload → bucket: researchers-avatars | path:', path, '| tamanho:', fotoFile.size, 'bytes | tipo:', fotoFile.type);
+  const { data: upData, error } = await db.storage.from('researchers-avatars').upload(path, fotoFile);
+  if (error) {
+    // Lança o erro para aparecer no alert do formulário — facilita diagnóstico
+    throw new Error('Falha no upload da foto: ' + error.message + (error.statusCode ? ' (HTTP ' + error.statusCode + ')' : ''));
   }
+  console.log('[foto] Upload concluído:', upData);
+  const { data: urlData } = db.storage.from('researchers-avatars').getPublicUrl(path);
+  console.log('[foto] URL pública:', urlData.publicUrl);
+  return urlData.publicUrl;
 }
 
 // ── PUBLICAÇÕES ───────────────────────────────────────────────────────
