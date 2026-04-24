@@ -363,8 +363,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Título</th><th>Autora</th><th>Tipo</th><th>Ano</th><th>Ações</th></tr></thead>
-        <tbody id="obrasTable"><tr><td colspan="5" class="loading"><div class="spinner"></div></td></tr></tbody>
+        <thead><tr><th>Título</th><th>Autora</th><th>Tipo</th><th>Ano</th><th>Capa</th><th>Ações</th></tr></thead>
+        <tbody id="obrasTable"><tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1129,10 +1129,11 @@ function removeObraCapa(tipo){
 async function uploadObraFoto(file,obraId){
   if(!file||!obraId) return null;
   const ext=file.name.split('.').pop().toLowerCase();
-  const path=`${obraId}.${ext}`;
-  const {error}=await db.storage.from('work-photos').upload(path,file,{upsert:true,contentType:file.type});
-  if(error){ console.warn('Erro upload capa obra:',error.message); return null; }
-  const {data}=db.storage.from('work-photos').getPublicUrl(path);
+  // Usa avatars/works/ — bucket com política INSERT para anon e authenticated
+  const path='works/'+(obraId||('obra-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)))+'.'+ext;
+  const {error}=await db.storage.from('avatars').upload(path,file);
+  if(error){ console.warn('Erro upload capa obra:',error.message,error); return null; }
+  const {data}=db.storage.from('avatars').getPublicUrl(path);
   return data.publicUrl;
 }
 function populateObraResearcherSelect(){
@@ -1142,8 +1143,46 @@ function populateObraResearcherSelect(){
 function showAddObra(){ document.getElementById('addObraForm').style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); }
 function renderObras(){
   const tbody=document.getElementById('obrasTable');
-  if(!allWorks.length){ tbody.innerHTML='<tr><td colspan="5" class="empty">Nenhuma publicação cadastrada.</td></tr>'; return; }
-  tbody.innerHTML=allWorks.map(w=>{ const author=allResearchers.find(r=>r.id===w.researcher_id)?.nome||'—'; return `<tr><td style="max-width:280px"><strong>${w.titulo}</strong></td><td>${author}</td><td>${w.tipo||'—'}</td><td>${w.ano||'—'}</td><td><button class="btn btn-red" onclick="deleteWork('${w.id}')">🗑</button></td></tr>`; }).join('');
+  if(!allWorks.length){ tbody.innerHTML='<tr><td colspan="6" class="empty">Nenhuma publicação cadastrada.</td></tr>'; return; }
+  tbody.innerHTML=allWorks.map(w=>{
+    const author=allResearchers.find(r=>r.id===w.researcher_id)?.nome||'—';
+    const capaUrl=w.capa_url||(w.foto_publicacao?`https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/work-photos/${w.foto_publicacao}`:null);
+    const capaHtml=capaUrl?`<img src="${capaUrl}" style="width:36px;height:48px;object-fit:cover;border-radius:4px" onerror="this.outerHTML='<span style=\\'color:var(--cinza);font-size:.7rem\\'>sem capa</span>'">`:'<span style="color:var(--cinza);font-size:.7rem">sem capa</span>';
+    return `<tr><td style="max-width:240px"><strong>${w.titulo}</strong></td><td>${author}</td><td>${w.tipo||'—'}</td><td>${w.ano||'—'}</td><td>${capaHtml}</td><td style="white-space:nowrap"><button class="btn btn-outline" style="font-size:.72rem;padding:.25rem .6rem" onclick="abrirEditarCapa('${w.id}')">🖼 Capa</button> <button class="btn btn-red" onclick="deleteWork('${w.id}')">🗑</button></td></tr>`;
+  }).join('');
+}
+
+// ── EDITAR CAPA DE OBRA ──────────────────────────────────
+let editCapaObraId=null, editCapaFile=null;
+function abrirEditarCapa(id){
+  editCapaObraId=id; editCapaFile=null;
+  const w=allWorks.find(x=>x.id===id); if(!w) return;
+  const capaUrl=w.capa_url||(w.foto_publicacao?`https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/work-photos/${w.foto_publicacao}`:null);
+  document.getElementById('editCapaTitulo').textContent=w.titulo;
+  const prev=document.getElementById('editCapaPreview');
+  prev.innerHTML=capaUrl?`<img src="${capaUrl}" style="width:100%;height:100%;object-fit:cover">`:'📚';
+  document.getElementById('editCapaInput').value='';
+  document.getElementById('editCapaModal').style.display='flex';
+}
+function fecharEditarCapa(){ document.getElementById('editCapaModal').style.display='none'; editCapaObraId=null; editCapaFile=null; }
+function previewEditCapa(input){
+  const file=input.files[0]; if(!file) return;
+  editCapaFile=file;
+  const reader=new FileReader();
+  reader.onload=e=>{ document.getElementById('editCapaPreview').innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`; };
+  reader.readAsDataURL(file);
+}
+async function salvarEditCapa(){
+  if(!editCapaObraId||!editCapaFile){ fecharEditarCapa(); return; }
+  const btn=document.getElementById('btnSalvarEditCapa');
+  btn.disabled=true; btn.textContent='Enviando…';
+  const capaUrl=await uploadObraFoto(editCapaFile,editCapaObraId);
+  if(capaUrl){
+    const {error}=await db.from('works').update({capa_url:capaUrl,foto_publicacao:null}).eq('id',editCapaObraId);
+    if(error){ alert('Erro ao salvar: '+error.message); }
+    else { toast('Capa atualizada!'); fecharEditarCapa(); await loadAll(); }
+  } else { alert('Falha no upload da imagem. Verifique o console.'); }
+  btn.disabled=false; btn.textContent='Salvar capa';
 }
 async function saveObra(){
   const titulo=document.getElementById('obraTitulo').value.trim(); const tipo=document.getElementById('obraTipo').value;
@@ -1639,5 +1678,25 @@ async function mSalvar(){
 // INIT
 initAuth();
 </script>
+
+<!-- MODAL EDITAR CAPA DE OBRA -->
+<div id="editCapaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:white;border-radius:16px;padding:1.5rem;max-width:380px;width:100%">
+    <h3 style="margin:0 0 .25rem;font-size:1rem">Editar capa da publicação</h3>
+    <p id="editCapaTitulo" style="font-size:.8rem;color:var(--cinza);margin:0 0 1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></p>
+    <div style="display:flex;gap:1rem;align-items:flex-start;margin-bottom:1rem">
+      <div id="editCapaPreview" style="width:72px;height:96px;border-radius:8px;background:var(--cinza-claro);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:2rem">📚</div>
+      <div>
+        <button type="button" class="btn btn-outline" style="font-size:.8rem;padding:.4rem .9rem" onclick="document.getElementById('editCapaInput').click()">Escolher imagem</button>
+        <input type="file" id="editCapaInput" accept="image/*" style="display:none" onchange="previewEditCapa(this)">
+        <p style="font-size:.7rem;color:var(--cinza);margin:.5rem 0 0">JPG, PNG ou WebP · Formato vertical recomendado</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:.75rem">
+      <button id="btnSalvarEditCapa" class="btn btn-green" style="flex:1" onclick="salvarEditCapa()">Salvar capa</button>
+      <button class="btn btn-outline" onclick="fecharEditarCapa()">Cancelar</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
