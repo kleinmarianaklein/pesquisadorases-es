@@ -204,6 +204,17 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
 .book-author { font-size: 0.73rem; color: rgba(255,255,255,0.45); }
 .book-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 0.73rem; font-weight: 700; margin-top: auto; padding: 0.5rem 1rem; border-radius: 100px; background: var(--rosa-vivo); color: white; text-decoration: none; transition: all 0.2s; cursor: pointer; font-family: 'Sora', sans-serif; border: none; }
 .book-btn:hover { opacity: 0.85; }
+/* Livraria — filtros e paginação no fundo escuro */
+.books-filters { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1.5rem; position:relative; z-index:1; }
+.book-filter-btn { display:inline-flex; align-items:center; gap:.35rem; font-family:'Sora',sans-serif; font-size:.75rem; font-weight:600; padding:.45rem 1rem; border-radius:100px; border:1.5px solid rgba(255,255,255,.25); background:transparent; color:rgba(255,255,255,.6); cursor:pointer; transition:all .2s; white-space:nowrap; }
+.book-filter-btn:hover { border-color:rgba(255,255,255,.7); color:white; }
+.book-filter-btn.active { background:white; color:#4f1964; border-color:white; }
+.books-pagination { margin-top:2rem; position:relative; z-index:1; }
+.books-pagination .page-btn { border-color:rgba(255,255,255,.25); color:rgba(255,255,255,.55); background:transparent; }
+.books-pagination .page-btn:hover:not(:disabled) { border-color:white; color:white; }
+.books-pagination .page-btn.active { background:white !important; color:#4f1964 !important; border-color:white !important; }
+.books-pagination .page-btn:disabled { opacity:.3; cursor:default; }
+.books-pagination .page-ellipsis { color:rgba(255,255,255,.4); }
 
 /* GRUPOS DE PESQUISA */
 #grupos-pesquisa { background: var(--areia-escura); }
@@ -420,11 +431,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <span class="section-eyebrow">Adquira!</span>
   <h2 class="section-title">Nossa <em>Livraria</em></h2>
   <p class="section-desc">Apoie diretamente as autoras capixabas.</p>
+  <div class="books-filters" id="booksFilters"></div>
   <div class="books-grid" id="booksGrid">
     <div class="loading" style="color:rgba(255,255,255,.55)">
       <div class="spinner" style="border-color:rgba(255,255,255,.15);border-top-color:var(--rosa-vivo)"></div>Carregando...
     </div>
   </div>
+  <div class="pagination books-pagination" id="booksPagination"></div>
 </section>
 
 <section id="grupos-pesquisa">
@@ -505,6 +518,10 @@ let allResearchers = [], allWorks = [];
 let filtroArea = '', filtroInst = '', filtroTipo = '', busca = '';
 const PAGE_SIZE = 16;
 let currentPage = 1;
+const BOOKS_PAGE_SIZE = 12;
+let bookPage = 1;
+let bookFilterArea = '';
+let shuffledBooks = [];
 
 // ── NORMALIZAÇÃO ──────────────────────────────────────────
 function normKey(s){ return String(s||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
@@ -774,14 +791,71 @@ function closeModal(){
 // ── LIVROS ────────────────────────────────────────────────
 function renderBooks(){
   const grid = document.getElementById('booksGrid');
-  const books = allWorks.filter(w => w.link_compra || w.para_adquirir);
-  if(!books.length){ grid.innerHTML = '<div class="empty" style="color:rgba(255,255,255,.45)">Nenhum livro à venda no momento.</div>'; return; }
-  grid.innerHTML = books.map(b => {
+  const raw = allWorks.filter(w => w.link_compra || w.para_adquirir);
+
+  // Embaralha uma vez por carregamento de página
+  if(!shuffledBooks.length && raw.length){
+    shuffledBooks = [...raw].sort(() => Math.random() - 0.5);
+  }
+
+  // Filtros de área (construídos a partir dos dados reais)
+  const areas = [...new Set(raw.map(b => b.area_conhecimento).filter(Boolean))].sort();
+  const filtersEl = document.getElementById('booksFilters');
+  if(areas.length > 1){
+    filtersEl.innerHTML =
+      `<button class="book-filter-btn${!bookFilterArea?' active':''}" onclick="setBookFilter('')">Todas</button>` +
+      areas.map(a => `<button class="book-filter-btn${bookFilterArea===a?' active':''}" onclick="setBookFilter('${a.replace(/'/g,"\\'")}')">${bookEmojis[a]||'📚'} ${a}</button>`).join('');
+  } else { filtersEl.innerHTML = ''; }
+
+  // Aplica filtro
+  const filtered = bookFilterArea ? shuffledBooks.filter(b => b.area_conhecimento === bookFilterArea) : shuffledBooks;
+
+  if(!filtered.length){
+    grid.innerHTML = '<div class="empty" style="color:rgba(255,255,255,.45)">Nenhuma obra nessa área no momento.</div>';
+    document.getElementById('booksPagination').innerHTML = '';
+    return;
+  }
+
+  // Paginação
+  const totalPages = Math.ceil(filtered.length / BOOKS_PAGE_SIZE);
+  if(bookPage > totalPages) bookPage = 1;
+  const start = (bookPage - 1) * BOOKS_PAGE_SIZE;
+  const pageBooks = filtered.slice(start, start + BOOKS_PAGE_SIZE);
+
+  grid.innerHTML = pageBooks.map(b => {
     const author = allResearchers.find(r => r.id === b.researcher_id)?.nome || '—';
     const fotoUrl = b.capa_url || (b.foto_publicacao ? `https://ktjsocalyzrpmaokxhzn.supabase.co/storage/v1/object/public/work-photos/${b.foto_publicacao}` : null);
     const coverHtml = fotoUrl ? `<div class="book-cover"><img src="${fotoUrl}" alt="${b.titulo}" loading="lazy"></div>` : `<div class="book-cover">${bookEmojis[b.area_conhecimento]||'📚'}</div>`;
     return `<div class="book-card">${coverHtml}<div class="book-title">${b.titulo}</div><div class="book-author">${author}</div><a class="book-btn" href="${b.link_compra}" target="_blank">🛒 Adquirir</a></div>`;
   }).join('');
+
+  // Render paginação
+  const nav = document.getElementById('booksPagination');
+  if(totalPages <= 1){ nav.innerHTML = ''; return; }
+  const mkBtn = (label, page, active, disabled, arrow) =>
+    `<button class="page-btn${active?' active':''}${arrow?' arrow':''}" ${disabled?'disabled':''} onclick="goBookPage(${page})">${label}</button>`;
+  let html = mkBtn('←', bookPage - 1, false, bookPage === 1, true);
+  for(let i = 1; i <= totalPages; i++){
+    if(i === 1 || i === totalPages || (i >= bookPage - 2 && i <= bookPage + 2)){
+      html += mkBtn(i, i, i === bookPage, false, false);
+    } else if(i === bookPage - 3 || i === bookPage + 3){
+      html += '<span class="page-ellipsis">…</span>';
+    }
+  }
+  html += mkBtn('→', bookPage + 1, false, bookPage === totalPages, true);
+  nav.innerHTML = html;
+}
+
+function setBookFilter(area){
+  bookFilterArea = area;
+  bookPage = 1;
+  renderBooks();
+}
+
+function goBookPage(page){
+  bookPage = page;
+  renderBooks();
+  document.getElementById('livros').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 // ── SOBRE ─────────────────────────────────────────────────
