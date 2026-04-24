@@ -204,6 +204,32 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
 .book-author { font-size: 0.73rem; color: rgba(255,255,255,0.45); }
 .book-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 0.73rem; font-weight: 700; margin-top: auto; padding: 0.5rem 1rem; border-radius: 100px; background: var(--rosa-vivo); color: white; text-decoration: none; transition: all 0.2s; cursor: pointer; font-family: 'Sora', sans-serif; border: none; }
 .book-btn:hover { opacity: 0.85; }
+/* ── MOBILE FILTER DROPDOWNS ─────────────────────────────── */
+.mobile-filters-row { display:none; flex-direction:column; gap:.5rem; margin-bottom:1rem; }
+.mobile-filter-group { position:relative; }
+.mobile-filter-toggle { width:100%; display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.6rem 1rem; border-radius:12px; border:1.5px solid var(--cinza-claro); background:white; font-family:'Sora',sans-serif; font-size:.82rem; font-weight:600; color:var(--texto); cursor:pointer; }
+.mf-label-wrap { display:flex; align-items:center; gap:.45rem; }
+.mf-count { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; background:var(--roxo); color:white; border-radius:100px; font-size:.62rem; padding:0 .35rem; }
+.mf-arrow { transition:transform .2s; font-size:.75rem; }
+.mf-arrow.open { transform:rotate(180deg); }
+.mobile-filter-panel { display:none; position:absolute; top:calc(100% + .35rem); left:0; right:0; background:white; border-radius:14px; border:1.5px solid var(--cinza-claro); box-shadow:0 8px 30px rgba(0,0,0,.14); z-index:300; overflow:hidden; max-height:260px; overflow-y:auto; }
+.mobile-filter-panel.open { display:block; }
+.mf-option { display:flex; align-items:center; gap:.65rem; padding:.55rem .85rem; cursor:pointer; font-size:.83rem; color:var(--texto); border-bottom:1px solid #f0ede8; transition:background .15s; }
+.mf-option:last-child { border-bottom:none; }
+.mf-option:hover { background:var(--areia); }
+.mf-option input[type=checkbox] { width:16px; height:16px; accent-color:var(--roxo); flex-shrink:0; cursor:pointer; }
+/* Dark theme (books section) */
+.mobile-filter-group.dark .mobile-filter-toggle { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.28); color:white; }
+.mobile-filter-group.dark .mobile-filter-panel { background:#2d1245; border-color:rgba(255,255,255,.2); }
+.mobile-filter-group.dark .mf-option { color:rgba(255,255,255,.88); border-color:rgba(255,255,255,.12); }
+.mobile-filter-group.dark .mf-option:hover { background:rgba(255,255,255,.1); }
+.mobile-filter-group.dark .mf-option input[type=checkbox] { accent-color:var(--rosa-vivo); }
+@media (max-width:768px) {
+  .filter-label { display:none; }
+  .filters { display:none !important; }
+  .books-filters { display:none !important; }
+  .mobile-filters-row { display:flex; }
+}
 /* Livraria — filtros e paginação no fundo escuro */
 .books-filters { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1.5rem; position:relative; z-index:1; }
 .book-filter-btn { display:inline-flex; align-items:center; gap:.35rem; font-family:'Sora',sans-serif; font-size:.75rem; font-weight:600; padding:.45rem 1rem; border-radius:100px; border:1.5px solid rgba(255,255,255,.25); background:transparent; color:rgba(255,255,255,.6); cursor:pointer; transition:all .2s; white-space:nowrap; }
@@ -406,6 +432,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="filters" id="areaFilters"></div>
   <span class="filter-label">Instituição</span>
   <div class="filters" id="instFilters"></div>
+  <div class="mobile-filters-row" id="mobileResearcherFilters"></div>
   <div class="researchers-grid" id="researchersGrid"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
 </section>
 
@@ -432,6 +459,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <h2 class="section-title">Nossa <em>Livraria</em></h2>
   <p class="section-desc">Apoie diretamente as autoras capixabas.</p>
   <div class="books-filters" id="booksFilters"></div>
+  <div class="mobile-filters-row" id="mobileBooksFilters" style="position:relative;z-index:1"></div>
   <div class="books-grid" id="booksGrid">
     <div class="loading" style="color:rgba(255,255,255,.55)">
       <div class="spinner" style="border-color:rgba(255,255,255,.15);border-top-color:var(--rosa-vivo)"></div>Carregando...
@@ -515,12 +543,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allResearchers = [], allWorks = [];
-let filtroArea = '', filtroInst = '', filtroTipo = '', busca = '';
+let filtroAreas = [], filtroInsts = [], filtroTipo = '', busca = '';
 const PAGE_SIZE = 16;
 let currentPage = 1;
 const BOOKS_PAGE_SIZE = 12;
 let bookPage = 1;
-let bookFilterArea = '';
+let bookFilterAreas = [];
 let shuffledBooks = [];
 
 // ── NORMALIZAÇÃO ──────────────────────────────────────────
@@ -569,40 +597,108 @@ function renderStats(){
   document.getElementById('statI').textContent = insts;
 }
 
-// ── FILTROS — usa data-attributes para evitar quebra com caracteres especiais ──
+// ── FILTROS ────────────────────────────────────────────────
 function renderFilters(){
   const areas = uniqueBy(allResearchers.map(r => r.area_principal), normKey);
   const insts  = uniqueBy(allResearchers.map(r => r.instituicao), normKey);
   const tipos  = uniqueBy(allWorks.map(w => w.tipo), normKey);
 
+  // Desktop pills
   document.getElementById('areaFilters').innerHTML =
-    filterBtn('Todas', '', filtroArea === '', 'area') +
-    areas.map(v => filterBtn(v, v, filtroArea === v, 'area')).join('');
+    filterBtn('Todas', '', !filtroAreas.length, 'area') +
+    areas.map(v => filterBtn(v, v, filtroAreas.includes(v), 'area')).join('');
 
   document.getElementById('instFilters').innerHTML =
-    filterBtn('Todas', '', filtroInst === '', 'inst') +
-    insts.map(v => filterBtn(v, v, filtroInst === v, 'inst')).join('');
+    filterBtn('Todas', '', !filtroInsts.length, 'inst') +
+    insts.map(v => filterBtn(v, v, filtroInsts.includes(v), 'inst')).join('');
 
   document.getElementById('tipoFilters').innerHTML =
     filterBtn('Todos', '', filtroTipo === '', 'tipo') +
     tipos.map(v => filterBtn(v, v, filtroTipo === v, 'tipo')).join('');
+
+  // Mobile dropdowns
+  const mfEl = document.getElementById('mobileResearcherFilters');
+  if(mfEl){
+    mfEl.innerHTML =
+      buildMobileDropdown('mf-area', 'Área', areas, filtroAreas, 'areas', false) +
+      buildMobileDropdown('mf-inst', 'Instituição', insts, filtroInsts, 'insts', false);
+  }
 }
 
-// CORREÇÃO: usa data-attributes em vez de onclick inline
-// Assim caracteres especiais (travessão, aspas, acentos) não quebram o JS
+function buildMobileDropdown(id, label, options, selected, key, dark){
+  const count = selected.length;
+  const countHtml = count ? `<span class="mf-count">${count}</span>` : '';
+  return `<div class="mobile-filter-group${dark?' dark':''}">
+    <button class="mobile-filter-toggle" onclick="toggleMobileDropdown('${id}')">
+      <span class="mf-label-wrap">${label}${countHtml}</span>
+      <span class="mf-arrow" id="${id}-arrow">▾</span>
+    </button>
+    <div class="mobile-filter-panel" id="${id}-panel">
+      <label class="mf-option"><input type="checkbox" onchange="mobileSelectAll('${key}',this)" ${!count?'checked':''}> Todas</label>
+      ${options.map(v => {
+        const safe = v.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        return `<label class="mf-option"><input type="checkbox" value="${safe}" onchange="mobileToggle('${key}','${safe}',this)" ${selected.includes(v)?'checked':''}> ${v}</label>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function toggleMobileDropdown(id){
+  const panel = document.getElementById(id+'-panel');
+  const arrow = document.getElementById(id+'-arrow');
+  const isOpen = panel.classList.contains('open');
+  // Fecha todos
+  document.querySelectorAll('.mobile-filter-panel.open').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.mf-arrow.open').forEach(a => a.classList.remove('open'));
+  if(!isOpen){ panel.classList.add('open'); arrow?.classList.add('open'); }
+}
+// Fecha dropdowns ao clicar fora
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.mobile-filter-group') && !e.target.closest('.mobile-filters-row')){
+    document.querySelectorAll('.mobile-filter-panel.open').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.mf-arrow.open').forEach(a => a.classList.remove('open'));
+  }
+});
+
+function mobileSelectAll(key, cb){
+  if(!cb.checked){ cb.checked = true; return; } // não desmarca "Todas" diretamente
+  if(key==='areas'){ filtroAreas=[]; currentPage=1; renderFilters(); renderResearchers(); }
+  if(key==='insts'){ filtroInsts=[]; currentPage=1; renderFilters(); renderResearchers(); }
+  if(key==='bookAreas'){ bookFilterAreas=[]; bookPage=1; renderBooks(); }
+}
+
+function mobileToggle(key, value, cb){
+  let arr;
+  if(key==='areas') arr=filtroAreas;
+  if(key==='insts') arr=filtroInsts;
+  if(key==='bookAreas') arr=bookFilterAreas;
+  if(cb.checked){ if(!arr.includes(value)) arr.push(value); }
+  else { const i=arr.indexOf(value); if(i>=0) arr.splice(i,1); }
+  if(key==='areas'||key==='insts'){ currentPage=1; renderFilters(); renderResearchers(); }
+  if(key==='bookAreas'){ bookPage=1; renderBooks(); }
+}
+
 function filterBtn(label, value, active, tipo) {
   const safeValue = value.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
   return `<button class="filter-btn${active ? ' active' : ''}" data-filtro="${tipo}" data-value="${safeValue}">${label}</button>`;
 }
 
-// Listener único para todos os botões de filtro
+// Listener desktop pills
 document.addEventListener('click', function(e) {
   const btn = e.target.closest('.filter-btn');
   if (!btn) return;
   const tipo  = btn.dataset.filtro;
   const valor = btn.dataset.value;
-  if (tipo === 'area') { filtroArea = valor; currentPage = 1; renderFilters(); renderResearchers(); }
-  if (tipo === 'inst') { filtroInst = valor; currentPage = 1; renderFilters(); renderResearchers(); }
+  if (tipo === 'area') {
+    if(!valor) filtroAreas = [];
+    else filtroAreas = filtroAreas.includes(valor) ? filtroAreas.filter(v=>v!==valor) : [...filtroAreas, valor];
+    currentPage = 1; renderFilters(); renderResearchers();
+  }
+  if (tipo === 'inst') {
+    if(!valor) filtroInsts = [];
+    else filtroInsts = filtroInsts.includes(valor) ? filtroInsts.filter(v=>v!==valor) : [...filtroInsts, valor];
+    currentPage = 1; renderFilters(); renderResearchers();
+  }
   if (tipo === 'tipo') { filtroTipo = valor; renderFilters(); renderWorks(); }
 });
 
@@ -612,8 +708,8 @@ function renderResearchers(){
   const list = allResearchers.filter(r => {
     const q = busca.toLowerCase();
     if(q && !r.nome?.toLowerCase().includes(q) && !r.area_principal?.toLowerCase().includes(q) && !r.instituicao?.toLowerCase().includes(q)) return false;
-    if(filtroArea && normKey(r.area_principal||'') !== normKey(filtroArea)) return false;
-    if(filtroInst && normKey(r.instituicao||'')   !== normKey(filtroInst))  return false;
+    if(filtroAreas.length && !filtroAreas.includes(r.area_principal)) return false;
+    if(filtroInsts.length && !filtroInsts.includes(r.instituicao))   return false;
     return true;
   });
 
@@ -803,12 +899,18 @@ function renderBooks(){
   const filtersEl = document.getElementById('booksFilters');
   if(areas.length > 1){
     filtersEl.innerHTML =
-      `<button class="book-filter-btn${!bookFilterArea?' active':''}" onclick="setBookFilter('')">Todas</button>` +
-      areas.map(a => `<button class="book-filter-btn${bookFilterArea===a?' active':''}" onclick="setBookFilter('${a.replace(/'/g,"\\'")}')">${bookEmojis[a]||'📚'} ${a}</button>`).join('');
+      `<button class="book-filter-btn${!bookFilterAreas.length?' active':''}" onclick="setBookFilter('')">Todas</button>` +
+      areas.map(a => `<button class="book-filter-btn${bookFilterAreas.includes(a)?' active':''}" onclick="setBookFilter('${a.replace(/'/g,"\\'")}')">${bookEmojis[a]||'📚'} ${a}</button>`).join('');
   } else { filtersEl.innerHTML = ''; }
 
+  // Mobile dropdown (books)
+  const mbEl = document.getElementById('mobileBooksFilters');
+  if(mbEl && areas.length > 1){
+    mbEl.innerHTML = buildMobileDropdown('mf-books', 'Área', areas, bookFilterAreas, 'bookAreas', true);
+  } else if(mbEl){ mbEl.innerHTML = ''; }
+
   // Aplica filtro
-  const filtered = bookFilterArea ? shuffledBooks.filter(b => b.area_conhecimento === bookFilterArea) : shuffledBooks;
+  const filtered = bookFilterAreas.length ? shuffledBooks.filter(b => bookFilterAreas.includes(b.area_conhecimento)) : shuffledBooks;
 
   if(!filtered.length){
     grid.innerHTML = '<div class="empty" style="color:rgba(255,255,255,.45)">Nenhuma obra nessa área no momento.</div>';
@@ -847,7 +949,9 @@ function renderBooks(){
 }
 
 function setBookFilter(area){
-  bookFilterArea = area;
+  // Desktop pills: toggle valor ou limpa se "Todas"
+  if(!area){ bookFilterAreas = []; }
+  else { bookFilterAreas = bookFilterAreas.includes(area) ? bookFilterAreas.filter(v=>v!==area) : [...bookFilterAreas, area]; }
   bookPage = 1;
   renderBooks();
 }
