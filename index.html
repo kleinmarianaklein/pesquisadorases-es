@@ -230,6 +230,28 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
   .filters { display:none !important; }
   .books-filters { display:none !important; }
   .mobile-filters-row { display:flex; }
+  /* Livraria mobile: scroll horizontal, 4 livros visíveis */
+  .books-grid {
+    display: flex !important;
+    overflow-x: auto;
+    overflow-y: visible;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: .6rem;
+    padding-bottom: .75rem;
+    margin-top: 1.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,.35) transparent;
+  }
+  .books-grid::-webkit-scrollbar { height: 4px; }
+  .books-grid::-webkit-scrollbar-track { background: transparent; }
+  .books-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,.35); border-radius: 4px; }
+  .books-grid .book-card {
+    flex: 0 0 calc(25% - .45rem);
+    scroll-snap-align: start;
+    min-width: 130px;
+  }
+  #booksPagination { display: none !important; }
 }
 /* Livraria — filtros e paginação no fundo escuro */
 .books-filters { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1.5rem; position:relative; z-index:1; }
@@ -919,11 +941,11 @@ function renderBooks(){
     return;
   }
 
-  // Paginação
+  // Mobile: todos no scroll horizontal; Desktop: paginação
+  const isMobile = window.innerWidth <= 768;
   const totalPages = Math.ceil(filtered.length / BOOKS_PAGE_SIZE);
   if(bookPage > totalPages) bookPage = 1;
-  const start = (bookPage - 1) * BOOKS_PAGE_SIZE;
-  const pageBooks = filtered.slice(start, start + BOOKS_PAGE_SIZE);
+  const pageBooks = isMobile ? filtered : filtered.slice((bookPage - 1) * BOOKS_PAGE_SIZE, bookPage * BOOKS_PAGE_SIZE);
 
   grid.innerHTML = pageBooks.map(b => {
     const author = allResearchers.find(r => r.id === b.researcher_id)?.nome || '—';
