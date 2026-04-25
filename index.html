@@ -231,10 +231,10 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
   .books-filters { display:none !important; }
   .mobile-filters-row { display:flex; }
   /* Livraria mobile: 2 colunas, 4 livros por página, sem título */
-  .books-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-top: 1.25rem; }
-  .book-title { display: none; }
+  .books-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: .75rem !important; margin-top: 1.25rem; }
+  .book-title { display: none !important; }
   .book-author { font-size: .68rem; }
-  .book-card { padding: 1rem .75rem; }
+  .book-card { padding: 1rem .75rem; width: auto !important; min-width: 0 !important; }
 }
 /* Livraria — filtros e paginação no fundo escuro */
 .books-filters { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1.5rem; position:relative; z-index:1; }
