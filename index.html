@@ -206,13 +206,14 @@ section { padding: clamp(3.5rem,8vw,7rem) clamp(1.5rem,5vw,4rem); }
 .book-btn:hover { opacity: 0.85; }
 /* ── MOBILE FILTER DROPDOWNS ─────────────────────────────── */
 .mobile-filters-row { display:none; flex-direction:column; gap:.5rem; margin-bottom:1rem; }
-.mobile-filter-group { position:relative; }
+.mobile-filter-group { }
 .mobile-filter-toggle { width:100%; display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.6rem 1rem; border-radius:12px; border:1.5px solid var(--cinza-claro); background:white; font-family:'Sora',sans-serif; font-size:.82rem; font-weight:600; color:var(--texto); cursor:pointer; }
 .mf-label-wrap { display:flex; align-items:center; gap:.45rem; }
 .mf-count { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; background:var(--roxo); color:white; border-radius:100px; font-size:.62rem; padding:0 .35rem; }
 .mf-arrow { transition:transform .2s; font-size:.75rem; }
 .mf-arrow.open { transform:rotate(180deg); }
-.mobile-filter-panel { display:none; position:absolute; top:calc(100% + .35rem); left:0; right:0; background:white; border-radius:14px; border:1.5px solid var(--cinza-claro); box-shadow:0 8px 30px rgba(0,0,0,.14); z-index:300; overflow:hidden; max-height:260px; overflow-y:auto; }
+/* Painel flui no documento — empurra conteúdo para baixo, sem sobreposição */
+.mobile-filter-panel { display:none; background:white; border-radius:14px; border:1.5px solid var(--cinza-claro); margin-top:.35rem; overflow:hidden; max-height:260px; overflow-y:auto; }
 .mobile-filter-panel.open { display:block; }
 .mf-option { display:flex; align-items:center; gap:.65rem; padding:.55rem .85rem; cursor:pointer; font-size:.83rem; color:var(--texto); border-bottom:1px solid #f0ede8; transition:background .15s; }
 .mf-option:last-child { border-bottom:none; }
@@ -459,7 +460,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <h2 class="section-title">Nossa <em>Livraria</em></h2>
   <p class="section-desc">Apoie diretamente as autoras capixabas.</p>
   <div class="books-filters" id="booksFilters"></div>
-  <div class="mobile-filters-row" id="mobileBooksFilters" style="position:relative;z-index:1"></div>
+  <div class="mobile-filters-row" id="mobileBooksFilters"></div>
   <div class="books-grid" id="booksGrid">
     <div class="loading" style="color:rgba(255,255,255,.55)">
       <div class="spinner" style="border-color:rgba(255,255,255,.15);border-top-color:var(--rosa-vivo)"></div>Carregando...
