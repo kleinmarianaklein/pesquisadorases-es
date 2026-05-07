@@ -439,6 +439,43 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             style="min-height:320px;padding:1.25rem;font-family:'DM Sans',sans-serif;font-size:.95rem;line-height:1.75;outline:none;color:var(--preto)"
             data-placeholder="Escreva o conteúdo do artigo aqui…"></div>
         </div>
+        <!-- SEO & Metadados -->
+        <div class="form-card" style="margin-top:1rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;cursor:pointer" onclick="toggleSeoPanel()">
+            <div style="display:flex;align-items:center;gap:.5rem">
+              <span style="font-size:1.1rem">🔍</span>
+              <h3 style="margin:0;font-size:.95rem">SEO &amp; Metadados</h3>
+              <span style="font-size:.72rem;color:var(--cinza);font-weight:400">— slug, meta description, palavras-chave</span>
+            </div>
+            <span id="seoArrow" style="font-size:.75rem;transition:transform .2s">▼</span>
+          </div>
+          <div id="seoPanel">
+            <div class="form-group" style="margin-bottom:.85rem">
+              <label style="display:flex;align-items:center;justify-content:space-between">
+                Slug (URL amigável)
+                <button type="button" onclick="gerarSlug()" style="font-size:.7rem;padding:.2rem .6rem;border-radius:6px;border:1px solid var(--cinza-claro);background:#f8f4ee;cursor:pointer;font-family:'DM Sans',sans-serif">⚡ Gerar do título</button>
+              </label>
+              <div style="display:flex;align-items:center;gap:.4rem;margin-top:.35rem">
+                <span style="font-size:.75rem;color:var(--cinza);white-space:nowrap">/blog/</span>
+                <input type="text" id="blogSlug" placeholder="meu-artigo-sobre-ciencia" style="font-family:'DM Mono',monospace;font-size:.82rem;flex:1" oninput="sanitizeSlug(this)">
+              </div>
+              <p style="font-size:.68rem;color:var(--cinza);margin:.3rem 0 0">Só letras minúsculas, números e hífens. Não use espaços ou acentos.</p>
+            </div>
+            <div class="form-group" style="margin-bottom:.85rem">
+              <label style="display:flex;align-items:center;justify-content:space-between">
+                Meta Description
+                <span id="metaCount" style="font-size:.7rem;color:var(--cinza)">0/160</span>
+              </label>
+              <textarea id="blogMetaDesc" placeholder="Descrição do artigo para motores de busca (máx. 160 caracteres)…" style="min-height:68px;margin-top:.35rem;resize:vertical" maxlength="160" oninput="document.getElementById('metaCount').textContent=this.value.length+'/160';document.getElementById('metaCount').style.color=this.value.length>155?'var(--erro)':'var(--cinza)'"></textarea>
+              <p style="font-size:.68rem;color:var(--cinza);margin:.3rem 0 0">Aparece como descrição nos resultados do Google. Ideal: 120–160 caracteres.</p>
+            </div>
+            <div class="form-group">
+              <label>Palavras-chave <span style="font-weight:400;color:var(--cinza)">(separadas por vírgula)</span></label>
+              <input type="text" id="blogKeywords" placeholder="pesquisa, ciência, mulheres, Espírito Santo…" style="margin-top:.35rem">
+              <p style="font-size:.68rem;color:var(--cinza);margin:.3rem 0 0">Usadas na meta tag keywords. Ex: pesquisa científica, UFES, gênero</p>
+            </div>
+          </div>
+        </div>
         <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem">
           <button class="btn-primary-lg" id="btnPublicar" onclick="saveBlog(true)">🌐 Publicar agora</button>
           <button class="btn btn-outline" id="btnRascunho" onclick="saveBlog(false)" style="padding:.85rem 1.5rem;font-size:.9rem">💾 Salvar rascunho</button>
@@ -1248,7 +1285,8 @@ async function saveBlog(publish){
   btnP.disabled=true; btnR.disabled=true;
   let foto_capa=document.getElementById('capaUrl').value||null;
   let foto_header=document.getElementById('headerUrl').value||null;
-  const payload={ titulo, resumo:document.getElementById('blogResumo').value.trim()||null, conteudo, categoria:document.getElementById('blogCategoria').value.trim()||'Artigo', emoji:document.getElementById('blogEmoji').value.trim()||'✍️', autor:document.getElementById('blogAutor').value.trim()||null, secao:'blog', publicado:publish };
+  const slugRaw=document.getElementById('blogSlug').value.trim();
+  const payload={ titulo, resumo:document.getElementById('blogResumo').value.trim()||null, conteudo, categoria:document.getElementById('blogCategoria').value.trim()||'Artigo', emoji:document.getElementById('blogEmoji').value.trim()||'✍️', autor:document.getElementById('blogAutor').value.trim()||null, secao:'blog', publicado:publish, slug:slugRaw||null, meta_descricao:document.getElementById('blogMetaDesc').value.trim()||null, palavras_chave:document.getElementById('blogKeywords').value.trim()||null };
   let postId=editId;
   if(editId){ await db.from('blog_posts').update(payload).eq('id',editId); }
   else { const {data}=await db.from('blog_posts').insert([payload]).select().single(); postId=data?.id; }
@@ -1261,11 +1299,36 @@ async function saveBlog(publish){
   btnP.disabled=false; btnR.disabled=false;
   cancelEditPost(); await loadAll();
 }
+// ── SEO HELPERS ───────────────────────────────────────────
+function toggleSeoPanel(){
+  const panel=document.getElementById('seoPanel');
+  const arrow=document.getElementById('seoArrow');
+  const hidden=panel.style.display==='none';
+  panel.style.display=hidden?'block':'none';
+  arrow.style.transform=hidden?'rotate(180deg)':'';
+}
+function sanitizeSlug(input){
+  input.value=input.value.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9\-]/g,'-')
+    .replace(/-+/g,'-');
+}
+function gerarSlug(){
+  const titulo=document.getElementById('blogTitulo').value.trim();
+  if(!titulo){ alert('Preencha o título primeiro.'); return; }
+  const slug=titulo.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-|-$/g,'');
+  document.getElementById('blogSlug').value=slug;
+}
+
 function cancelEditPost(){
   document.getElementById('blogEditId').value='';
   document.getElementById('blogFormTitle').textContent='Novo artigo';
   document.getElementById('blogCancelEdit').style.display='none';
-  ['blogTitulo','blogResumo','blogCategoria','blogEmoji','blogAutor'].forEach(id=>document.getElementById(id).value='');
+  ['blogTitulo','blogResumo','blogCategoria','blogEmoji','blogAutor','blogSlug','blogMetaDesc','blogKeywords'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('metaCount').textContent='0/160';
   const ed=document.getElementById('blogEditor');
   if(ed.contentEditable==='true') ed.innerHTML=''; else ed.value='';
   capaFile=null; headerFile=null;
@@ -1279,6 +1342,10 @@ function editPost(id){
   document.getElementById('blogCategoria').value=p.categoria||'';
   document.getElementById('blogEmoji').value=p.emoji||'';
   document.getElementById('blogAutor').value=p.autor||'';
+  document.getElementById('blogSlug').value=p.slug||'';
+  document.getElementById('blogMetaDesc').value=p.meta_descricao||'';
+  document.getElementById('metaCount').textContent=(p.meta_descricao||'').length+'/160';
+  document.getElementById('blogKeywords').value=p.palavras_chave||'';
   const ed=document.getElementById('blogEditor');
   if(ed.contentEditable==='true') ed.innerHTML=p.conteudo||''; else ed.value=p.conteudo||'';
   if(p.foto_capa){ document.getElementById('capaUrl').value=p.foto_capa; document.getElementById('capaPreview').innerHTML=`<img src="${p.foto_capa}" style="width:100%;height:100%;object-fit:cover">`; document.getElementById('capaRemoveBtn').style.display='inline-flex'; }

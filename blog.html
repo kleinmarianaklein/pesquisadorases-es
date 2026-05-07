@@ -275,8 +275,8 @@ function updateMetaTags(post) {
   const description = post.resumo || 'Artigo do blog Pesquisadoras ES';
 
   // Update title
-  document.title = `${post.titulo} — Pesquisadoras ES`;
-  
+  document.title = `${post.titulo} — Pesquisadoras do ES`;
+
   // Update or create meta tags
   const updateMeta = (property, content) => {
     let meta = document.querySelector(`meta[property="${property}"]`) || 
@@ -293,14 +293,21 @@ function updateMetaTags(post) {
     meta.setAttribute('content', content);
   };
 
-  updateMeta('description', description);
+  // Meta description: prioriza campo SEO, cai para resumo
+  const metaDesc = post.meta_descricao || description;
+  updateMeta('description', metaDesc);
   updateMeta('og:url', postUrl);
   updateMeta('og:title', post.titulo);
-  updateMeta('og:description', description);
+  updateMeta('og:description', metaDesc);
   updateMeta('og:type', 'article');
   updateMeta('twitter:url', postUrl);
   updateMeta('twitter:title', post.titulo);
-  updateMeta('twitter:description', description);
+  updateMeta('twitter:description', metaDesc);
+  // Palavras-chave
+  if(post.palavras_chave) updateMeta('keywords', post.palavras_chave);
+  // Slug canônico
+  const canonical = document.querySelector('link[rel="canonical"]') || (() => { const l=document.createElement('link'); l.rel='canonical'; document.head.appendChild(l); return l; })();
+  canonical.href = postUrl;
   
   // Se o post tiver foto_capa, adiciona a imagem
   if (post.foto_capa) {
